@@ -26,7 +26,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 
     if(empty($username_err) && empty($password_err)){
-        $sql = "SELECT id, username, password FROM users WHERE username = ?";
+        $sql = "SELECT id, username, first_name, last_name, password FROM users WHERE username = ?";
 
         if($stmt = $conn->prepare($sql)){
             $stmt->bind_param("s", $param_username);
@@ -37,13 +37,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $stmt->store_result();
 
                 if($stmt->num_rows == 1){
-                    $stmt->bind_result($id, $username, $hashed_password);
+                    $stmt->bind_result($id, $username, $first_name, $last_name, $hashed_password);
                     if($stmt->fetch()){
-                        if(password_verify($password, $hashed_password)){
+                        if(md5($password) === $hashed_password){
                             session_start();
-
                             $_SESSION["user_id"] = $id;
                             $_SESSION["username"] = $username;
+                            $_SESSION["fullname"] = $first_name . " " . $last_name;
 
                             header("location: dashboard.php");
                         } else{
@@ -104,38 +104,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                         <div class="text-center">
                                             <h1 class="h4 text-gray-900 mb-4">Welcome To iSAMS MIS</h1>
                                         </div>
-                                        <form class="user">
+                                        <form class="user" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                                             <div class="form-group">
                                                 <input type="text" class="form-control form-control-user" id="username" name="username" aria-describedby="emailHelp" placeholder="Enter Username...">
                                             </div>
                                             <div class="form-group">
                                                 <input type="password" class="form-control form-control-user" id="password" name="password" placeholder="Password">
                                             </div>
-                                            <!-- <div class="form-group">
-                                                <div class="custom-control custom-checkbox small">
-                                                    <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                    <label class="custom-control-label" for="customCheck">Remember
-                                                    Me</label>
-                                                </div>
-                                            </div> -->
-                                            <a href="index.html" class="btn btn-primary btn-user btn-block">
-                                            Login
-                                        </a>
-                                            <!-- <hr>
-                                            <a href="index.html" class="btn btn-google btn-user btn-block">
-                                                <i class="fab fa-google fa-fw"></i> Login with Google
-                                            </a>
-                                            <a href="index.html" class="btn btn-facebook btn-user btn-block">
-                                                <i class="fab fa-facebook-f fa-fw"></i> Login with Facebook
-                                            </a>
+                                            <button type="submit" class="btn btn-primary btn-user btn-block">Login</button>
                                         </form>
-                                        <hr>
-                                        <div class="text-center">
-                                            <a class="small" href="forgot-password.html">Forgot Password?</a>
-                                        </div>
-                                        <div class="text-center">
-                                            <a class="small" href="register.html">Create an Account!</a>
-                                        </div> -->
                                     </div>
                                 </div>
                             </div>

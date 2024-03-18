@@ -11215,10 +11215,10 @@ a:focus {
 }
 
 .bg-login-image {
-    background: url("../img/login.jpg");
+    background: url("../img/logo-img.png");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 100% auto;
+    background-size: 75%;
 }
 
 .bg-register-image {
