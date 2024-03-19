@@ -15,11 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Dumping database structure for isams
-CREATE DATABASE IF NOT EXISTS `isams` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `isams`;
+-- Dumping database structure for smea
+CREATE DATABASE IF NOT EXISTS `smea` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `smea`;
 
--- Dumping structure for table isams.grades
+-- Dumping structure for table smea.grades
 CREATE TABLE IF NOT EXISTS `grades` (
   `id` int NOT NULL AUTO_INCREMENT,
   `value` int NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `grades` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table isams.roles
+-- Dumping structure for table smea.roles
 CREATE TABLE IF NOT EXISTS `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
   `description` varchar(50) NOT NULL DEFAULT '0',
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table isams.schools
+-- Dumping structure for table smea.schools
 CREATE TABLE IF NOT EXISTS `schools` (
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS `schools` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table isams.students
+-- Dumping structure for table smea.students
 CREATE TABLE IF NOT EXISTS `students` (
   `id` int NOT NULL AUTO_INCREMENT,
   `first_name` varchar(255) NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `students` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table isams.subjects
+-- Dumping structure for table smea.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `subjects` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table isams.users
+-- Dumping structure for table smea.users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
