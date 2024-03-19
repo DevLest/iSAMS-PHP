@@ -3,7 +3,7 @@
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.php">
         <img class="sidebar-brand-icon" style="height: 100%;" src="img/logo-img.png" alt="no-image">
-        <div class="sidebar-brand-text mx-3">iSAMS <sup>MIS</sup></div>
+        <div class="sidebar-brand-text mx-3">SMEA <sup> Tool</sup></div>
     </a>
 
     <!-- Divider -->
