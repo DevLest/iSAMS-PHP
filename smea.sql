@@ -15,21 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Dumping database structure for smea
-CREATE DATABASE IF NOT EXISTS `smea` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `smea`;
+-- Dumping database structure for isams
+CREATE DATABASE IF NOT EXISTS `isams` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `isams`;
 
--- Dumping structure for table smea.grades
-CREATE TABLE IF NOT EXISTS `grades` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `value` int NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Data exporting was unselected.
-
--- Dumping structure for table smea.roles
+-- Dumping structure for table isams.roles
 CREATE TABLE IF NOT EXISTS `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
   `description` varchar(50) NOT NULL DEFAULT '0',
@@ -41,15 +31,19 @@ CREATE TABLE IF NOT EXISTS `roles` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table smea.schools
+-- Dumping structure for table isams.schools
 CREATE TABLE IF NOT EXISTS `schools` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `name` text NOT NULL,
+  `address` text,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
--- Dumping structure for table smea.students
+-- Dumping structure for table isams.students
 CREATE TABLE IF NOT EXISTS `students` (
   `id` int NOT NULL AUTO_INCREMENT,
   `first_name` varchar(255) NOT NULL,
@@ -63,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `students` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table smea.subjects
+-- Dumping structure for table isams.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -74,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `subjects` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table smea.users
+-- Dumping structure for table isams.users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
@@ -87,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   KEY `FK_users_roles` (`role`),
   CONSTRAINT `FK_users_roles` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
