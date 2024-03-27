@@ -47,13 +47,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                             header("location: dashboard.php");
                         } else{
-                            $password_err = "The password you entered was not valid.";
+                            echo '<div class="alert alert-warning">The password you entered was not valid.</div>';
                         }
                     }
                 } else{
-                    $username_err = "No account found with that username.";
+                    echo '<div class="alert alert-warning">No account found with that username.</div>';
                 }
             } else{
+                echo '<div class="alert alert-warning">Oops! Something went wrong. Please try again later.</div>';
                 echo "Oops! Something went wrong. Please try again later.";
             }
 

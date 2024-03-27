@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "SELECT id FROM users WHERE username = '$username'";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
-        echo '<script>alert("User already exists.");</script>';
+        echo '<div class="alert alert-warning">A User with the same name already exists.</div>';
     } else {
         // Hash the password for security
         $hashedPassword = md5($password);
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: user-list.php"); // Redirect to user list page on success
             exit;
         } else {
-            echo '<script>alert("Error: ' . $conn->error . '");</script>';
+            echo '<div class="alert alert-danger">Error: ' . $sql . '<br>' . $conn->error . '</div>';
         }
     }
 }
