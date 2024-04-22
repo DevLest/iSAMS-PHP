@@ -15,19 +15,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $role = $conn->real_escape_string($_POST['role']);
     $password = $_POST['password']; 
 
-    // Check if the user already exists
     $sql = "SELECT id FROM users WHERE username = '$username'";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         echo '<script>alert("User already exists.");</script>';
     } else {
-        // Hash the password for security
         $hashedPassword = md5($password);
 
-        // Insert new user
         $sql = "INSERT INTO users (username, first_name, last_name, role, password) VALUES ('$username', '$firstName', '$lastName', '$role', '$hashedPassword')";
         if ($conn->query($sql) === TRUE) {
-            header("Location: user-list.php"); // Redirect to user list page on success
+            header("Location: user-list.php");
             exit;
         } else {
             echo '<script>alert("Error: ' . $conn->error . '");</script>';
@@ -37,13 +34,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $roles = [];
 
-// Fetch roles from the database
-$sql = "SELECT * FROM roles"; // Adjust if your table or column names differ
+$sql = "SELECT * FROM roles";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
-        $roles[] = $row; // Add each role to the roles array
+        $roles[] = $row;
     }
 }
 
@@ -52,23 +48,17 @@ include_once('header.php');
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
     <div id="wrapper">
         <?php include_once "sidebar.php"; ?>
 
-        <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
-            <!-- Main Content -->
             <div id="content">
                 <?php include_once "navbar.php"?>
-                <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <!-- Begin Page Content -->
                     <div class="container-fluid">
 
-                        <!-- Page Heading -->
                         <h1 class="h3 mb-2 text-gray-800">User</h1>
                         <p class="mb-4">Add, View, Update, and Delete Schools.</p>
 
@@ -104,18 +94,12 @@ include_once('header.php');
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
 
-                        <!-- Here we will insert PHP code to display schools -->
-
                     </div>
-                    <!-- /.container-fluid -->
 
                 </div>
-                <!-- /.container-fluid -->
 
             </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
+            
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
@@ -123,15 +107,11 @@ include_once('header.php');
                     </div>
                 </div>
             </footer>
-            <!-- End of Footer -->
 
         </div>
-        <!-- End of Content Wrapper -->
 
     </div>
-    <!-- End of Page Wrapper -->
-
-    <!-- Scroll to Top Button-->
+    
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
@@ -139,20 +119,19 @@ include_once('header.php');
     <style>
         .form-group.position-relative {
             display: flex;
-            align-items: center; /* Aligns items vertically center in a flex container */
+            align-items: center;
         }
 
         .eye-icon {
             position: absolute;
-            right: 10px; /* Adjust this as necessary */
+            right: 10px;
             cursor: pointer;
             display: flex;
-            align-items: center; /* Helps center the icon vertically */
+            align-items: center;
         }
 
-        /* Adjust height or padding as needed based on your form's design */
         .form-control {
-            padding-right: 30px; /* Makes room for the icon inside the input box */
+            padding-right: 30px;
         }
     </style>
 
