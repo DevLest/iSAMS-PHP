@@ -10,6 +10,7 @@ require_once "connection/db.php";
 
 $username = $password = "";
 $username_err = $password_err = "";
+$error = "";
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 
@@ -47,14 +48,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                             header("location: dashboard.php");
                         } else{
-                            $password_err = "The password you entered was not valid.";
+                            $error = "The password you entered was not valid.";
                         }
                     }
                 } else{
-                    $username_err = "No account found with that username.";
+                    $error = "No account found with that username.";
                 }
             } else{
-                echo "Oops! Something went wrong. Please try again later.";
+                $error = "Oops! Something went wrong. Please try again later.";
             }
 
             $stmt->close();
@@ -86,6 +87,11 @@ include_once('header.php');
                                     <div class="p-5">
                                         <div class="text-center">
                                             <h1 class="h4 text-gray-900 mb-4">Welcome To SMEA</h1>
+                                            <?php
+                                                if(isset($error) && $error != ""){
+                                                    echo '<div class="alert alert-danger" role="alert">' . htmlspecialchars($error) . '</div>';
+                                                }
+                                            ?>
                                         </div>
                                         <form class="user" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                                             <div class="form-group">
