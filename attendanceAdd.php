@@ -157,9 +157,7 @@ if ($grade_level->num_rows > 0) {
                     <div class="container-fluid">
 
                     <h1 class="h3 mb-2 text-gray-800">Encoding Tables</h1>
-                    <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below.
-                        For more information about DataTables, please visit the <a target="_blank"
-                            href="https://datatables.net">official DataTables documentation</a>.</p>
+                    <p class="mb-4">Encode Population or Data head count for Analysis and Comparison.</p>
 
                     <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
                         <div class="collapse navbar-collapse" id="navbarNav">
@@ -440,12 +438,24 @@ if ($grade_level->num_rows > 0) {
                 row.find('.total').text(male + female);
             }
 
+            function clearZero(input) {
+                if (input.find('input')[0].value == '0') {
+                    input.find('input')[0].value = '';
+                } else if (input.find('input')[0].value < 1 || input.find('input')[0].value == "") {
+                    input.find('input')[0].value = '0';
+                }
+            }
+
             $('tbody tr').each(function() {
                 updateTotal($(this));
             });
 
             $('input[type="number"]').on('input', function() {
                 updateTotal($(this).closest('tr'));
+            });
+            
+            $('input[type="number"]').on('focus', function() {
+                clearZero($(this).closest('tr'));
             });
 
             $(".nav-item-custom a").click(function(e) {
