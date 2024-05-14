@@ -69,7 +69,7 @@ include_once('header.php');
 ?>
 
 
-    <body class="bg-gradient-primary">
+    <body class="bg-gradient-primary" style="display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background-image: url('img/login-bg.jpg'); background-size: cover; background-position: center;">
 
         <div class="container">
 
@@ -78,7 +78,7 @@ include_once('header.php');
 
                 <div class="col-xl-10 col-lg-12 col-md-9">
 
-                    <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card o-hidden border-0 shadow-lg my-5" style="background-color: rgba(255, 255, 255, 0.8);">
                         <div class="card-body p-0">
                             <!-- Nested Row within Card Body -->
                             <div class="row">

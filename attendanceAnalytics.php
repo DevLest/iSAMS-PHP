@@ -10,6 +10,8 @@ require_once "connection/db.php";
 include_once('header.php');
 
 $sql = "SELECT * FROM schools";
+
+$schools = "";
 $schools = $conn->query($sql);
 
 $inputTables = "";
@@ -225,7 +227,7 @@ if ($grade_level->num_rows > 0) {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div class="tab-pane fade" id="v-pills-ae-elem" role="tabpanel" aria-labelledby="v-pills-ae-elem-tab">
+                                            <!-- <div class="tab-pane fade" id="v-pills-ae-elem" role="tabpanel" aria-labelledby="v-pills-ae-elem-tab">
                                                 <table class="table">
                                                     <thead>
                                                         <tr>
@@ -253,7 +255,7 @@ if ($grade_level->num_rows > 0) {
                                                     <tbody>
                                                         <?php echo $inputTables;?>
                                                     </tbody>
-                                                </table>
+                                                </table> -->
                                             </div>
                                         </div>
                                     </div>
