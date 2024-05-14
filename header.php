@@ -19,3 +19,7 @@
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
 </head>
+
+<?php
+  $current_page = basename($_SERVER['REQUEST_URI']);
+?>

@@ -10,7 +10,7 @@
     <hr class="sidebar-divider my-0">
 
     <!-- Nav Item - Dashboard -->
-    <li class="nav-item active">
+    <li class="nav-item <?php if($current_page == 'dashboard.php') echo 'active'; ?>">
         <a class="nav-link" href="dashboard.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span></a>
@@ -24,47 +24,47 @@
         Modules
     </div>
     
-    <li class="nav-item">
+    <li class="nav-item <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUser" aria-expanded="true"
             aria-controls="collapseUser">
             <i class="fas fa-fw fa-user"></i>
             <span>Users</span>
         </a>
-        <div id="collapseUser" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="collapseUser" class="collapse <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <!-- <h6 class="collapse-header">Custom Components:</h6> -->
-                <a class="collapse-item" href="addUser.php">Add</a>
-                <a class="collapse-item" href="user-list.php">List</a>
+                <a class="collapse-item <?php if($current_page == 'addUser.php') echo 'active'; ?>" href="addUser.php">Add</a>
+                <a class="collapse-item <?php if($current_page == 'user-list.php') echo 'active'; ?>" href="user-list.php">List</a>
             </div>
         </div>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSchool" aria-expanded="true"
             aria-controls="collapseSchool">
             <i class="fas fa-fw fa-school"></i>
             <span>Schools</span>
         </a>
-        <div id="collapseSchool" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="collapseSchool" class="collapse <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <!-- <h6 class="collapse-header">Custom Components:</h6> -->
-                <a class="collapse-item" href="addSchool.php">Add</a>
-                <a class="collapse-item" href="school-list.php">List</a>
+                <a class="collapse-item <?php if($current_page == 'addSchool.php') echo 'active'; ?>" href="addSchool.php">Add</a>
+                <a class="collapse-item <?php if($current_page == 'school-list.php') echo 'active'; ?>" href="school-list.php">List</a>
             </div>
         </div>
     </li>
     
 
-    <li class="nav-item">
+    <li class="nav-item <?php if(in_array($current_page, ["attendanceAnalytics.php", "attendanceAdd.php"])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAttendance" aria-expanded="true"
             aria-controls="collapseAttendance">
             <i class="fas fa-fw fa-list-alt"></i>
             <span>Attendance</span>
         </a>
-        <div id="collapseAttendance" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="collapseAttendance" class="collapse <?php if(in_array($current_page, ["attendanceAnalytics.php", "attendanceAdd.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="attendanceAnalytics.php">Analytics Tables</a>
-                <a class="collapse-item" href="addAttendace.php">Add</a>
+                <a class="collapse-item <?php if($current_page == 'attendanceAnalytics.php') echo 'active'; ?>" href="attendanceAnalytics.php">Analytics Tables</a>
+                <a class="collapse-item <?php if($current_page == 'attendanceAdd.php') echo 'active'; ?>" href="attendanceAdd.php">Add</a>
             </div>
         </div>
     </li>
