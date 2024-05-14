@@ -1,8 +1,3 @@
-
-CREATE DATABASE IF NOT EXISTS `smea` 
-USE `smea`;
-
--- Dumping structure for table isams.attendance_summary
 CREATE TABLE IF NOT EXISTS `attendance_summary` (
   `summary_id` int NOT NULL AUTO_INCREMENT,
   `school_id` int DEFAULT NULL,
@@ -13,25 +8,14 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   `count` int DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`summary_id`),
-  KEY `FK_attendance_summary_schools` (`school_id`),
-  KEY `FK_attendance_summary_grade_level` (`grade_level_id`),
-  CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),
-  CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
-
--- Dumping data for table isams.attendance_summary: ~0 rows (approximately)
-
--- Dumping structure for table isams.grade_level
-CREATE TABLE IF NOT EXISTS `grade_level` (
+),  CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),y_  CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)y_) ENGINE=InnoDB;_s_s-- Dumping data for table isams.attendance_summary: ~0 rows (approximately)RS i-- Dumping structure for table isams.grade_levelsaCREATE TABLE IF NOT EXISTS `grade_level` (ta  `id` int NOT NULL AUTO_INCREMENT,bl  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,`grade_level` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB AUTO_INCREMENT=14;
 
--- Dumping data for table isams.grade_level: ~12 rows (approximately)
 INSERT INTO `grade_level` (`id`, `name`, `updated_at`, `created_at`) VALUES
 	(1, 'Kinder', '2024-04-04 04:30:22', '2024-04-04 04:30:22'),
 	(2, 'Grade 1', '2024-04-04 04:30:22', '2024-04-04 04:30:22'),
@@ -47,17 +31,13 @@ INSERT INTO `grade_level` (`id`, `name`, `updated_at`, `created_at`) VALUES
 	(12, 'Grade 11', '2024-04-04 05:53:18', '2024-04-04 04:30:22'),
 	(13, 'Grade 12', '2024-04-04 05:53:18', '2024-04-04 04:30:22');
 
--- Dumping structure for table isams.quarters
 CREATE TABLE IF NOT EXISTS `quarters` (
   `id` int NOT NULL AUTO_INCREMENT,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB;
 
--- Dumping data for table isams.quarters: ~0 rows (approximately)
-
--- Dumping structure for table isams.roles
 CREATE TABLE IF NOT EXISTS `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
   `description` varchar(50) NOT NULL DEFAULT '0',
@@ -65,14 +45,12 @@ CREATE TABLE IF NOT EXISTS `roles` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB AUTO_INCREMENT=3;
 
--- Dumping data for table isams.roles: ~2 rows (approximately)
 INSERT INTO `roles` (`id`, `description`, `permission`, `updated_at`, `created_at`) VALUES
 	(1, 'Admin', '[\'1\',\'2\']', '2024-03-19 03:43:00', '2024-03-18 10:58:50'),
 	(2, 'Teacher', '[\'1\', \'2\']', '2024-03-18 10:59:09', '2024-03-18 10:59:09');
 
--- Dumping structure for table isams.schools
 CREATE TABLE IF NOT EXISTS `schools` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
@@ -80,9 +58,8 @@ CREATE TABLE IF NOT EXISTS `schools` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB AUTO_INCREMENT=21;
 
--- Dumping data for table isams.schools: ~20 rows (approximately)
 INSERT INTO `schools` (`id`, `name`, `address`, `updated_at`, `created_at`) VALUES
 	(1, 'Amontay Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
 	(2, 'Binalbagan Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
@@ -105,18 +82,14 @@ INSERT INTO `schools` (`id`, `name`, `address`, `updated_at`, `created_at`) VALU
 	(19, 'Augurio Marañon Abeto National High School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
 	(20, 'Binalbagan National High School-santol Extension', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26');
 
--- Dumping structure for table isams.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `current_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB;
 
--- Dumping data for table isams.subjects: ~0 rows (approximately)
-
--- Dumping structure for table isams.users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
@@ -129,95 +102,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   KEY `FK_users_roles` (`role`),
   CONSTRAINT `FK_users_roles` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 ;
+) ENGINE=InnoDB AUTO_INCREMENT=7;
 
--- Dumping data for table isams.users: ~0 rows (approximately)
 INSERT INTO `users` (`id`, `username`, `password`, `first_name`, `last_name`, `role`, `updated_at`, `created_at`) VALUES
 	(5, 'bonbon', '5f4dcc3b5aa765d61d8327deb882cf99', 'Frederson', 'Ebra', 1, '2024-03-18 10:59:36', '2024-03-18 10:59:36'),
-	(6, 'bea', '25d55ad283aa400af464c76d713c07ad', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-03-27 08:31:14');
-
-/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
-
--- Dumping database structure for isams
-CREATE DATABASE IF NOT EXISTS `isams` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `isams`;
-
--- Dumping structure for table isams.roles
-CREATE TABLE IF NOT EXISTS `roles` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `description` varchar(50) NOT NULL DEFAULT '0',
-  `permission` text NOT NULL,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 ;
-
--- Data exporting was unselected.
-
--- Dumping structure for table isams.schools
-CREATE TABLE IF NOT EXISTS `schools` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
-  `address` text,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 ;
-
--- Data exporting was unselected.
-
--- Dumping structure for table isams.students
-CREATE TABLE IF NOT EXISTS `students` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `first_name` varchar(255) NOT NULL,
-  `last_name` varchar(255) NOT NULL,
-  `grades` int DEFAULT '0',
-  `active` tinyint DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
-
--- Data exporting was unselected.
-
--- Dumping structure for table isams.subjects
-CREATE TABLE IF NOT EXISTS `subjects` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
-
--- Data exporting was unselected.
-
--- Dumping structure for table isams.users
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `password` text NOT NULL,
-  `first_name` text NOT NULL,
-  `last_name` text NOT NULL,
-  `role` int NOT NULL DEFAULT '0',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `FK_users_roles` (`role`),
-  CONSTRAINT `FK_users_roles` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 ;
-
+	(6, 'bea', '5f4dcc3b5aa765d61d8327deb882cf99', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-03-27 08:31:14');
