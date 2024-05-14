@@ -31,17 +31,17 @@ if ($schools->num_rows > 0) {
 $sql = "SELECT * FROM grade_level";
 $grade_level = $conn->query($sql);
 
-$grade_lavels = "";
-$grade_lavel_inputs = "";
+$grade_levels = "";
 if ($grade_level->num_rows > 0) {
     $count = 0;
     while($row = $grade_level->fetch_assoc()) {
+        $grade_level_inputs = "";
         $active = $count == 0 ? "true" : "false";
         $rowid = $row['id'];
 
-        $grade_lavels .= "<a class='nav-link ".($count == 0 ? 'active' : '')."' id='v-pills-$rowid-tab' data-toggle='pill' href='#v-pills-$rowid' role='tab' aria-controls='v-pills-$rowid' aria-selected='$active'>".$row['name']."</a>";
+        $grade_levels .= "<a class='nav-link ".($count == 0 ? 'active' : '')."' id='v-pills-$rowid-tab' data-toggle='pill' href='#v-pills-$rowid' role='tab' aria-controls='v-pills-$rowid' aria-selected='$active'>".$row['name']."</a>";
         
-        $grade_lavel_inputs .= "<div class='tab-pane fade show active' id='v-pills-$rowid' role='tabpanel' aria-labelledby='v-pills-$rowid-tab'>
+        $grade_level_inputs .= "<div class='tab-pane fade show active' id='v-pills-$rowid' role='tabpanel' aria-labelledby='v-pills-$rowid-tab'>
                                     <table class='table'>
                                     <thead>
                                         <tr>
@@ -266,13 +266,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab2" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent2">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -282,13 +282,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab3" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent3">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -298,13 +298,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent4">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -314,13 +314,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent5">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -330,13 +330,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent6">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -346,13 +346,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent7">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -362,13 +362,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent8">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -378,13 +378,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent9">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -394,13 +394,13 @@ if ($grade_level->num_rows > 0) {
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab10" role="tablist" aria-orientation="vertical">
-                                            <?php echo $grade_lavels; ?>
+                                            <?php echo $grade_levels; ?>
                                         </div>
                                     </div>
 
                                     <div class="col-md-9">
                                         <div class="tab-content" id="v-pills-tabContent10">
-                                            <?php echo $grade_lavel_inputs; ?>
+                                            <?php echo $grade_level_inputs; ?>
                                         </div>
                                     </div>
                                 </div>
