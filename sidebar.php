@@ -68,6 +68,28 @@
             </div>
         </div>
     </li>
+    
+    <li class="nav-item <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php'])) echo 'active'; ?>">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseQuality" aria-expanded="true"
+            aria-controls="collapseQuality">
+            <i class="fas fa-chart-area"></i>
+            <span>Quality</span>
+        </a>
+        <div id="collapseQuality" class="collapse <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item <?php if($current_page == 'qualityPassingRate.php') echo 'active'; ?>" href="qualityPassingRate.php">Passing Rate</a>
+                <a class="collapse-item <?php if($current_page == 'qualityLeastLearned.php') echo 'active'; ?>" href="qualityLeastLearned.php">Least Learned</a>
+                <a class="collapse-item <?php if($current_page == 'qualityALS.php') echo 'active'; ?>" href="qualityALS.php">ALS</a>
+                <a class="collapse-item <?php if($current_page == 'qualityReading.php') echo 'active'; ?>" href="qualityReading.php">Reading</a>
+                <a class="collapse-item <?php if($current_page == 'qualityNonNumerates.php') echo 'active'; ?>" href="qualityNonNumerates.php">Non-numerates</a>
+                <a class="collapse-item <?php if($current_page == 'qualityPromoted.php') echo 'active'; ?>" href="qualityPromoted.php">Promoted</a>
+                <a class="collapse-item <?php if($current_page == 'qualityIS.php') echo 'active'; ?>" href="qualityIS.php">Instructional Supervison</a>
+                <a class="collapse-item <?php if($current_page == 'qualityTeachers.php') echo 'active'; ?>" href="qualityTeachers.php">Teachers</a>
+                <a class="collapse-item <?php if($current_page == 'qualityEnrollees.php') echo 'active'; ?>" href="qualityEnrollees.php">Enrollees</a>
+                <a class="collapse-item <?php if($current_page == 'qualityResources.php') echo 'active'; ?>" href="qualityResources.php">Resources</a>
+            </div>
+        </div>
+    </li>
 
     <!-- Nav Item - Pages Collapse Menu -->
     <!-- <li class="nav-item">

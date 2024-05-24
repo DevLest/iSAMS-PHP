@@ -227,35 +227,6 @@ if ($grade_level->num_rows > 0) {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <!-- <div class="tab-pane fade" id="v-pills-ae-elem" role="tabpanel" aria-labelledby="v-pills-ae-elem-tab">
-                                                <table class="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Male</th>
-                                                            <th scope="col">Female</th>
-                                                            <th scope="col">Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php echo $inputTables;?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="tab-pane fade" id="v-pills-ae-jhs" role="tabpanel" aria-labelledby="v-pills-ae-jhs-tab">
-                                                <table class="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Male</th>
-                                                            <th scope="col">Female</th>
-                                                            <th scope="col">Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php echo $inputTables;?>
-                                                    </tbody>
-                                                </table> -->
                                             </div>
                                         </div>
                                     </div>
