@@ -11,6 +11,54 @@ include_once('header.php');
 
 $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
+$year = date('Y');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $gender_male = 1;
+    $gender_female = 2;
+
+    list($type, $grade_level_id) = explode('-', $_POST['activeTab']);
+
+    if (isset($_POST[$type.'-male']) || isset($_POST[$type.'-female'])) {
+
+        foreach ($_POST[$type.'-male'] as $school_id => $count) {
+            $count = (int) $count;
+            if ($count > 0) {
+                $query = sprintf(
+                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                    mysqli_real_escape_string($conn, $school_id),
+                    mysqli_real_escape_string($conn, $grade_level_id),
+                    mysqli_real_escape_string($conn, $gender_male),
+                    mysqli_real_escape_string($conn, $type),
+                    mysqli_real_escape_string($conn, $count),
+                    mysqli_real_escape_string($conn, $_POST['quarter']),
+                    mysqli_real_escape_string($conn, $year)
+                );
+                $conn->query($query);
+            } else continue;
+        }
+
+        foreach ($_POST[$type.'-female'] as $school_id => $count) {
+            $count = (int) $count;
+            if ($count > 0) {
+                $query = sprintf(
+                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE count = '%s'",
+                    mysqli_real_escape_string($conn, $school_id),
+                    mysqli_real_escape_string($conn, $grade_level_id),
+                    mysqli_real_escape_string($conn, $gender_female),
+                    mysqli_real_escape_string($conn, $type),
+                    mysqli_real_escape_string($conn, $count),
+                    mysqli_real_escape_string($conn, $_POST['quarter']),
+                    mysqli_real_escape_string($conn, $year)
+                );
+                $conn->query($query);
+            } else continue;
+        }
+    }
+
+    $stmt->close();
+}
 
 $sql = "SELECT * FROM schools";
 
@@ -32,9 +80,17 @@ if ($schools->num_rows > 0) {
     }
 }
 
-$attendanceQuery = "SELECT * FROM attendance_summary";
+$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $currentQuarter AND year = $year";
 $attendanceResult = $conn->query($attendanceQuery);
 $attendance = $attendanceResult->fetch_assoc();
+
+$attendanceData = [];
+foreach ($attendanceResult as $row) {
+    $gender = ($row['gender'] == 1) ? 'male' : 'female';
+    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
+    $attendanceData[$keyId] = $row['count'];
+}
+$attendanceKeys = array_keys($attendanceData);
 
 $sql = "SELECT * FROM grade_level";
 $grade_level = $conn->query($sql);
@@ -67,55 +123,6 @@ if ($grade_level->num_rows > 0) {
 
         $count++;
     }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $year = date("Y");
-    $gender_male = 1;
-    $gender_female = 2;
-
-    list($type, $school_id) = explode('-', $_POST['activeTab']);
-
-    if (isset($_POST[$type.'-male']) || isset($_POST[$type.'-female'])) {
-
-        foreach ($_POST[$type.'-male'] as $grade_level_id => $count) {
-            $count = (int) $count;
-            if ($count > 0) {
-                $query = sprintf(
-                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-                    mysqli_real_escape_string($conn, $school_id),
-                    mysqli_real_escape_string($conn, $grade_level_id),
-                    mysqli_real_escape_string($conn, $gender_male),
-                    mysqli_real_escape_string($conn, $type),
-                    mysqli_real_escape_string($conn, $count),
-                    mysqli_real_escape_string($conn, $_POST['quarter']),
-                    mysqli_real_escape_string($conn, $year)
-                );
-                $conn->query($query);
-            } else continue;
-        }
-
-        foreach ($_POST[$type.'-female'] as $grade_level_id => $count) {
-            $count = (int) $count;
-            if ($count > 0) {
-                $query = sprintf(
-                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-                    mysqli_real_escape_string($conn, $school_id),
-                    mysqli_real_escape_string($conn, $grade_level_id),
-                    mysqli_real_escape_string($conn, $gender_male),
-                    mysqli_real_escape_string($conn, $type),
-                    mysqli_real_escape_string($conn, $count),
-                    mysqli_real_escape_string($conn, $_POST['quarter']),
-                    mysqli_real_escape_string($conn, $year)
-                );
-                $conn->query($query);
-            } else continue;
-        }
-    }
-
-    $stmt->close();
-    $conn->close();
 }
 ?>
 
@@ -478,14 +485,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function activeTab(tab) {
             $('#activeTab').val(tab);
+            lockFields();
         }
 
-        $(document).ready(function(){
-            function updateTotal(row) {
-                var male = parseInt(row.find('input')[0].value) || 0;
-                var female = parseInt(row.find('input')[1].value) || 0;
-                row.find('.total').text(male + female);
+        function lockFields(){
+            var activeTab = $('#activeTab').val().split('-')[0];
+            var activeTabGrade = $('#activeTab').val().split('-')[1];
+            
+            $('table input').each(function() {
+                this.value = 0;
+            });
+            
+            for (var i = 0; i < keys.length; i++) {
+                var parts = keys[i].split('-');
+                var gender = parts[0];
+                var type = parts[1];
+                var gradeLevel = parts[2];
+                var schoolId = parts[3];
+                var inputName = type + '-' + gender + '[' + schoolId + ']';
+                var inputBox = document.querySelector('input[name="' + inputName + '"]');
+                console.log(inputBox)
+                if (gradeLevel === activeTabGrade && type === activeTab) {
+                    if (inputBox) {
+                        inputBox.disabled = true;
+                        inputBox.value = attendanceData[keys[i]];
+                        updateTotal($(inputBox).closest('tr'));
+                    }
+                } else {
+                    inputBox.disabled = false;
+                    inputBox.value = 0;
+                    updateTotal($(inputBox).closest('tr'));
+                }
             }
+        }
+        
+        function updateTotal(row) {
+            var male = parseInt(row.find('input')[0].value) || 0;
+            var female = parseInt(row.find('input')[1].value) || 0;
+            row.find('.total').text(male + female);
+        }
+        
+        var keys = <?php echo json_encode($attendanceKeys); ?>;
+        var attendanceData = <?php echo json_encode($attendanceData); ?>;
+
+        $(document).ready(function(){
 
             function clearZero(input) {
                 if (input.find('input')[0].value == '0') {
@@ -519,6 +562,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $(this).parent().addClass("active");
 
                 $('#activeTab').val(tabId+"-1");
+                lockFields();
             });
 
             $(".nav-item-custom:first-child a").click();
