@@ -9,7 +9,7 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
-$sql = "SELECT * FROM users";
+$sql = "SELECT users.*, roles.description FROM users JOIN roles ON users.role = roles.id ORDER BY users.created_at DESC";
 $result = $conn->query($sql);
 ?>
 
@@ -71,8 +71,12 @@ $result = $conn->query($sql);
                                                         <tr>
                                                             <td>".$row["username"]."</td>
                                                             <td>".$row["first_name"]. " ".$row["last_name"]."</td>
-                                                            <td>".$row["role"]."</td>
-                                                            <td></td>
+                                                            <td>".$row["description"]."</td>
+                                                            <td>";
+                                                    echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
+                                                            <a href='addUser.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>
+                                                            <a href='addUser.php?id=".$row["id"]."&type=delete' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i> Delete</a>" : "";
+                                                    echo " </td>
                                                         </tr>
                                                     ";
                                                 }
@@ -94,7 +98,7 @@ $result = $conn->query($sql);
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Your Website 2021</span>
+                        <span>Copyright &copy; YUMI 2024</span>
                     </div>
                 </div>
             </footer>

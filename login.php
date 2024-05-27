@@ -27,7 +27,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 
     if(empty($username_err) && empty($password_err)){
-        $sql = "SELECT id, username, first_name, last_name, password FROM users WHERE username = ?";
+        $sql = "SELECT id, username, first_name, last_name, password, role FROM users WHERE username = ?";
 
         if($stmt = $conn->prepare($sql)){
             $stmt->bind_param("s", $param_username);
@@ -38,13 +38,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $stmt->store_result();
 
                 if($stmt->num_rows == 1){
-                    $stmt->bind_result($id, $username, $first_name, $last_name, $hashed_password);
+                    $stmt->bind_result($id, $username, $first_name, $last_name, $hashed_password, $role);
                     if($stmt->fetch()){
                         if(md5($password) === $hashed_password){
                             session_start();
                             $_SESSION["user_id"] = $id;
                             $_SESSION["username"] = $username;
                             $_SESSION["fullname"] = $first_name . " " . $last_name;
+                            $_SESSION["role"] = $role;
 
                             header("location: dashboard.php");
                         } else{

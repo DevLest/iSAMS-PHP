@@ -32,8 +32,9 @@
         </a>
         <div id="collapseUser" class="collapse <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <!-- <h6 class="collapse-header">Custom Components:</h6> -->
-                <a class="collapse-item <?php if($current_page == 'addUser.php') echo 'active'; ?>" href="addUser.php">Add</a>
+                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                    <a class="collapse-item <?php if($current_page == 'addUser.php') echo 'active'; ?>" href="addUser.php">Add</a>
+                <?php endif; ?>
                 <a class="collapse-item <?php if($current_page == 'user-list.php') echo 'active'; ?>" href="user-list.php">List</a>
             </div>
         </div>
@@ -47,8 +48,9 @@
         </a>
         <div id="collapseSchool" class="collapse <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <!-- <h6 class="collapse-header">Custom Components:</h6> -->
-                <a class="collapse-item <?php if($current_page == 'addSchool.php') echo 'active'; ?>" href="addSchool.php">Add</a>
+                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                    <a class="collapse-item <?php if($current_page == 'addSchool.php') echo 'active'; ?>" href="addSchool.php">Add</a>
+                <?php endif; ?>
                 <a class="collapse-item <?php if($current_page == 'school-list.php') echo 'active'; ?>" href="school-list.php">List</a>
             </div>
         </div>

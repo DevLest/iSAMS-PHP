@@ -9,36 +9,26 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
-$sql = "SELECT * FROM schools";
+$sql = "SELECT * FROM schools ORDER BY name ASC";
 $result = $conn->query($sql);
 ?>
 
 <body id="page-top">
-
-    <!-- Page Wrapper -->
     <div id="wrapper">
         <?php include_once "sidebar.php"; ?>
 
-        <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
-            <!-- Main Content -->
             <div id="content">
                 <?php include_once "navbar.php"?>
-                <!-- Begin Page Content -->
                 <div class="container-fluid">
-
-                    <!-- Begin Page Content -->
                     <div class="container-fluid">
 
-                        
-                    <!-- Page Heading -->
                     <h1 class="h3 mb-2 text-gray-800">School List</h1>
                     <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below.
                         For more information about DataTables, please visit the <a target="_blank"
                             href="https://datatables.net">official DataTables documentation</a>.</p>
 
-                    <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Active Schools</h6>
@@ -69,7 +59,11 @@ $result = $conn->query($sql);
                                                         <tr>
                                                             <td>".$row["name"]."</td>
                                                             <td>".$row["address"]."</td>
-                                                            <td></td>
+                                                            <td>";
+                                                    echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
+                                                            <a href='addSchool.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>
+                                                            <a href='addSchool.php?id=".$row["id"]."&type=delete' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i> Delete</a>" : "";
+                                                    echo " </td>
                                                         </tr>
                                                     ";
                                                 }
@@ -91,7 +85,7 @@ $result = $conn->query($sql);
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Your Website 2021</span>
+                        <span>Copyright &copy; YUMI 2024</span>
                     </div>
                 </div>
             </footer>
