@@ -13,10 +13,17 @@ $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
 $year = date('Y');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES (?, ?, ?, ?, ?, ?, ?)");
+if (isset($_POST['quarter'])) {
+    $selectedQuarter = $_POST['quarter'];
+} else {
+    $selectedQuarter = $currentQuarter; // default to current quarter if none selected
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $gender_male = 1;
     $gender_female = 2;
+    $current_user_id = $_SESSION['user_id'];
 
     list($type, $grade_level_id) = explode('-', $_POST['activeTab']);
 
@@ -26,15 +33,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $count = (int) $count;
             if ($count > 0) {
                 $query = sprintf(
-                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                    "SELECT * FROM attendance_summary WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s'",
                     mysqli_real_escape_string($conn, $school_id),
                     mysqli_real_escape_string($conn, $grade_level_id),
                     mysqli_real_escape_string($conn, $gender_male),
                     mysqli_real_escape_string($conn, $type),
-                    mysqli_real_escape_string($conn, $count),
                     mysqli_real_escape_string($conn, $_POST['quarter']),
                     mysqli_real_escape_string($conn, $year)
                 );
+                $result = $conn->query($query);
+                if ($result->num_rows > 0) {
+                    $query = sprintf(
+                        "UPDATE attendance_summary SET count = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s' AND last_user_save = '%s'",
+                        mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $school_id),
+                        mysqli_real_escape_string($conn, $grade_level_id),
+                        mysqli_real_escape_string($conn, $gender_male),
+                        mysqli_real_escape_string($conn, $type),
+                        mysqli_real_escape_string($conn, $_POST['quarter']),
+                        mysqli_real_escape_string($conn, $year),
+                        mysqli_real_escape_string($conn, $current_user_id)
+                    );
+                } else {
+                    $query = sprintf(
+                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                        mysqli_real_escape_string($conn, $school_id),
+                        mysqli_real_escape_string($conn, $grade_level_id),
+                        mysqli_real_escape_string($conn, $gender_male),
+                        mysqli_real_escape_string($conn, $type),
+                        mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $_POST['quarter']),
+                        mysqli_real_escape_string($conn, $year),
+                        mysqli_real_escape_string($conn, $current_user_id)
+                    );
+                }
                 $conn->query($query);
             } else continue;
         }
@@ -43,15 +75,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $count = (int) $count;
             if ($count > 0) {
                 $query = sprintf(
-                    "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE count = '%s'",
+                    "SELECT * FROM attendance_summary WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s'",
                     mysqli_real_escape_string($conn, $school_id),
                     mysqli_real_escape_string($conn, $grade_level_id),
                     mysqli_real_escape_string($conn, $gender_female),
                     mysqli_real_escape_string($conn, $type),
-                    mysqli_real_escape_string($conn, $count),
                     mysqli_real_escape_string($conn, $_POST['quarter']),
                     mysqli_real_escape_string($conn, $year)
                 );
+                $result = $conn->query($query);
+                if ($result->num_rows > 0) {
+                    $query = sprintf(
+                        "UPDATE attendance_summary SET count = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s' AND last_user_save = '%s'",
+                        mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $school_id),
+                        mysqli_real_escape_string($conn, $grade_level_id),
+                        mysqli_real_escape_string($conn, $gender_female),
+                        mysqli_real_escape_string($conn, $type),
+                        mysqli_real_escape_string($conn, $_POST['quarter']),
+                        mysqli_real_escape_string($conn, $year),
+                        mysqli_real_escape_string($conn, $current_user_id)
+                    );
+                } else {
+                    $query = sprintf(
+                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                        mysqli_real_escape_string($conn, $school_id),
+                        mysqli_real_escape_string($conn, $grade_level_id),
+                        mysqli_real_escape_string($conn, $gender_female),
+                        mysqli_real_escape_string($conn, $type),
+                        mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $_POST['quarter']),
+                        mysqli_real_escape_string($conn, $year),
+                        mysqli_real_escape_string($conn, $current_user_id)
+                    );
+                }
                 $conn->query($query);
             } else continue;
         }
@@ -80,7 +137,7 @@ if ($schools->num_rows > 0) {
     }
 }
 
-$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $currentQuarter AND year = $year";
+$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $selectedQuarter AND year = $year";
 $attendanceResult = $conn->query($attendanceQuery);
 $attendance = $attendanceResult->fetch_assoc();
 
@@ -228,14 +285,15 @@ if ($grade_level->num_rows > 0) {
                             <div class="col-md-6">
                                 <label for="quarter">Select Quarter:</label>
                                 <select id="quarter" name="quarter">
-                                    <option value="1" <?php if ($currentQuarter == 1) echo 'selected'; ?>>1st</option>
-                                    <option value="2" <?php if ($currentQuarter == 2) echo 'selected'; ?>>2nd</option>
-                                    <option value="3" <?php if ($currentQuarter == 3) echo 'selected'; ?>>3rd</option>
-                                    <option value="4" <?php if ($currentQuarter == 4) echo 'selected'; ?>>4th</option>
+                                    <option value="1" <?php if ($selectedQuarter == 1) echo 'selected'; ?>>1st</option>
+                                    <option value="2" <?php if ($selectedQuarter == 2) echo 'selected'; ?>>2nd</option>
+                                    <option value="3" <?php if ($selectedQuarter == 3) echo 'selected'; ?>>3rd</option>
+                                    <option value="4" <?php if ($selectedQuarter == 4) echo 'selected'; ?>>4th</option>
                                 </select>
+                                <button type="submit" class="btn btn-secondary" name="filter">Filter</button>
                             </div>
                             <div class="col-md-6 text-right">
-                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="submit" class="btn btn-primary" name="save">Save</button>
                             </div>
                         </div>
                         
@@ -276,7 +334,7 @@ if ($grade_level->num_rows > 0) {
                             </div>
                         </nav>
                         
-                        <input type="text" name="activeTab" id="activeTab" value="blp">
+                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content-als" class="content-tab">
@@ -494,6 +552,7 @@ if ($grade_level->num_rows > 0) {
             
             $('table input').each(function() {
                 this.value = 0;
+                this.disabled = false;
             });
             
             for (var i = 0; i < keys.length; i++) {
@@ -504,17 +563,12 @@ if ($grade_level->num_rows > 0) {
                 var schoolId = parts[3];
                 var inputName = type + '-' + gender + '[' + schoolId + ']';
                 var inputBox = document.querySelector('input[name="' + inputName + '"]');
-                console.log(inputBox)
                 if (gradeLevel === activeTabGrade && type === activeTab) {
                     if (inputBox) {
                         inputBox.disabled = true;
                         inputBox.value = attendanceData[keys[i]];
                         updateTotal($(inputBox).closest('tr'));
                     }
-                } else {
-                    inputBox.disabled = false;
-                    inputBox.value = 0;
-                    updateTotal($(inputBox).closest('tr'));
                 }
             }
         }
@@ -566,6 +620,12 @@ if ($grade_level->num_rows > 0) {
             });
 
             $(".nav-item-custom:first-child a").click();
+        });
+
+        $(document).on('dblclick', 'input[type="number"]', function() {
+            if ($(this).is(':disabled')) {
+                alert('Request Access Needed to be able to edit this field.');
+            }
         });
     </script>
 

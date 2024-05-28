@@ -42,16 +42,20 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   `count` int DEFAULT NULL,
   `quarter` int DEFAULT NULL,
   `year` int DEFAULT NULL,
+  `last_user_save` int NOT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`summary_id`),
-  KEY `FK_attendance_summary_schools` (`school_id`),
-  KEY `FK_attendance_summary_grade_level` (`grade_level_id`),
+  KEY `type` (`type`) USING BTREE,
+  KEY `quarter` (`quarter`) USING BTREE,
+  KEY `year` (`year`) USING BTREE,
+  KEY `school_id` (`school_id`) USING BTREE,
+  KEY `grade_level_id` (`grade_level_id`) USING BTREE,
+  KEY `FK_attendance_summary_users` (`last_user_save`),
   CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),
-  CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table isams.attendance_summary: ~0 rows (approximately)
+  CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
+  CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping structure for table isams.grade_level
 CREATE TABLE IF NOT EXISTS `grade_level` (
@@ -111,11 +115,11 @@ CREATE TABLE IF NOT EXISTS `schools` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table isams.schools: ~20 rows (approximately)
 INSERT INTO `schools` (`id`, `name`, `address`, `updated_at`, `created_at`) VALUES
-	(1, 'Amontay Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
+	(1, 'Amontay Elementary School', 'Brgy. Amontay, Binalbagan, Negros Occidental', '2024-05-27 09:02:04', '2024-04-04 05:24:26'),
 	(2, 'Binalbagan Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
 	(3, 'Binalbagan South Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
 	(4, 'Canmoros Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
@@ -145,7 +149,7 @@ CREATE TABLE IF NOT EXISTS `subjects` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.subjects: ~0 rows (approximately)
+-- Dumping data for table isams.subjects: ~8 rows (approximately)
 INSERT INTO `subjects` (`id`, `name`, `updated_at`, `current_timestamp`) VALUES
 	(1, 'Math', '2024-05-23 12:32:57', '2024-05-23 12:32:57'),
 	(2, 'Filipino', '2024-05-23 12:33:04', '2024-05-23 12:33:04'),
@@ -170,12 +174,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   KEY `FK_users_roles` (`role`),
   CONSTRAINT `FK_users_roles` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table isams.users: ~0 rows (approximately)
 INSERT INTO `users` (`id`, `username`, `password`, `first_name`, `last_name`, `role`, `updated_at`, `created_at`) VALUES
-	(5, 'bonbon', '5f4dcc3b5aa765d61d8327deb882cf99', 'Frederson', 'Ebra', 1, '2024-03-18 10:59:36', '2024-03-18 10:59:36'),
-	(6, 'bea', '25d55ad283aa400af464c76d713c07ad', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-03-27 08:31:14');
+	(1, 'bon', '5f4dcc3b5aa765d61d8327deb882cf99', 'Frederson', 'Ebra', 1, '2024-03-18 10:59:36', '2024-05-27 08:46:29'),
+	(2, 'bea', '5f4dcc3b5aa765d61d8327deb882cf99', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-05-27 08:46:18');
+	(3, 'carlo', '5f4dcc3b5aa765d61d8327deb882cf99', 'Carlo', 'Carlo', 2, '2024-03-27 08:31:14', '2024-05-27 08:46:18');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
