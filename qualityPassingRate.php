@@ -215,7 +215,7 @@ if ($grade_level->num_rows > 0) {
                             </div>
                         </nav>
                         
-                        <input type="text" name="activeTab" id="activeTab" value="blp">
+                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content1" class="content-tab">

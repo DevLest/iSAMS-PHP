@@ -182,7 +182,7 @@ if ($grade_level->num_rows > 0) {
                             <div class="collapse navbar-collapse" id="navbarNav">
                                 <ul class="navbar-nav">
                                     <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="tab1">ASL</a>
+                                        <a class="nav-link" href="#" id="tab1">ALS</a>
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="tab2">PARDOS SARDOS</a>
@@ -215,7 +215,7 @@ if ($grade_level->num_rows > 0) {
                             </div>
                         </nav>
                         
-                        <input type="text" name="activeTab" id="activeTab" value="blp">
+                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content1" class="content-tab">

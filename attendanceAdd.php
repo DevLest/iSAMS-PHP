@@ -277,7 +277,7 @@ if ($grade_level->num_rows > 0) {
 
                     <div class="container-fluid">
 
-                    <h1 class="h3 mb-2 text-gray-800">Encoding Tables</h1>
+                    <h1 class="h3 mb-2 text-gray-800">Data Encoding</h1>
                     <p class="mb-4">Encode Population or Data head count for Analysis and Comparison.</p>
                     
                     <form action="attendanceAdd.php" method="post">
@@ -329,6 +329,12 @@ if ($grade_level->num_rows > 0) {
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="overweight">Overweight</a>
+                                    </li>
+                                    <li class="nav-item-custom">
+                                        <a class="nav-link" href="#" id="no_classes">Classes</a>
+                                    </li>
+                                    <li class="nav-item-custom">
+                                        <a class="nav-link" href="#" id="modules">Modules</a>
                                     </li>
                                 </ul>
                             </div>
@@ -508,6 +514,38 @@ if ($grade_level->num_rows > 0) {
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent10">
                                                 <?php echo str_replace('dynamicId', 'overweight', $grade_level_inputs); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="content-no_classes" class="content-tab">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
+                                                <?php echo str_replace('dynamicId', 'no_classes', $grade_levels); ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-9">
+                                            <div class="tab-content" id="v-pills-tabContent11">
+                                                <?php echo str_replace('dynamicId', 'no_classes', $grade_level_inputs); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="content-modules" class="content-tab">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="nav flex-column nav-pills" id="v-pills-tab12" role="tablist" aria-orientation="vertical">
+                                                <?php echo str_replace('dynamicId', 'modules', $grade_levels); ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-9">
+                                            <div class="tab-content" id="v-pills-tabContent12">
+                                                <?php echo str_replace('dynamicId', 'modules', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
