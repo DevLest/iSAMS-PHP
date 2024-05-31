@@ -31,7 +31,7 @@
             <span>Users</span>
         </a>
         <div id="collapseUser" class="collapse <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+            <div class="bg-warning py-2 collapse-inner rounded">
                 <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
                     <a class="collapse-item <?php if($current_page == 'addUser.php') echo 'active'; ?>" href="addUser.php">Add</a>
                 <?php endif; ?>
@@ -47,7 +47,7 @@
             <span>Schools</span>
         </a>
         <div id="collapseSchool" class="collapse <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+            <div class="bg-warning py-2 collapse-inner rounded">
                 <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
                     <a class="collapse-item <?php if($current_page == 'addSchool.php') echo 'active'; ?>" href="addSchool.php">Add</a>
                 <?php endif; ?>
@@ -56,29 +56,32 @@
         </div>
     </li>
     
+    <hr class="sidebar-divider">
 
-    <li class="nav-item <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php"])) echo 'active'; ?>">
+    <li class="nav-item <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns'])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAttendance" aria-expanded="true"
             aria-controls="collapseAttendance">
             <i class="fas fa-fw fa-list-alt"></i>
-            <span>Attendance</span>
+            <span>Access</span>
         </a>
-        <div id="collapseAttendance" class="collapse <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+        <div id="collapseAttendance" class="collapse <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-warning py-2 collapse-inner rounded">
                 <a class="collapse-item <?php if($current_page == 'attendanceComparative.php') echo 'active'; ?>" href="attendanceComparative.php">Comparative Data</a>
                 <a class="collapse-item <?php if($current_page == 'attendanceAdd.php') echo 'active'; ?>" href="attendanceAdd.php">Encode</a>
+                <hr class="sidebar-divider">
+                <a class="collapse-item <?php if($current_page == 'attendanceConcerns.php') echo 'active'; ?>" href="attendanceConcerns.php">Issues and Concerns</a>
             </div>
         </div>
     </li>
     
-    <li class="nav-item <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php'])) echo 'active'; ?>">
+    <li class="nav-item <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php', 'qualityConcerns'])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseQuality" aria-expanded="true"
             aria-controls="collapseQuality">
             <i class="fas fa-chart-area"></i>
             <span>Quality</span>
         </a>
-        <div id="collapseQuality" class="collapse <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+        <div id="collapseQuality" class="collapse <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php', 'qualityConcerns'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-warning py-2 collapse-inner rounded">
                 <a class="collapse-item <?php if($current_page == 'qualityPassingRate.php') echo 'active'; ?>" href="qualityPassingRate.php">Passing Rate</a>
                 <a class="collapse-item <?php if($current_page == 'qualityLeastLearned.php') echo 'active'; ?>" href="qualityLeastLearned.php">Least Learned</a>
                 <a class="collapse-item <?php if($current_page == 'qualityALS.php') echo 'active'; ?>" href="qualityALS.php">ALS</a>
@@ -89,6 +92,40 @@
                 <a class="collapse-item <?php if($current_page == 'qualityTeachers.php') echo 'active'; ?>" href="qualityTeachers.php">Teachers</a>
                 <a class="collapse-item <?php if($current_page == 'qualityEnrollees.php') echo 'active'; ?>" href="qualityEnrollees.php">Enrollees</a>
                 <a class="collapse-item <?php if($current_page == 'qualityResources.php') echo 'active'; ?>" href="qualityResources.php">Resources</a>
+                <hr class="sidebar-divider">
+                <a class="collapse-item <?php if($current_page == 'qualityConcerns.php') echo 'active'; ?>" href="qualityConcerns.php">Issues and Concerns</a>
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item <?php if(in_array($current_page, ["equityComparative.php", "equityAdd.php", 'equityConcerns'])) echo 'active'; ?>">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#equity" aria-expanded="true"
+            aria-controls="equity">
+            <i class="fas fa-fw fa-list-alt"></i>
+            <span>Equity</span>
+        </a>
+        <div id="equity" class="collapse <?php if(in_array($current_page, ["equityComparative.php", "equityAdd.php", 'equityConcerns'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-warning py-2 collapse-inner rounded">
+                <a class="collapse-item <?php if($current_page == 'equityComparative.php') echo 'active'; ?>" href="equityComparative.php">Comparative Data</a>
+                <a class="collapse-item <?php if($current_page == 'equityAdd.php') echo 'active'; ?>" href="equityAdd.php">Encode</a>
+                <hr class="sidebar-divider">
+                <a class="collapse-item <?php if($current_page == 'equityConcerns.php') echo 'active'; ?>" href="equityConcerns.php">Issues and Concerns</a>
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item <?php if(in_array($current_page, ["rwbComparative.php", "rwbAdd.php"])) echo 'active'; ?>">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#rwb" aria-expanded="true"
+            aria-controls="rwb">
+            <i class="fas fa-fw fa-list-alt"></i>
+            <span>RWB</span>
+        </a>
+        <div id="rwb" class="collapse <?php if(in_array($current_page, ["equityDisplacedLearners.php", "equityBullyingChildAbuse.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-warning py-2 collapse-inner rounded">
+                <a class="collapse-item <?php if($current_page == 'equityDisplacedLearners.php') echo 'active'; ?>" href="equityDisplacedLearners.php">Displaced Learners</a>
+                <a class="collapse-item <?php if($current_page == 'equityBullyingChildAbuse.php') echo 'active'; ?>" href="equityBullyingChildAbuse.php">Bullying & Child Abuse</a>
+                <hr class="sidebar-divider">
+                <a class="collapse-item <?php if($current_page == 'equityConcerns.php') echo 'active'; ?>" href="equityConcerns.php">Issues and Concerns</a>
             </div>
         </div>
     </li>
