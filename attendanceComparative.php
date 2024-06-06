@@ -16,7 +16,7 @@ $year = date('Y');
 if (isset($_POST['quarter'])) {
     $selectedQuarter = $_POST['quarter'];
 } else {
-    $selectedQuarter = $currentQuarter; // default to current quarter if none selected
+    $selectedQuarter = $currentQuarter;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
@@ -24,11 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $gender_male = 1;
     $gender_female = 2;
     $current_user_id = $_SESSION['user_id'];
-
 }
 
 $schoolYearsql = "SELECT * FROM school_year";
 $schoolYearResult = $conn->query($schoolYearsql);
+$syrows = "";
+if ($schoolYearResult->num_rows > 0) {
+    while($row = $schoolYearResult->fetch_assoc()) {
+        $syrows .= "<th scope='col'> S.Y ".$row['start_year']." - ".$row['end_year']."</th>";
+    }
+}
 
 $sql = "SELECT * FROM schools";
 $schools = $conn->query($sql);
@@ -39,10 +44,15 @@ if ($schools->num_rows > 0) {
     while($row = $schools->fetch_assoc()) {
         $inputTables .= "
             <tr>
-                <td>".$row["name"]."</td>
-                <td><input type='number' class='form-control form-control-sm' name='dynamicId-male[".$row['id']."]' value='0'></td>
-                <td><input type='number' class='form-control form-control-sm' name='dynamicId-female[".$row['id']."]' value='0'></td>
-                <td class='total'>0</td>
+                <td>".$row["name"]."</td>";
+                
+            if ($schoolYearResult->num_rows > 0) {
+                while($SYrowreturn = $schoolYearResult->fetch_assoc()) {
+                    $inputTables .= "<td><input type='number' class='form-control form-control-sm' name='year-".$SYrowreturn['start_year']."-".$SYrowreturn['end_year']."[".$row['id']."]' value='0'></td>";
+                }
+            }
+
+        $inputTables .= "
             </tr>
         ";
     }
@@ -78,9 +88,7 @@ if ($grade_level->num_rows > 0) {
                                     <thead>
                                         <tr>
                                             <th scope='col'>Name</th>
-                                            <th scope='col'>Male</th>
-                                            <th scope='col'>Female</th>
-                                            <th scope='col'>Total</th>
+                                            ".$syrows."
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -253,9 +261,9 @@ if ($grade_level->num_rows > 0) {
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col">Name</th>
-                                                                <th scope="col">Male</th>
-                                                                <th scope="col">Female</th>
-                                                                <th scope="col">Total</th>
+                                                                <?php
+                                                                    echo $syrows;
+                                                                ?>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -466,7 +474,7 @@ if ($grade_level->num_rows > 0) {
             var activeTabGrade = $('#activeTab').val().split('-')[1];
             
             $('table input').each(function() {
-                this.value = 0;
+                // this.value = 0;
                 this.disabled = false;
             });
             
@@ -481,7 +489,7 @@ if ($grade_level->num_rows > 0) {
                 if (gradeLevel === activeTabGrade && type === activeTab) {
                     if (inputBox) {
                         inputBox.disabled = true;
-                        inputBox.value = attendanceData[keys[i]];
+                        // inputBox.value = attendanceData[keys[i]];
                         updateTotal($(inputBox).closest('tr'));
                     }
                 }
@@ -489,22 +497,22 @@ if ($grade_level->num_rows > 0) {
         }
         
         function updateTotal(row) {
-            var male = parseInt(row.find('input')[0].value) || 0;
-            var female = parseInt(row.find('input')[1].value) || 0;
-            row.find('.total').text(male + female);
+            // var male = parseInt(row.find('input')[0].value) || 0;
+            // var female = parseInt(row.find('input')[1].value) || 0;
+            // row.find('.total').text(male + female);
         }
         
         var keys = <?php echo json_encode($attendanceKeys); ?>;
-        var attendanceData = <?php echo json_encode($attendanceData); ?>;
+        // var attendanceData = <?php echo json_encode($attendanceData); ?>;
 
         $(document).ready(function(){
 
             function clearZero(input) {
-                if (input.find('input')[0].value == '0') {
-                    input.find('input')[0].value = '';
-                } else if (input.find('input')[0].value < 1 || input.find('input')[0].value == "") {
-                    input.find('input')[0].value = '0';
-                }
+                // if (input.find('input')[0].value == '0') {
+                //     input.find('input')[0].value = '';
+                // } else if (input.find('input')[0].value < 1 || input.find('input')[0].value == "") {
+                //     input.find('input')[0].value = '0';
+                // }
             }
 
             $('tbody tr').each(function() {
@@ -535,12 +543,6 @@ if ($grade_level->num_rows > 0) {
             });
 
             $(".nav-item-custom:first-child a").click();
-        });
-
-        $(document).on('dblclick', 'input[type="number"]', function() {
-            if ($(this).is(':disabled')) {
-                alert('Request Access Needed to be able to edit this field.');
-            }
         });
     </script>
 

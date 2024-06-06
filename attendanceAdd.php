@@ -137,15 +137,17 @@ if ($schools->num_rows > 0) {
     }
 }
 
-$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $selectedQuarter AND year = $year";
+$attendanceQuery = "SELECT attendance_summary.*, users.first_name, users.last_name FROM attendance_summary INNER JOIN users on users.id = attendance_summary.last_user_save WHERE quarter = $selectedQuarter AND year = $year";
 $attendanceResult = $conn->query($attendanceQuery);
 $attendance = $attendanceResult->fetch_assoc();
 
 $attendanceData = [];
+$lastUserSave = "";
 foreach ($attendanceResult as $row) {
     $gender = ($row['gender'] == 1) ? 'male' : 'female';
     $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
     $attendanceData[$keyId] = $row['count'];
+    $lastUserSave = $row['last_name'].', '.$row['first_name'];
 }
 $attendanceKeys = array_keys($attendanceData);
 
@@ -293,6 +295,7 @@ if ($grade_level->num_rows > 0) {
                                 <button type="submit" class="btn btn-secondary" name="filter">Filter</button>
                             </div>
                             <div class="col-md-6 text-right">
+                                Last Edited By: <?php echo $lastUserSave;?>
                                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                             </div>
                         </div>
@@ -578,8 +581,10 @@ if ($grade_level->num_rows > 0) {
     <?php include_once "footer.php"?>
 
     <script>
-
+        var keys = <?php echo json_encode($attendanceKeys); ?>;
+        var attendanceData = <?php echo json_encode($attendanceData); ?>;
         var role = <?php echo $_SESSION['role']?>;
+
         function activeTab(tab) {
             $('#activeTab').val(tab);
             lockFields();
@@ -620,9 +625,6 @@ if ($grade_level->num_rows > 0) {
             var female = parseInt(row.find('input')[1].value) || 0;
             row.find('.total').text(male + female);
         }
-        
-        var keys = <?php echo json_encode($attendanceKeys); ?>;
-        var attendanceData = <?php echo json_encode($attendanceData); ?>;
 
         $(document).ready(function(){
 
@@ -662,12 +664,6 @@ if ($grade_level->num_rows > 0) {
             });
 
             $(".nav-item-custom:first-child a").click();
-        });
-
-        $(document).on('dblclick', 'input[type="number"]', function() {
-            if ($(this).is(':disabled')) {
-                alert('Request Access Needed to be able to edit this field.');
-            }
         });
     </script>
 
