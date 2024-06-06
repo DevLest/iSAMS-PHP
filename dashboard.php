@@ -8,6 +8,16 @@ if(!isset($_SESSION['user_id'])) {
 
 require_once "connection/db.php";
 include_once('header.php');
+
+$sql = "SELECT 
+        SUM(CASE WHEN type = 'als' THEN count ELSE 0 END) AS total_als,
+        SUM(CASE WHEN type = 'tardiness' THEN count ELSE 0 END) AS total_tardiness,
+        SUM(CASE WHEN type = 'absenteeism' THEN count ELSE 0 END) AS total_absentism,
+        SUM(CASE WHEN type = 'severly_wasted' THEN count ELSE 0 END) AS total_severely_wasted
+        FROM attendance_summary
+        WHERE quarter = 2;";
+$sum = $conn->query($sql);
+$sum = $sum->fetch_assoc()
 ?>
 
 <body id="page-top">
@@ -42,8 +52,8 @@ include_once('header.php');
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                ALS Attendance (Monthly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$40,000</div>
+                                                ALS Attendance (Quarterly)</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_als'];?></div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -60,8 +70,8 @@ include_once('header.php');
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Tardiness (Monthly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$215,000</div>
+                                                Tardiness (Quarterly)</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_tardiness'];?></div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -77,11 +87,11 @@ include_once('header.php');
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Absenteeism (Weekly)
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Absenteeism (Quarterly)
                                             </div>
                                             <div class="row no-gutters align-items-center">
                                                 <div class="col-auto">
-                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
+                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $sum['total_absentism'];?></div>
                                                 </div>
                                                 <div class="col">
                                                     <div class="progress progress-sm mr-2">
@@ -108,7 +118,7 @@ include_once('header.php');
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                                 Severly Wasted</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_severely_wasted'];?></div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-comments fa-2x text-gray-300"></i>
