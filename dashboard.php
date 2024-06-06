@@ -9,13 +9,17 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
+$currentMonth = date('n');
+$currentQuarter = ceil($currentMonth / 3);
+$year = date('Y');
+
 $sql = "SELECT 
         SUM(CASE WHEN type = 'als' THEN count ELSE 0 END) AS total_als,
         SUM(CASE WHEN type = 'tardiness' THEN count ELSE 0 END) AS total_tardiness,
         SUM(CASE WHEN type = 'absenteeism' THEN count ELSE 0 END) AS total_absentism,
         SUM(CASE WHEN type = 'severly_wasted' THEN count ELSE 0 END) AS total_severely_wasted
         FROM attendance_summary
-        WHERE quarter = 2;";
+        WHERE quarter = $currentQuarter;";
 $sum = $conn->query($sql);
 $sum = $sum->fetch_assoc()
 ?>

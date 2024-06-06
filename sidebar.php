@@ -62,13 +62,13 @@
         Monitoring Evaluation Adj
     </div>
 
-    <li class="nav-item <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns'])) echo 'active'; ?>">
+    <li class="nav-item <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns.php'])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAttendance" aria-expanded="true"
             aria-controls="collapseAttendance">
             <i class="fas fa-fw fa-list-alt"></i>
             <span>Access</span>
         </a>
-        <div id="collapseAttendance" class="collapse <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="collapseAttendance" class="collapse <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns.php'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-warning py-2 collapse-inner rounded">
                 <a class="collapse-item <?php if($current_page == 'attendanceComparative.php') echo 'active'; ?>" href="attendanceComparative.php">Comparative Data</a>
                 <a class="collapse-item <?php if($current_page == 'attendanceAdd.php') echo 'active'; ?>" href="attendanceAdd.php">Encode</a>

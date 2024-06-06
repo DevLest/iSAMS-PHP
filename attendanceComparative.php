@@ -41,14 +41,18 @@ $schools = $conn->query($sql);
 $inputTables = "";
 
 if ($schools->num_rows > 0) {
+    $schoolYearsql = "SELECT * FROM school_year";
+    $schoolYearResult = $conn->query($schoolYearsql);
+    $SYrowreturns = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
+    
     while($row = $schools->fetch_assoc()) {
         $inputTables .= "
             <tr>
                 <td>".$row["name"]."</td>";
                 
             if ($schoolYearResult->num_rows > 0) {
-                while($SYrowreturn = $schoolYearResult->fetch_assoc()) {
-                    $inputTables .= "<td><input type='number' class='form-control form-control-sm' name='year-".$SYrowreturn['start_year']."-".$SYrowreturn['end_year']."[".$row['id']."]' value='0'></td>";
+                foreach ($SYrowreturns as $SYrowreturn) {
+                    $inputTables .= "<td><input type='number' class='form-control form-control-sm' name='year-".$SYrowreturn['start_year']."-".$SYrowreturn['end_year']."[".$row['id']."]' readonly></td>";
                 }
             }
 

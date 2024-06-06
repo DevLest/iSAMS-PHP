@@ -292,7 +292,7 @@ if ($grade_level->num_rows > 0) {
                                     <option value="3" <?php if ($selectedQuarter == 3) echo 'selected'; ?>>3rd</option>
                                     <option value="4" <?php if ($selectedQuarter == 4) echo 'selected'; ?>>4th</option>
                                 </select>
-                                <button type="submit" class="btn btn-secondary" name="filter">Filter</button>
+                                <button type="submit" class="btn btn-success" name="filter">Select</button>
                             </div>
                             <div class="col-md-6 text-right">
                                 Last Edited By: <?php echo $lastUserSave;?>
@@ -590,7 +590,6 @@ if ($grade_level->num_rows > 0) {
             lockFields();
         }
 
-        console.log(role)
         function lockFields(){
             var activeTab = $('#activeTab').val().split('-')[0];
             var activeTabGrade = $('#activeTab').val().split('-')[1];
