@@ -21,7 +21,7 @@
 
     <!-- Heading -->
     <div class="sidebar-heading">
-        Modules
+        Management Modules
     </div>
     
     <li class="nav-item <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'active'; ?>">
@@ -40,23 +40,27 @@
         </div>
     </li>
 
-    <li class="nav-item <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'active'; ?>">
+    <li class="nav-item <?php if(in_array($current_page, ["addSchool.php", "school-list.php", 'school-year-list.php', 'addSchoolYear.php'])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSchool" aria-expanded="true"
             aria-controls="collapseSchool">
             <i class="fas fa-fw fa-school"></i>
             <span>Schools</span>
         </a>
-        <div id="collapseSchool" class="collapse <?php if(in_array($current_page, ["addSchool.php", "school-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="collapseSchool" class="collapse <?php if(in_array($current_page, ["addSchool.php", "school-list.php", 'school-year-list.php', 'addSchoolYear.php'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-warning py-2 collapse-inner rounded">
                 <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
                     <a class="collapse-item <?php if($current_page == 'addSchool.php') echo 'active'; ?>" href="addSchool.php">Add</a>
+                    <a class="collapse-item <?php if($current_page == 'addSchoolYear.php') echo 'active'; ?>" href="addSchoolYear.php">Add School Year</a>
                 <?php endif; ?>
                 <a class="collapse-item <?php if($current_page == 'school-list.php') echo 'active'; ?>" href="school-list.php">List</a>
+                <a class="collapse-item <?php if($current_page == 'school-year-list.php') echo 'active'; ?>" href="school-year-list.php">School Year List</a>
             </div>
         </div>
     </li>
     
-    <hr class="sidebar-divider">
+    <div class="sidebar-heading">
+        Monitoring Evaluation Adj
+    </div>
 
     <li class="nav-item <?php if(in_array($current_page, ["attendanceComparative.php", "attendanceAdd.php", 'attendanceConcerns'])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAttendance" aria-expanded="true"

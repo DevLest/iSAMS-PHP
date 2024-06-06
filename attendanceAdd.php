@@ -579,11 +579,13 @@ if ($grade_level->num_rows > 0) {
 
     <script>
 
+        var role = <?php echo $_SESSION['role']?>;
         function activeTab(tab) {
             $('#activeTab').val(tab);
             lockFields();
         }
 
+        console.log(role)
         function lockFields(){
             var activeTab = $('#activeTab').val().split('-')[0];
             var activeTabGrade = $('#activeTab').val().split('-')[1];
@@ -603,7 +605,9 @@ if ($grade_level->num_rows > 0) {
                 var inputBox = document.querySelector('input[name="' + inputName + '"]');
                 if (gradeLevel === activeTabGrade && type === activeTab) {
                     if (inputBox) {
-                        inputBox.disabled = true;
+                        if (role == 2) {
+                            inputBox.disabled = true; 
+                        }
                         inputBox.value = attendanceData[keys[i]];
                         updateTotal($(inputBox).closest('tr'));
                     }
