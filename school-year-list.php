@@ -55,7 +55,7 @@ $result = $conn->query($sql);
                                                 while($row = $result->fetch_assoc()) {
                                                     echo "
                                                         <tr>
-                                                            <td> S.Y. ".$row["start_year"]." - ".$row["end_year"]."</td>
+                                                            <td> S.Y. ".$row["start_year"]." - ".$row["end_year"]." ( ".$row['start_month']."/".$row["start_year"]." - ".$row['end_month']."/".$row["end_year"]." ) </td>
     
                                                             <td>";
                                                     echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
