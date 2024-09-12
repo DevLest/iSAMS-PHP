@@ -231,7 +231,6 @@ if ($grade_level->num_rows > 0) {
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
-
     <?php include_once "logout-modal.php"?>
     <?php include_once "footer.php"?>
 
