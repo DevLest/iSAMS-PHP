@@ -21,12 +21,6 @@ if (isset($_POST['quarter'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    echo "<script>
-        if (!confirm('Are you sure you want to save?')) {
-            window.location.href = 'attendanceConcerns.php';
-            exit;
-        }
-    </script>";
 
     $issuesStmt = $conn->prepare("INSERT INTO issues_and_concerns (school_id, issues, facilitating_facts, hindering_factors, actions_taken, quarter, year, last_user_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
@@ -95,11 +89,22 @@ $attendance = $attendanceResult->fetch_assoc();
 
 $attendanceData = [];
 $lastUserSave = "";
+if (isset($_SESSION['last_name']) && isset($_SESSION['first_name'])) {
+    $lastUserSave = $_SESSION['last_name'] . ', ' . $_SESSION['first_name'];
+} else {
+    $lastUserSave = "Unknown User"; // Fallback if names are not available
+}
 foreach ($attendanceResult as $row) {
     $gender = ($row['gender'] == 1) ? 'male' : 'female';
     $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
     $attendanceData[$keyId] = $row['count'];
-    $lastUserSave = $row['last_name'].', '.$row['first_name'];
+    
+    // Check if last_name and first_name exist before accessing them
+    if (isset($row['last_name']) && isset($row['first_name'])) {
+        $lastUserSave = $row['last_name'].', '.$row['first_name'];
+    } else {
+        $lastUserSave = "Unknown User"; // Fallback if names are not available
+    }
 }
 $attendanceKeys = array_keys($attendanceData);
 

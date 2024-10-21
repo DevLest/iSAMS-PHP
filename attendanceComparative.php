@@ -20,7 +20,9 @@ if (isset($_POST['quarter'])) {
 }
 
 // Fetch school years
-$schoolYearSql = "SELECT * FROM school_year ORDER BY start_year ASC";
+$currentYear = date('Y');
+$nextYear = $currentYear + 1;
+$schoolYearSql = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
 $schoolYearResult = $conn->query($schoolYearSql);
 $schoolYears = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
 
