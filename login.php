@@ -70,7 +70,7 @@ include_once('header.php');
 ?>
 
 
-    <body class="bg-gradient-primary" style="display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background-image: url('img/login-bg.jpg'); background-size: cover; background-position: center;">
+    <body class="bg-gradient-primary" style="display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background-color: #E6F3FF; background-size: cover; background-position: center;">
 
         <div class="container">
 

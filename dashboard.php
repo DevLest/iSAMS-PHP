@@ -60,7 +60,7 @@ $sum = $sum->fetch_assoc()
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_als'];?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                            <!-- <i class="fas fa-calendar fa-2x text-gray-300"></i> -->
                                         </div>
                                     </div>
                                 </div>
@@ -78,7 +78,7 @@ $sum = $sum->fetch_assoc()
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_tardiness'];?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                            <!-- <i class="fas fa-dollar-sign fa-2x text-gray-300"></i> -->
                                         </div>
                                     </div>
                                 </div>
@@ -107,7 +107,7 @@ $sum = $sum->fetch_assoc()
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                            <!-- <i class="fas fa-clipboard-list fa-2x text-gray-300"></i> -->
                                         </div>
                                     </div>
                                 </div>
@@ -125,7 +125,7 @@ $sum = $sum->fetch_assoc()
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_severely_wasted'];?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                                            <!-- <i class="fas fa-comments fa-2x text-gray-300"></i> -->
                                         </div>
                                     </div>
                                 </div>
