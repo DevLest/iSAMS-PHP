@@ -183,6 +183,118 @@ if ($grade_level->num_rows > 0) {
         $count++;
     }
 }
+
+// Add these new functions at the top of the file, after the existing PHP code
+
+function exportCSV($conn) {
+    // Set the headers to force download
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment;filename="attendance_summary.csv"');
+
+    // Open output stream
+    $output = fopen('php://output', 'w');
+
+    // Write the header row
+    fputcsv($output, ['Grade Level', 'School Name', 'Male', 'Female', 'Total']);
+
+    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'tardiness', 'absenteeism', 'severly_wasted', 'wasted', 'normal', 'obese', 'overweight', 'no_classes', 'modules'];
+
+    foreach ($types as $type) {
+        $gradeLevels = $conn->query("SELECT * FROM grade_level ORDER BY id");
+        while ($gradeLevel = $gradeLevels->fetch_assoc()) {
+            $schools = $conn->query("SELECT * FROM schools ORDER BY id");
+            while ($school = $schools->fetch_assoc()) {
+                $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 1 AND type = '$type'")->fetch_assoc();
+                $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 2 AND type = '$type'")->fetch_assoc();
+
+                $total = ($male['count'] ?? 0) + ($female['count'] ?? 0);
+
+                // Write the data row
+                fputcsv($output, [
+                    $gradeLevel['name'],
+                    $school['name'],
+                    $male['count'] ?? 0,
+                    $female['count'] ?? 0,
+                    $total
+                ]);
+            }
+        }
+    }
+
+    // Close the output stream
+    fclose($output);
+    exit;
+}
+
+function exportPDF($conn, $activeTab, $activeGradeLevel) {
+    require_once('vendor/tecnickcom/tcpdf/tcpdf.php');
+
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetAuthor('Your Name');
+    $pdf->SetTitle('Attendance Summary');
+    $pdf->SetSubject('Attendance Summary');
+    $pdf->SetKeywords('TCPDF, PDF, Attendance, Summary');
+
+    $pdf->SetHeaderData('', 0, 'Attendance Summary', '');
+
+    $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    $pdf->AddPage('L');
+
+    $html = '<h1>' . ucfirst(str_replace('_', ' ', $activeTab)) . ' - Grade ' . $activeGradeLevel . '</h1>';
+    $html .= '<table border="1" cellpadding="5">
+                <tr>
+                    <th>School Name</th>
+                    <th>Male</th>
+                    <th>Female</th>
+                    <th>Total</th>
+                </tr>';
+
+    $schools = $conn->query("SELECT * FROM schools ORDER BY id");
+    while ($school = $schools->fetch_assoc()) {
+        $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = $activeGradeLevel AND gender = 1 AND type = '$activeTab'")->fetch_assoc();
+        $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = $activeGradeLevel AND gender = 2 AND type = '$activeTab'")->fetch_assoc();
+
+        $maleCount = $male['count'] ?? 0;
+        $femaleCount = $female['count'] ?? 0;
+        $total = $maleCount + $femaleCount;
+
+        $html .= "<tr>
+                    <td>{$school['name']}</td>
+                    <td>{$maleCount}</td>
+                    <td>{$femaleCount}</td>
+                    <td>{$total}</td>
+                  </tr>";
+    }
+
+    $html .= '</table>';
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('attendance_summary.pdf', 'D');
+    exit;
+}
+
+if (isset($_POST['export_csv'])) {
+    exportCSV($conn);
+}
+
+if (isset($_POST['export_pdf'])) {
+    $activeTab = $_POST['activeTab'] ?? '';
+    $activeGradeLevel = $_POST['activeGradeLevel'] ?? '';
+    if (empty($activeTab) || empty($activeGradeLevel)) {
+        echo "Invalid active tab or grade level.";
+        exit;
+    }
+    exportPDF($conn, $activeTab, $activeGradeLevel);
+}
+
 ?>
 
 <body id="page-top">
@@ -297,6 +409,8 @@ if ($grade_level->num_rows > 0) {
                             <div class="col-md-6 text-right">
                                 Last Edited By: <?php echo $lastUserSave;?>
                                 <button type="submit" class="btn btn-primary" name="save">Save</button>
+                                <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
+                                <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
                             </div>
                         </div>
                         
@@ -343,7 +457,8 @@ if ($grade_level->num_rows > 0) {
                             </div>
                         </nav>
                         
-                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
+                        <input type="hidden" name="activeTab" id="activeTab" value="">
+                        <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content-als" class="content-tab">
@@ -664,6 +779,11 @@ if ($grade_level->num_rows > 0) {
 
             $(".nav-item-custom:first-child a").click();
         });
+
+        function updateActiveTab(tab, gradeLevel) {
+            document.getElementById('activeTab').value = tab;
+            document.getElementById('activeGradeLevel').value = gradeLevel;
+        }
     </script>
 
 </body>

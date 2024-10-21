@@ -19,91 +19,86 @@ if (isset($_POST['quarter'])) {
     $selectedQuarter = $currentQuarter;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $gender_male = 1;
-    $gender_female = 2;
-    $current_user_id = $_SESSION['user_id'];
-}
+// Fetch school years
+$schoolYearSql = "SELECT * FROM school_year ORDER BY start_year ASC";
+$schoolYearResult = $conn->query($schoolYearSql);
+$schoolYears = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
 
-$schoolYearsql = "SELECT * FROM school_year";
-$schoolYearResult = $conn->query($schoolYearsql);
 $syrows = "";
-if ($schoolYearResult->num_rows > 0) {
-    while($row = $schoolYearResult->fetch_assoc()) {
-        $syrows .= "<th scope='col'> S.Y ".$row['start_year']." - ".$row['end_year']."</th>";
-    }
+foreach ($schoolYears as $sy) {
+    $syrows .= "<th scope='col'>S.Y ".$sy['start_year']."-".$sy['end_year']." (M)</th>";
+    $syrows .= "<th scope='col'>S.Y ".$sy['start_year']."-".$sy['end_year']." (F)</th>";
 }
 
+// Fetch schools
 $sql = "SELECT * FROM schools";
-$schools = $conn->query($sql);
+$schools = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
-$inputTables = "";
-
-if ($schools->num_rows > 0) {
-    $schoolYearsql = "SELECT * FROM school_year";
-    $schoolYearResult = $conn->query($schoolYearsql);
-    $SYrowreturns = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
-    
-    while($row = $schools->fetch_assoc()) {
-        $inputTables .= "
-            <tr>
-                <td>".$row["name"]."</td>";
-                
-            if ($schoolYearResult->num_rows > 0) {
-                foreach ($SYrowreturns as $SYrowreturn) {
-                    $inputTables .= "<td><input type='number' class='form-control form-control-sm' name='year-".$SYrowreturn['start_year']."-".$SYrowreturn['end_year']."[".$row['id']."]' readonly></td>";
-                }
-            }
-
-        $inputTables .= "
-            </tr>
-        ";
-    }
-}
-
-$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $selectedQuarter AND year = $year";
-$attendanceResult = $conn->query($attendanceQuery);
-$attendance = $attendanceResult->fetch_assoc();
-
-$attendanceData = [];
-foreach ($attendanceResult as $row) {
-    $gender = ($row['gender'] == 1) ? 'male' : 'female';
-    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
-    $attendanceData[$keyId] = $row['count'];
-}
-$attendanceKeys = array_keys($attendanceData);
-
+// Fetch grade levels
 $sql = "SELECT * FROM grade_level";
-$grade_level = $conn->query($sql);
+$gradeLevels = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
-$grade_levels = "";
-if ($grade_level->num_rows > 0) {
-    $count = 0;
-    while($row = $grade_level->fetch_assoc()) {
-        $grade_level_inputs = "";
-        $active = $count == 0 ? "true" : "false";
-        $rowid = $row['id'];
+// Fetch attendance data
+$attendanceQuery = "SELECT a.*, sy.start_year, sy.end_year 
+                    FROM attendance_summary a
+                    JOIN school_year sy ON (a.year BETWEEN sy.start_year AND sy.end_year)
+                    WHERE (a.year = sy.start_year AND MONTH(NOW()) >= sy.start_month) 
+                       OR (a.year = sy.end_year AND MONTH(NOW()) < sy.end_month)";
+$attendanceResult = $conn->query($attendanceQuery);
+$attendanceData = [];
 
-        $grade_levels .= "<a class='nav-link ".($count == 0 ? 'active' : '')."' id='v-pills-dynamicId-$rowid-tab' onclick=\"activeTab('dynamicId-$rowid')\" data-toggle='pill' href='#v-pills-dynamicId-$rowid' role='tab' aria-controls='v-pills-dynamicId-$rowid' aria-selected='$active'>".$row['name']."</a>";
-        
-        $grade_level_inputs .= "<div class='tab-pane fade show active' id='v-pills-dynamicId-$rowid' role='tabpanel' aria-labelledby='v-pills-dynamicId-$rowid-tab'>
-                                    <table class='table'>
-                                    <thead>
-                                        <tr>
-                                            <th scope='col'>Name</th>
-                                            ".$syrows."
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ".$inputTables."
-                                    </tbody>
-                                </table>
-                                </div>";
-
-        $count++;
-    }
+while ($row = $attendanceResult->fetch_assoc()) {
+    $key = $row['type'] . '-' . $row['grade_level_id'] . '-' . $row['school_id'] . '-' . $row['start_year'] . '-' . $row['end_year'];
+    $attendanceData[$key][$row['gender']] = $row['count'];
 }
+
+function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $attendanceData) {
+    $inputTable = "";
+    foreach ($schools as $school) {
+        $inputTable .= "<tr><td>".$school["name"]."</td>";
+        foreach ($schoolYears as $sy) {
+            $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
+            $maleValue = isset($attendanceData[$key][1]) ? $attendanceData[$key][1] : '';
+            $femaleValue = isset($attendanceData[$key][2]) ? $attendanceData[$key][2] : '';
+            
+            $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-male[".$school['id']."]' value='$maleValue' readonly></td>";
+            $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-female[".$school['id']."]' value='$femaleValue' readonly></td>";
+        }
+        $inputTable .= "</tr>";
+    }
+    return $inputTable;
+}
+
+function generateGradeLevelTabs($type, $gradeLevels) {
+    $tabs = "";
+    foreach ($gradeLevels as $index => $level) {
+        $active = $index == 0 ? "active" : "";
+        $tabs .= "<a class='nav-link $active' id='v-pills-$type-".$level['id']."-tab' onclick=\"activeTab('$type-".$level['id']."')\" data-toggle='pill' href='#v-pills-$type-".$level['id']."' role='tab' aria-controls='v-pills-$type-".$level['id']."' aria-selected='true'>".$level['name']."</a>";
+    }
+    return $tabs;
+}
+
+function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows) {
+    $content = "";
+    foreach ($gradeLevels as $index => $level) {
+        $active = $index == 0 ? "show active" : "";
+        $content .= "<div class='tab-pane fade $active' id='v-pills-$type-".$level['id']."' role='tabpanel' aria-labelledby='v-pills-$type-".$level['id']."-tab'>
+                        <table class='table'>
+                            <thead>
+                                <tr>
+                                    <th scope='col'>Name</th>
+                                    $syrows
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ".generateInputTable($type, $level['id'], $schools, $schoolYears, $attendanceData)."
+                            </tbody>
+                        </table>
+                    </div>";
+    }
+    return $content;
+}
+
 ?>
 
 <body id="page-top">
@@ -247,199 +242,49 @@ if ($grade_level->num_rows > 0) {
                         
                         <input type="hidden" name="activeTab" id="activeTab" value="blp">
                         <div id="tabContent">
-                            <div id="tabContent">
-                                <div id="content-als" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
-                                                <a class="nav-link active" id="v-pills-blp-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-blp" role="tab" aria-controls="v-pills-blp" aria-selected="true">BLP</a>
-                                                <a class="nav-link" id="v-pills-ae-elem-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-ae-elem" role="tab" aria-controls="v-pills-ae-elem" aria-selected="false">A & E - Elementary</a>
-                                                <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A&E - JHS</a>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent1">
-                                                <div class="tab-pane fade show active" id="v-pills-blp" role="tabpanel" aria-labelledby="v-pills-blp-tab">
-                                                    <table class="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col">Name</th>
-                                                                <?php
-                                                                    echo $syrows;
-                                                                ?>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php echo str_replace('dynamicId', 'als', $inputTables); ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
+                            <div id="content-als" class="content-tab">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
+                                            <a class="nav-link active" id="v-pills-als-1-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-als-1" role="tab" aria-controls="v-pills-als-1" aria-selected="true">BLP</a>
+                                            <a class="nav-link" id="v-pills-als-2-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-als-2" role="tab" aria-controls="v-pills-als-2" aria-selected="false">A & E - Elementary</a>
+                                            <a class="nav-link" id="v-pills-als-3-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-als-3" role="tab" aria-controls="v-pills-als-3" aria-selected="false">A&E - JHS</a>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div id="content-pardos_sardos" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab2" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent2">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-pivate_vourcher" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab3" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent3">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-tardiness" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent4">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-absenteeism" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent5">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-severly_wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent6">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent7">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-normal" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent8">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-obese" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent9">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-overweight" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab10" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent10">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-no_classses" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'no_classses', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent11">
-                                                <?php echo str_replace('dynamicId', 'no_classses', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent1">
+                                            <?php
+                                            $alsLevels = [
+                                                ['id' => 1, 'name' => 'BLP'],
+                                                ['id' => 2, 'name' => 'A & E - Elementary'],
+                                                ['id' => 3, 'name' => 'A&E - JHS']
+                                            ];
+                                            echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $attendanceData, $syrows);
+                                            ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <?php
+                            $types = ['pardos_sardos', 'pivate_vourcher', 'tardiness', 'absenteeism', 'severly_wasted', 'wasted', 'normal', 'obese', 'overweight', 'no_classes'];
+                            foreach ($types as $type) {
+                                echo "<div id='content-$type' class='content-tab'>
+                                        <div class='row'>
+                                            <div class='col-md-3'>
+                                                <div class='nav flex-column nav-pills' id='v-pills-tab-$type' role='tablist' aria-orientation='vertical'>
+                                                    ".generateGradeLevelTabs($type, $gradeLevels)."
+                                                </div>
+                                            </div>
+                                            <div class='col-md-9'>
+                                                <div class='tab-content' id='v-pills-tabContent-$type'>
+                                                    ".generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows)."
+                                                </div>
+                                            </div>
+                                        </div>
+                                      </div>";
+                            }
+                            ?>
                         </div>
                     </form>
                     <br>
@@ -467,87 +312,30 @@ if ($grade_level->num_rows > 0) {
     <?php include_once "footer.php"?>
 
     <script>
+    function activeTab(tab) {
+        $('#activeTab').val(tab);
+        lockFields();
+    }
 
-        function activeTab(tab) {
-            $('#activeTab').val(tab);
+    function lockFields() {
+        $('table input').prop('readonly', true);
+    }
+
+    $(document).ready(function(){
+        $(".nav-item-custom a").click(function(e) {
+            e.preventDefault();
+            var tabId = $(this).attr("id");
+            $(".content-tab").hide();
+            $("#content-" + tabId).show();
+            $(".nav-item-custom").removeClass("active");
+            $(this).parent().addClass("active");
+            $('#activeTab').val(tabId+"-1");
             lockFields();
-        }
-
-        function lockFields(){
-            var activeTab = $('#activeTab').val().split('-')[0];
-            var activeTabGrade = $('#activeTab').val().split('-')[1];
-            
-            $('table input').each(function() {
-                // this.value = 0;
-                this.disabled = false;
-            });
-            
-            for (var i = 0; i < keys.length; i++) {
-                var parts = keys[i].split('-');
-                var gender = parts[0];
-                var type = parts[1];
-                var gradeLevel = parts[2];
-                var schoolId = parts[3];
-                var inputName = type + '-' + gender + '[' + schoolId + ']';
-                var inputBox = document.querySelector('input[name="' + inputName + '"]');
-                if (gradeLevel === activeTabGrade && type === activeTab) {
-                    if (inputBox) {
-                        inputBox.disabled = true;
-                        // inputBox.value = attendanceData[keys[i]];
-                        updateTotal($(inputBox).closest('tr'));
-                    }
-                }
-            }
-        }
-        
-        function updateTotal(row) {
-            // var male = parseInt(row.find('input')[0].value) || 0;
-            // var female = parseInt(row.find('input')[1].value) || 0;
-            // row.find('.total').text(male + female);
-        }
-        
-        var keys = <?php echo json_encode($attendanceKeys); ?>;
-        // var attendanceData = <?php echo json_encode($attendanceData); ?>;
-
-        $(document).ready(function(){
-
-            function clearZero(input) {
-                // if (input.find('input')[0].value == '0') {
-                //     input.find('input')[0].value = '';
-                // } else if (input.find('input')[0].value < 1 || input.find('input')[0].value == "") {
-                //     input.find('input')[0].value = '0';
-                // }
-            }
-
-            $('tbody tr').each(function() {
-                updateTotal($(this));
-            });
-
-            $('input[type="number"]').on('input', function() {
-                updateTotal($(this).closest('tr'));
-            });
-            
-            $('input[type="number"]').on('focus', function() {
-                clearZero($(this).closest('tr'));
-            });
-
-            $(".nav-item-custom a").click(function(e) {
-                e.preventDefault();
-
-                var tabId = $(this).attr("id");
-                $(".content-tab").hide();
-
-                $("#content-" + tabId).show(); 
-
-                $(".nav-item-custom").removeClass("active");
-                $(this).parent().addClass("active");
-
-                $('#activeTab').val(tabId+"-1");
-                lockFields();
-            });
-
-            $(".nav-item-custom:first-child a").click();
         });
+
+        $(".nav-item-custom:first-child a").click();
+        lockFields();
+    });
     </script>
 
 </body>

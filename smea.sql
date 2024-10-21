@@ -15,11 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Dumping database structure for isams
-CREATE DATABASE IF NOT EXISTS `smea` /*!80016 DEFAULT ENCRYPTION='N' */;
+-- Dumping database structure for smea
+CREATE DATABASE IF NOT EXISTS `smea` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `smea`;
 
--- Dumping structure for table isams.als
+-- Dumping structure for table smea.als
 CREATE TABLE IF NOT EXISTS `als` (
   `id` int NOT NULL AUTO_INCREMENT,
   `type` varchar(50) DEFAULT NULL,
@@ -28,11 +28,11 @@ CREATE TABLE IF NOT EXISTS `als` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.als: ~0 rows (approximately)
+-- Dumping data for table smea.als: ~0 rows (approximately)
 
--- Dumping structure for table isams.attendance_summary
+-- Dumping structure for table smea.attendance_summary
 CREATE TABLE IF NOT EXISTS `attendance_summary` (
   `summary_id` int NOT NULL AUTO_INCREMENT,
   `school_id` int DEFAULT NULL,
@@ -55,9 +55,9 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.attendance_summary: ~6 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~11 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`) VALUES
 	(1, 2, 1, 1, 'pardos_sardos', 2, 2, 2024, 5, '2024-05-28 07:33:57', '2024-05-28 07:33:57'),
 	(2, 3, 1, 2, 'pardos_sardos', 3, 2, 2024, 5, '2024-05-28 07:34:21', '2024-05-28 07:34:21'),
@@ -65,18 +65,41 @@ INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `
 	(4, 1, 1, 2, 'als', 2, 2, 2024, 5, '2024-05-28 07:34:27', '2024-05-28 07:34:27'),
 	(5, 1, 2, 1, 'als', 23, 2, 2024, 5, '2024-05-28 07:36:00', '2024-05-28 07:36:00'),
 	(6, 1, 2, 2, 'als', 4, 2, 2024, 5, '2024-05-28 07:36:00', '2024-05-28 07:36:00'),
-	(7, 2, 2, 1, 'als', 4, 2, 2024, 5, '2024-05-28 07:46:09', '2024-05-28 07:46:09');
+	(7, 2, 2, 1, 'als', 4, 2, 2024, 5, '2024-05-28 07:46:09', '2024-05-28 07:46:09'),
+	(8, 1, 1, 1, 'als', 24, 3, 2024, 6, '2024-09-23 09:57:41', '2024-09-23 09:57:41'),
+	(9, 1, 1, 2, 'als', 23, 3, 2024, 6, '2024-09-23 09:57:41', '2024-09-23 09:57:41'),
+	(10, 2, 1, 1, 'als', 3, 3, 2024, 6, '2024-09-23 09:57:52', '2024-09-23 09:57:52'),
+	(11, 2, 1, 2, 'als', 23, 3, 2024, 6, '2024-09-23 09:57:52', '2024-09-23 09:57:52');
 
--- Dumping structure for table isams.grade_level
+-- Dumping structure for table smea.edit_requests
+CREATE TABLE IF NOT EXISTS `edit_requests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `issue_id` int NOT NULL,
+  `request_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('pending','approved','denied') NOT NULL DEFAULT 'pending',
+  `requested_by` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `issue_id` (`issue_id`),
+  CONSTRAINT `edit_requests_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `edit_requests_ibfk_2` FOREIGN KEY (`issue_id`) REFERENCES `issues_and_concerns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table smea.edit_requests: ~0 rows (approximately)
+INSERT INTO `edit_requests` (`id`, `user_id`, `issue_id`, `request_date`, `status`, `requested_by`) VALUES
+	(5, 6, 43, '2024-09-11 08:10:39', 'approved', 6);
+
+-- Dumping structure for table smea.grade_level
 CREATE TABLE IF NOT EXISTS `grade_level` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) CHARACTER SET utf8mb4,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.grade_level: ~12 rows (approximately)
+-- Dumping data for table smea.grade_level: ~12 rows (approximately)
 INSERT INTO `grade_level` (`id`, `name`, `updated_at`, `created_at`) VALUES
 	(1, 'Kinder', '2024-04-04 04:30:22', '2024-04-04 04:30:22'),
 	(2, 'Grade 1', '2024-04-04 04:30:22', '2024-04-04 04:30:22'),
@@ -92,7 +115,30 @@ INSERT INTO `grade_level` (`id`, `name`, `updated_at`, `created_at`) VALUES
 	(12, 'Grade 11', '2024-04-04 05:53:18', '2024-04-04 04:30:22'),
 	(13, 'Grade 12', '2024-04-04 05:53:18', '2024-04-04 04:30:22');
 
--- Dumping structure for table isams.roles
+-- Dumping structure for table smea.issues_and_concerns
+CREATE TABLE IF NOT EXISTS `issues_and_concerns` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `school_id` int NOT NULL,
+  `quarter` int NOT NULL,
+  `year` int NOT NULL,
+  `issues` text,
+  `facilitating_facts` text,
+  `hindering_factors` text,
+  `actions_taken` text,
+  `last_user_save` int NOT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_issues_and_concerns_schools` (`school_id`),
+  CONSTRAINT `FK_issues_and_concerns_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table smea.issues_and_concerns: ~2 rows (approximately)
+INSERT INTO `issues_and_concerns` (`id`, `school_id`, `quarter`, `year`, `issues`, `facilitating_facts`, `hindering_factors`, `actions_taken`, `last_user_save`, `updated_at`, `created_at`) VALUES
+	(1, 1, 3, 2024, 'tesst', '', '', '', 6, '2024-09-23 09:40:28', '2024-09-23 09:40:28'),
+	(2, 1, 3, 2024, 'tesst', 'asda', '', '', 6, '2024-09-23 09:45:18', '2024-09-23 09:45:18');
+
+-- Dumping structure for table smea.roles
 CREATE TABLE IF NOT EXISTS `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
   `description` varchar(50) NOT NULL DEFAULT '0',
@@ -100,14 +146,14 @@ CREATE TABLE IF NOT EXISTS `roles` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.roles: ~2 rows (approximately)
+-- Dumping data for table smea.roles: ~2 rows (approximately)
 INSERT INTO `roles` (`id`, `description`, `permission`, `updated_at`, `created_at`) VALUES
 	(1, 'Admin', '[\'1\',\'2\']', '2024-03-19 03:43:00', '2024-03-18 10:58:50'),
 	(2, 'Teacher', '[\'1\', \'2\']', '2024-03-18 10:59:09', '2024-03-18 10:59:09');
 
--- Dumping structure for table isams.schools
+-- Dumping structure for table smea.schools
 CREATE TABLE IF NOT EXISTS `schools` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
@@ -115,9 +161,9 @@ CREATE TABLE IF NOT EXISTS `schools` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.schools: ~20 rows (approximately)
+-- Dumping data for table smea.schools: ~20 rows (approximately)
 INSERT INTO `schools` (`id`, `name`, `address`, `updated_at`, `created_at`) VALUES
 	(1, 'Amontay Elementary School', 'Brgy. Amontay, Binalbagan, Negros Occidental', '2024-05-27 09:02:04', '2024-04-04 05:24:26'),
 	(2, 'Binalbagan Elementary School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
@@ -140,7 +186,7 @@ INSERT INTO `schools` (`id`, `name`, `address`, `updated_at`, `created_at`) VALU
 	(19, 'Augurio Marañon Abeto National High School', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26'),
 	(20, 'Binalbagan National High School-santol Extension', NULL, '2024-04-04 05:24:26', '2024-04-04 05:24:26');
 
--- Dumping structure for table isams.school_year
+-- Dumping structure for table smea.school_year
 CREATE TABLE IF NOT EXISTS `school_year` (
   `id` int NOT NULL AUTO_INCREMENT,
   `start_month` int NOT NULL DEFAULT '0',
@@ -150,23 +196,25 @@ CREATE TABLE IF NOT EXISTS `school_year` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.school_year: ~1 rows (approximately)
+-- Dumping data for table smea.school_year: ~4 rows (approximately)
 INSERT INTO `school_year` (`id`, `start_month`, `start_year`, `end_month`, `end_year`, `updated_at`, `created_at`) VALUES
-	(1, 8, 2023, 7, 2024, '2024-05-28 08:45:43', '2024-05-28 08:44:50'),
-	(2, 8, 2024, 7, 2025, '2024-05-28 08:46:10', '2024-05-28 08:46:07');
+	(3, 8, 2021, 7, 2022, '2024-09-10 23:19:14', '2024-09-10 23:19:14'),
+	(4, 8, 2022, 7, 2023, '2024-09-10 23:19:19', '2024-09-10 23:18:26'),
+	(5, 8, 2023, 7, 2024, '2024-09-10 23:19:42', '2024-05-28 08:44:50'),
+	(6, 8, 2024, 7, 2025, '2024-09-10 23:19:47', '2024-05-28 08:46:07');
 
--- Dumping structure for table isams.subjects
+-- Dumping structure for table smea.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `current_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.subjects: ~8 rows (approximately)
+-- Dumping data for table smea.subjects: ~8 rows (approximately)
 INSERT INTO `subjects` (`id`, `name`, `updated_at`, `current_timestamp`) VALUES
 	(1, 'Math', '2024-05-23 12:32:57', '2024-05-23 12:32:57'),
 	(2, 'Filipino', '2024-05-23 12:33:04', '2024-05-23 12:33:04'),
@@ -178,7 +226,7 @@ INSERT INTO `subjects` (`id`, `name`, `updated_at`, `current_timestamp`) VALUES
 	(8, 'EPP', '2024-05-23 12:34:00', '2024-05-23 12:34:00'),
 	(9, 'Science', '2024-05-23 12:34:05', '2024-05-23 12:34:05');
 
--- Dumping structure for table isams.users
+-- Dumping structure for table smea.users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
@@ -191,12 +239,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   KEY `FK_users_roles` (`role`),
   CONSTRAINT `FK_users_roles` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table isams.users: ~2 rows (approximately)
+-- Dumping data for table smea.users: ~2 rows (approximately)
 INSERT INTO `users` (`id`, `username`, `password`, `first_name`, `last_name`, `role`, `updated_at`, `created_at`) VALUES
-	(5, 'bon', '5f4dcc3b5aa765d61d8327deb882cf99', 'Frederson', 'Ebra', 1, '2024-03-18 10:59:36', '2024-05-27 08:46:29'),
-	(6, 'bea', '25d55ad283aa400af464c76d713c07ad', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-05-27 08:46:18');
+	(5, 'bon', '21232f297a57a5a743894a0e4a801fc3', 'Frederson', 'Ebra', 1, '2024-03-18 10:59:36', '2024-09-10 23:25:01'),
+	(6, 'bea', '21232f297a57a5a743894a0e4a801fc3', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-09-11 08:04:17');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
