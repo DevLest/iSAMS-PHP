@@ -1,4 +1,5 @@
 <?php
+ob_start(); // Start output buffering
 session_start();
 
 if(!isset($_SESSION['user_id'])) {
@@ -457,8 +458,8 @@ if (isset($_POST['export_pdf'])) {
                             </div>
                         </nav>
                         
-                        <input type="hidden" name="activeTab" id="activeTab" value="">
-                        <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="">
+                        <input type="hidden" name="activeTab" id="activeTab" value="als-1">
+                        <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="1">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content-als" class="content-tab">
@@ -773,7 +774,9 @@ if (isset($_POST['export_pdf'])) {
                 $(".nav-item-custom").removeClass("active");
                 $(this).parent().addClass("active");
 
-                $('#activeTab').val(tabId+"-1");
+                // Set the active tab and grade level
+                $('#activeTab').val(tabId + "-1"); // Assuming default grade level is 1
+                $('#activeGradeLevel').val("1"); // Update this based on your logic
                 lockFields();
             });
 
