@@ -86,7 +86,9 @@
         </a>
         <div id="collapseQuality" class="collapse <?php if(in_array($current_page, ["qualityPassingRate.php", "qualityLeastLearned.php", 'qualityALS.php', 'qualityReading.php', 'qualityNonNumerates.php', 'qualityPromoted.php', 'qualityIS.php', 'qualityTeachers.php', 'qualityEnrollees.php', 'qualityResources.php', 'qualityConcerns'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-warning py-2 collapse-inner rounded">
-                <a class="collapse-item <?php if($current_page == 'qualityPassingRate.php') echo 'active'; ?>" href="qualityPassingRate.php">Passing Rate</a>
+                <a class="collapse-item <?php if($current_page == 'qualityComparative.php') echo 'active'; ?>" href="attendanceComparative.php">Comparative Data</a>
+                <a class="collapse-item <?php if($current_page == 'qualityAdd.php') echo 'active'; ?>" href="qualityAdd.php">Encode</a>
+                <!-- <a class="collapse-item <?php if($current_page == 'qualityPassingRate.php') echo 'active'; ?>" href="qualityPassingRate.php">Passing Rate</a>
                 <a class="collapse-item <?php if($current_page == 'qualityLeastLearned.php') echo 'active'; ?>" href="qualityLeastLearned.php">Least Learned</a>
                 <a class="collapse-item <?php if($current_page == 'qualityALS.php') echo 'active'; ?>" href="qualityALS.php">ALS</a>
                 <a class="collapse-item <?php if($current_page == 'qualityReading.php') echo 'active'; ?>" href="qualityReading.php">Reading</a>
@@ -96,7 +98,7 @@
                 <a class="collapse-item <?php if($current_page == 'qualityTeachers.php') echo 'active'; ?>" href="qualityTeachers.php">Teachers</a>
                 <a class="collapse-item <?php if($current_page == 'qualityEnrollees.php') echo 'active'; ?>" href="qualityEnrollees.php">Enrollees</a>
                 <a class="collapse-item <?php if($current_page == 'qualityResources.php') echo 'active'; ?>" href="qualityResources.php">Resources</a>
-                <hr class="sidebar-divider">
+                <hr class="sidebar-divider"> -->
                 <a class="collapse-item <?php if($current_page == 'qualityConcerns.php') echo 'active'; ?>" href="qualityConcerns.php">Issues and Concerns</a>
             </div>
         </div>
