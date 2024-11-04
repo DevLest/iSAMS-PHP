@@ -99,7 +99,7 @@ foreach ($attendanceResult as $row) {
     $gender = ($row['gender'] == 1) ? 'male' : 'female';
     $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
     $attendanceData[$keyId] = $row['count'];
-    $lastUserSave = $row['last_name'].', '.$row['first_name'];
+    $lastUserSave = $row['last_name'].',    '.$row['first_name'];
 }
 $attendanceKeys = array_keys($attendanceData);
 

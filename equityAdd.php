@@ -307,38 +307,25 @@ if ($grade_level->num_rows > 0) {
                                         <a class="nav-link" href="#" id="als">ALS</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">PARDOS SARDOS</a>
+                                        <a class="nav-link" href="#" id="pardos_sardos">Learners SBFP</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
+                                        <a class="nav-link" href="#" id="pivate_vourcher">Number of Classrooms</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Tardiness</a>
+                                        <a class="nav-link" href="#" id="tardiness">MOOE Utilization</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism">Absenteeism</a>
+                                        <a class="nav-link" href="#" id="absenteeism">School TITLING</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted">Severly Wasted</a>
+                                        <a class="nav-link" href="#" id="severly_wasted">DEPED Computirazation</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted">Wasted</a>
+                                        <a class="nav-link" href="#" id="wasted">Water Sanitation and Hygiene</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal">Normal</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese">Obese</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="overweight">Overweight</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes">Classes</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="modules">Modules</a>
-                                    </li>
+                                        <a class="nav-link" href="#" id="normal">Child Friendly School System</a>
                                 </ul>
                             </div>
                         </nav>

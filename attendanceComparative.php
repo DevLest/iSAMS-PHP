@@ -206,37 +206,16 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
                             <div class="collapse navbar-collapse" id="navbarNav">
                                 <ul class="navbar-nav">
                                     <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="als">ALS</a>
+                                        <a class="nav-link" href="#" id="als">ALS Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">PARDOS SARDOS</a>
+                                        <a class="nav-link" href="#" id="pardos_sardos">Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
+                                        <a class="nav-link" href="#" id="pivate_vourcher">Drop Outs </a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Tardiness</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism">Absenteeism</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted">Severly Wasted</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted">Wasted</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal">Normal</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese">Obese</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="overweight">Overweight</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes">Classes</a>
+                                        <a class="nav-link" href="#" id="tardiness">Completers</a>
                                     </li>
                                 </ul>
                             </div>

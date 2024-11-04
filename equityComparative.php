@@ -212,34 +212,34 @@ if ($grade_level->num_rows > 0) {
                                         <a class="nav-link" href="#" id="als">ALS</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">PARDOS SARDOS</a>
+                                        <a class="nav-link" href="#" id="pardos_sardos">Learners SBFP</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
+                                        <a class="nav-link" href="#" id="pivate_vourcher"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Tardiness</a>
+                                        <a class="nav-link" href="#" id="tardiness"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism">Absenteeism</a>
+                                        <a class="nav-link" href="#" id="absenteeism"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted">Severly Wasted</a>
+                                        <a class="nav-link" href="#" id="severly_wasted"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted">Wasted</a>
+                                        <a class="nav-link" href="#" id="wasted"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal">Normal</a>
+                                        <a class="nav-link" href="#" id="normal"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese">Obese</a>
+                                        <a class="nav-link" href="#" id="obese"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="overweight">Overweight</a>
+                                        <a class="nav-link" href="#" id="overweight"></a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes">Classes</a>
+                                        <a class="nav-link" href="#" id="no_classes"></a>
                                     </li>
                                 </ul>
                             </div>

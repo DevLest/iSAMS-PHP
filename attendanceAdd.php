@@ -1,5 +1,4 @@
 <?php
-ob_start(); // Start output buffering
 session_start();
 
 if(!isset($_SESSION['user_id'])) {
@@ -428,28 +427,28 @@ if (isset($_POST['export_pdf'])) {
                                         <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Tardiness</a>
+                                        <a class="nav-link" href="#" id="tardiness">Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism">Absenteeism</a>
+                                        <a class="nav-link" href="#" id="absenteeism">Drop Outs</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted">Severly Wasted</a>
+                                        <a class="nav-link" href="#" id="severly_wasted">Graduates</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted">Wasted</a>
+                                        <a class="nav-link" href="#" id="wasted">Completers</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal">Normal</a>
+                                        <a class="nav-link" href="#" id="normal">Leavers</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese">Obese</a>
+                                        <a class="nav-link" href="#" id="obese">Repeaters</a>
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="overweight">Overweight</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes">Classes</a>
+                                        <a class="nav-link" href="#" id="no_classes">Subjects</a>
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="modules">Modules</a>
@@ -458,8 +457,8 @@ if (isset($_POST['export_pdf'])) {
                             </div>
                         </nav>
                         
-                        <input type="hidden" name="activeTab" id="activeTab" value="als-1">
-                        <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="1">
+                        <input type="hidden" name="activeTab" id="activeTab" value="">
+                        <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="">
                         <div id="tabContent">
                             <div id="tabContent">
                                 <div id="content-als" class="content-tab">
@@ -774,9 +773,7 @@ if (isset($_POST['export_pdf'])) {
                 $(".nav-item-custom").removeClass("active");
                 $(this).parent().addClass("active");
 
-                // Set the active tab and grade level
-                $('#activeTab').val(tabId + "-1"); // Assuming default grade level is 1
-                $('#activeGradeLevel').val("1"); // Update this based on your logic
+                $('#activeTab').val(tabId+"-1");
                 lockFields();
             });
 
