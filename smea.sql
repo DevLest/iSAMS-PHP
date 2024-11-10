@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=350 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.attendance_summary: ~342 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~338 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`) VALUES
 	(8, 1, 1, 1, 'enrollment', 24, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-09 02:56:12'),
 	(9, 2, 1, 1, 'enrollment', 48, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-09 02:56:12'),
@@ -419,6 +419,37 @@ CREATE TABLE IF NOT EXISTS `edit_requests` (
 
 -- Dumping data for table smea.edit_requests: ~0 rows (approximately)
 
+-- Dumping structure for table smea.equity_assessment
+CREATE TABLE IF NOT EXISTS `equity_assessment` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `school_id` int NOT NULL,
+  `grade_level` int DEFAULT NULL,
+  `gender` tinyint DEFAULT NULL,
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `count` int NOT NULL DEFAULT '0',
+  `points` int DEFAULT NULL,
+  `quarter` int NOT NULL,
+  `year` int NOT NULL,
+  `last_user_save` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `school_id` (`school_id`),
+  KEY `grade_level` (`grade_level`),
+  KEY `last_user_save` (`last_user_save`),
+  CONSTRAINT `equity_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
+  CONSTRAINT `equity_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
+  CONSTRAINT `equity_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table smea.equity_assessment: ~0 rows (approximately)
+INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `points`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
+	(1, 1, NULL, NULL, 'cfs', 23, 25, 4, 2024, 5, '2024-11-10 16:31:27', '2024-11-10 16:31:27'),
+	(2, 2, 1, 1, 'sbfp', 23, NULL, 1, 2024, 5, '2024-11-10 16:31:36', '2024-11-10 16:31:36'),
+	(3, 2, 1, 2, 'sbfp', 54, NULL, 1, 2024, 5, '2024-11-10 16:31:36', '2024-11-10 16:31:36'),
+	(4, 1, NULL, NULL, 'cfs', 123, 25, 1, 2025, 5, '2024-11-10 16:31:53', '2024-11-10 16:31:53'),
+	(5, 2, NULL, NULL, 'cfs', 21312, 35, 1, 2025, 5, '2024-11-10 16:31:53', '2024-11-10 16:31:53');
+
 -- Dumping structure for table smea.grade_level
 CREATE TABLE IF NOT EXISTS `grade_level` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -503,7 +534,7 @@ CREATE TABLE IF NOT EXISTS `quality_assessment` (
   CONSTRAINT `quality_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.quality_assessment: ~7 rows (approximately)
+-- Dumping data for table smea.quality_assessment: ~0 rows (approximately)
 INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(2, 1, 1, 1, 'als', 23, 4, 2024, 5, '2024-11-10 13:18:47', '2024-11-10 13:18:47'),
 	(3, 1, 2, 1, 'als', 3436, 4, 2024, 5, '2024-11-10 13:55:49', '2024-11-10 13:55:49'),
@@ -533,6 +564,32 @@ CREATE TABLE IF NOT EXISTS `roles` (
 INSERT INTO `roles` (`id`, `description`, `permission`, `updated_at`, `created_at`) VALUES
 	(1, 'Admin', '[\'1\',\'2\']', '2024-03-19 03:43:00', '2024-03-18 10:58:50'),
 	(2, 'Teacher', '[\'1\', \'2\']', '2024-03-18 10:59:09', '2024-03-18 10:59:09');
+
+-- Dumping structure for table smea.rwb_assessment
+CREATE TABLE IF NOT EXISTS `rwb_assessment` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `school_id` int NOT NULL,
+  `grade_level` int NOT NULL,
+  `gender` tinyint NOT NULL,
+  `type` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `count` int NOT NULL DEFAULT '0',
+  `quarter` int NOT NULL,
+  `year` int NOT NULL,
+  `last_user_save` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `school_id` (`school_id`),
+  KEY `grade_level` (`grade_level`),
+  KEY `last_user_save` (`last_user_save`),
+  CONSTRAINT `rwb_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
+  CONSTRAINT `rwb_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
+  CONSTRAINT `rwb_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table smea.rwb_assessment: ~1 rows (approximately)
+INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
+	(1, 1, 1, 1, 'displaced', 505, 4, 2024, 5, '2024-11-10 16:41:41', '2024-11-10 16:41:41');
 
 -- Dumping structure for table smea.schools
 CREATE TABLE IF NOT EXISTS `schools` (
