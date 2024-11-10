@@ -12,8 +12,8 @@
     <!-- Nav Item - Dashboard -->
     <li class="nav-item <?php if($current_page == 'dashboard.php') echo 'active'; ?>">
         <a class="nav-link" href="dashboard.php">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span></a>
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Dashboard</span></a>
     </li>
 
     <!-- Divider -->
@@ -24,20 +24,10 @@
         Management Modules
     </div>
     
-    <li class="nav-item <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'active'; ?>">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUser" aria-expanded="true"
-            aria-controls="collapseUser">
-            <i class="fas fa-fw fa-user"></i>
-            <span>Users</span>
-        </a>
-        <div id="collapseUser" class="collapse <?php if(in_array($current_page, ["addUser.php", "user-list.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-warning py-2 collapse-inner rounded">
-                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
-                    <a class="collapse-item <?php if($current_page == 'addUser.php') echo 'active'; ?>" href="addUser.php">Add</a>
-                <?php endif; ?>
-                <a class="collapse-item <?php if($current_page == 'user-list.php') echo 'active'; ?>" href="user-list.php">List</a>
-            </div>
-        </div>
+    <li class="nav-item <?php if($current_page == 'user-list.php') echo 'active'; ?>">
+        <a class="nav-link" href="user-list.php">
+        <i class="fas fa-fw fa-user"></i>
+        <span>Users</span></a>
     </li>
 
     <li class="nav-item <?php if(in_array($current_page, ["addSchool.php", "school-list.php", 'school-year-list.php', 'addSchoolYear.php'])) echo 'active'; ?>">

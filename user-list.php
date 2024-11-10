@@ -10,7 +10,7 @@ require_once "connection/db.php";
 include_once('header.php');
 
 $sql = "SELECT users.*, roles.description FROM users JOIN roles ON users.role = roles.id ORDER BY users.created_at DESC";
-$result = $conn->query($sql);
+$resultUsers = $conn->query($sql);
 ?>
 
 <body id="page-top">
@@ -41,7 +41,14 @@ $result = $conn->query($sql);
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Active Users</h6>
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Active Users</h6>
+                                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                                    <a href="addUser.php" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus"></i> Add User
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -64,9 +71,9 @@ $result = $conn->query($sql);
                                     </tfoot>
                                     <tbody>
                                         <?php 
-                                            if ($result->num_rows > 0) {
+                                            if ($resultUsers->num_rows > 0) {
                                                 // Output data of each row
-                                                while($row = $result->fetch_assoc()) {
+                                                while($row = $resultUsers->fetch_assoc()) {
                                                     echo "
                                                         <tr>
                                                             <td>".$row["username"]."</td>
