@@ -86,7 +86,7 @@
         </a>
         <div id="collapseQuality" class="collapse <?php if(in_array($current_page, ["qualityComparative.php", "qualityAdd.php", 'qualityConcerns.php'])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-warning py-2 collapse-inner rounded">
-                <a class="collapse-item <?php if($current_page == 'qualityComparative.php') echo 'active'; ?>" href="attendanceComparative.php">Comparative Data</a>
+                <a class="collapse-item <?php if($current_page == 'qualityComparative.php') echo 'active'; ?>" href="qualityComparative.php">Comparative Data</a>
                 <a class="collapse-item <?php if($current_page == 'qualityAdd.php') echo 'active'; ?>" href="qualityAdd.php">Encode</a>
                 <a class="collapse-item <?php if($current_page == 'qualityConcerns.php') echo 'active'; ?>" href="qualityConcerns.php">Issues and Concerns</a>
             </div>

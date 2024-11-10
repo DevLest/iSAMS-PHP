@@ -55,9 +55,9 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=347 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=350 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.attendance_summary: ~338 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~342 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`) VALUES
 	(8, 1, 1, 1, 'enrollment', 24, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-09 02:56:12'),
 	(9, 2, 1, 1, 'enrollment', 48, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-09 02:56:12'),
@@ -397,7 +397,10 @@ INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `
 	(343, 18, 13, 2, 'enrollment', 310, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-14 06:14:08'),
 	(344, 19, 13, 2, 'enrollment', 36, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-14 06:14:08'),
 	(345, 20, 13, 2, 'enrollment', 45, 3, 2024, 5, '2024-11-10 07:16:19', '2024-10-14 06:14:08'),
-	(346, 1, 1, 1, 'als', 213, 4, 2024, 5, '2024-11-08 06:25:43', '2024-11-08 06:25:43');
+	(346, 1, 1, 1, 'als', 213, 4, 2024, 5, '2024-11-08 06:25:43', '2024-11-08 06:25:43'),
+	(347, 1, 1, 2, 'als', 23, 4, 2024, 5, '2024-11-10 08:28:21', '2024-11-10 08:28:21'),
+	(348, 1, 1, 1, 'als', 300, 3, 2024, 5, '2024-11-10 08:30:49', '2024-11-10 08:30:49'),
+	(349, 2, 1, 1, 'pardos_sardos', 15, 4, 2024, 5, '2024-11-10 08:32:08', '2024-11-10 08:32:08');
 
 -- Dumping structure for table smea.edit_requests
 CREATE TABLE IF NOT EXISTS `edit_requests` (
@@ -448,6 +451,7 @@ CREATE TABLE IF NOT EXISTS `issues_and_concerns` (
   `school_id` int NOT NULL,
   `quarter` int NOT NULL,
   `year` int NOT NULL,
+  `type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `issues` text COLLATE utf8mb4_general_ci,
   `facilitating_facts` text COLLATE utf8mb4_general_ci,
   `hindering_factors` text COLLATE utf8mb4_general_ci,
@@ -461,21 +465,21 @@ CREATE TABLE IF NOT EXISTS `issues_and_concerns` (
 ) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table smea.issues_and_concerns: ~14 rows (approximately)
-INSERT INTO `issues_and_concerns` (`id`, `school_id`, `quarter`, `year`, `issues`, `facilitating_facts`, `hindering_factors`, `actions_taken`, `last_user_save`, `updated_at`, `created_at`) VALUES
-	(73, 2, 4, 2024, 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-10-07 05:24:36', '2024-10-07 05:24:36'),
-	(75, 3, 4, 2024, 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child\'s health', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school\'s activities/programs regarding health and wellness', 5, '2024-10-07 05:29:23', '2024-10-07 05:29:23'),
-	(76, 2, 4, 2024, 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-10-07 05:36:38', '2024-10-07 05:36:38'),
-	(77, 3, 4, 2024, 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school', 5, '2024-10-07 05:36:38', '2024-10-07 05:36:38'),
-	(78, 2, 3, 2024, 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(79, 3, 3, 2024, 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(80, 8, 3, 2024, 'active and effective communication between the teachers, parents and stakeholder of the school.', 'parents notion regarding educating their pupils', 'poverty, parents and pupils participation', 'parent teacher orientation', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(81, 9, 3, 2024, 'programs will implemented, effective communication between teachers and stakeholders', '', '', '', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(82, 11, 3, 2024, 'active participation from the teachers and stakeholders on the different programs of the school. effective communication between the teachers and parents.', 'parents and pupils negative attitude towards education', 'poverty, pupils and parents participation', 'orientation/PTA meetings', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(83, 12, 3, 2024, 'school coordinator and school are very active and well knowlegeable in implementing the program. teachers are actively helped facilitate and cooperate in doing their tasks. proper timeline in giving support and dessimination of information from division to school level.', 'pupils willingness to fully cooperate and engage in the program lack of technical support and assistance from partners school resources availabilty', 'lack of knowledge in conducting the program school resources availability pupils cooperation lack of support from stakeholders', 'coordinate from division and create a technical working commitee to ensure the smooth and effective implementation of the program. regular monitoring', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(84, 14, 3, 2024, 'the school continue to practice resiliency and provide technical assistance for the safety of the learners', '', '', 'the school continue its program and implementation with appropriate schedule of time', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(85, 16, 3, 2024, 'effective communication between teachers and stakeholders', 'the perspective of parents and students on education', 'poverty and the distance from home to school', 'inspire and encourage the parents to have confidence and positive mindset amidst adversities', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(86, 17, 3, 2024, 'increased number of learners for SY 2023-2024. active participation of teachers and stakeholders', '', '', '', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57'),
-	(87, 20, 3, 2024, 'school coordinator and school are very active and well knowlegeable in implementing the program. teachers are actively helped facilitate and cooperate in doing their tasks. proper timeline in giving support and dessimination of information from division to school level', 'students willingness to fully cooperate and engage in the program lack of technical support and assistance from partners school resources availability students cooperation lack of support from stakeholders', 'coordinate from division and create a technical working commitee to ensure the smooth and effective implementation of the program. regular monitoring', '', 5, '2024-10-08 12:54:57', '2024-10-08 12:54:57');
+INSERT INTO `issues_and_concerns` (`id`, `school_id`, `quarter`, `year`, `type`, `issues`, `facilitating_facts`, `hindering_factors`, `actions_taken`, `last_user_save`, `updated_at`, `created_at`) VALUES
+	(73, 2, 4, 2024, 'attendance', 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-11-10 08:47:10', '2024-10-07 05:24:36'),
+	(75, 3, 4, 2024, 'attendance', 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child\'s health', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school\'s activities/programs regarding health and wellness', 5, '2024-11-10 08:42:57', '2024-10-07 05:29:23'),
+	(76, 2, 4, 2024, 'attendance', 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-11-10 08:42:56', '2024-10-07 05:36:38'),
+	(77, 3, 4, 2024, 'attendance', 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school', 5, '2024-11-10 08:42:56', '2024-10-07 05:36:38'),
+	(78, 2, 3, 2024, 'attendance', 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-11-10 08:42:55', '2024-10-08 12:54:57'),
+	(79, 3, 3, 2024, 'attendance', 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school', 5, '2024-11-10 08:42:55', '2024-10-08 12:54:57'),
+	(80, 8, 3, 2024, 'attendance', 'active and effective communication between the teachers, parents and stakeholder of the school.', 'parents notion regarding educating their pupils', 'poverty, parents and pupils participation', 'parent teacher orientation', 5, '2024-11-10 08:42:53', '2024-10-08 12:54:57'),
+	(81, 9, 3, 2024, 'attendattendanceace', 'programs will implemented, effective communication between teachers and stakeholders', '', '', '', 5, '2024-11-10 08:42:54', '2024-10-08 12:54:57'),
+	(82, 11, 3, 2024, 'attendance', 'active participation from the teachers and stakeholders on the different programs of the school. effective communication between the teachers and parents.', 'parents and pupils negative attitude towards education', 'poverty, pupils and parents participation', 'orientation/PTA meetings', 5, '2024-11-10 08:42:52', '2024-10-08 12:54:57'),
+	(83, 12, 3, 2024, 'attendance', 'school coordinator and school are very active and well knowlegeable in implementing the program. teachers are actively helped facilitate and cooperate in doing their tasks. proper timeline in giving support and dessimination of information from division to school level.', 'pupils willingness to fully cooperate and engage in the program lack of technical support and assistance from partners school resources availabilty', 'lack of knowledge in conducting the program school resources availability pupils cooperation lack of support from stakeholders', 'coordinate from division and create a technical working commitee to ensure the smooth and effective implementation of the program. regular monitoring', 5, '2024-11-10 08:42:51', '2024-10-08 12:54:57'),
+	(84, 14, 3, 2024, 'attendance', 'the school continue to practice resiliency and provide technical assistance for the safety of the learners', '', '', 'the school continue its program and implementation with appropriate schedule of time', 5, '2024-11-10 08:42:52', '2024-10-08 12:54:57'),
+	(85, 16, 3, 2024, 'attendance', 'effective communication between teachers and stakeholders', 'the perspective of parents and students on education', 'poverty and the distance from home to school', 'inspire and encourage the parents to have confidence and positive mindset amidst adversities', 5, '2024-11-10 08:42:50', '2024-10-08 12:54:57'),
+	(86, 17, 3, 2024, 'attendance', 'increased number of learners for SY 2023-2024. active participation of teachers and stakeholders', '', '', '', 5, '2024-11-10 08:42:50', '2024-10-08 12:54:57'),
+	(87, 20, 3, 2024, 'attendance', 'school coordinator and school are very active and well knowlegeable in implementing the program. teachers are actively helped facilitate and cooperate in doing their tasks. proper timeline in giving support and dessimination of information from division to school level', 'students willingness to fully cooperate and engage in the program lack of technical support and assistance from partners school resources availability students cooperation lack of support from stakeholders', 'coordinate from division and create a technical working commitee to ensure the smooth and effective implementation of the program. regular monitoring', '', 5, '2024-11-10 08:42:49', '2024-10-08 12:54:57');
 
 -- Dumping structure for table smea.quality_assessment
 CREATE TABLE IF NOT EXISTS `quality_assessment` (
@@ -497,9 +501,23 @@ CREATE TABLE IF NOT EXISTS `quality_assessment` (
   CONSTRAINT `quality_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `quality_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `quality_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.quality_assessment: ~0 rows (approximately)
+-- Dumping data for table smea.quality_assessment: ~7 rows (approximately)
+INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
+	(2, 1, 1, 1, 'als', 23, 4, 2024, 5, '2024-11-10 13:18:47', '2024-11-10 13:18:47'),
+	(3, 1, 2, 1, 'als', 3436, 4, 2024, 5, '2024-11-10 13:55:49', '2024-11-10 13:55:49'),
+	(4, 1, 1, 1, 'eng-frustration', 11, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(5, 2, 1, 1, 'eng-frustration', 33, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(6, 3, 1, 1, 'eng-frustration', 55, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(7, 1, 1, 2, 'eng-frustration', 22, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(8, 2, 1, 2, 'eng-frustration', 44, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(9, 1, 1, 1, 'fil-frustration', 999, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(10, 2, 1, 1, 'fil-frustration', 333, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(11, 3, 1, 1, 'fil-frustration', 88, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(12, 1, 1, 2, 'fil-frustration', 222, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(13, 2, 1, 2, 'fil-frustration', 44, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(14, 4, 1, 2, 'fil-frustration', 78, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47');
 
 -- Dumping structure for table smea.roles
 CREATE TABLE IF NOT EXISTS `roles` (
