@@ -13,15 +13,110 @@ $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
 $year = date('Y');
 
+$reportType = 'enrollment'; // Default value
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_type'])) {
+    $reportType = $_POST['report_type'];
+}
+
 $sql = "SELECT 
-        SUM(CASE WHEN type = 'als' THEN count ELSE 0 END) AS total_als,
-        SUM(CASE WHEN type = 'tardiness' THEN count ELSE 0 END) AS total_tardiness,
-        SUM(CASE WHEN type = 'absenteeism' THEN count ELSE 0 END) AS total_absentism,
-        SUM(CASE WHEN type = 'severly_wasted' THEN count ELSE 0 END) AS total_severely_wasted
-        FROM attendance_summary
-        WHERE quarter = $currentQuarter;";
+        SUM(CASE WHEN quarter = 1 AND type = '$reportType' THEN count ELSE 0 END) AS q1_total,
+        SUM(CASE WHEN quarter = 2 AND type = '$reportType' THEN count ELSE 0 END) AS q2_total,
+        SUM(CASE WHEN quarter = 3 AND type = '$reportType' THEN count ELSE 0 END) AS q3_total,
+        SUM(CASE WHEN quarter = 4 AND type = '$reportType' THEN count ELSE 0 END) AS q4_total
+        FROM attendance_summary 
+        WHERE year = $year;";
 $sum = $conn->query($sql);
-$sum = $sum->fetch_assoc()
+$sum = $sum->fetch_assoc();
+
+$schoolsQuery = "SELECT 
+    s.id,
+    s.name,
+    COALESCE(SUM(a.count), 0) as total_count,
+    (SELECT COALESCE(SUM(count), 0) 
+     FROM attendance_summary 
+     WHERE type = '$reportType' 
+     AND year = $year) as overall_total
+FROM schools s
+LEFT JOIN attendance_summary a ON s.id = a.school_id 
+    AND a.type = '$reportType' 
+    AND a.year = $year
+GROUP BY s.id, s.name
+ORDER BY s.id";
+
+$schools = $conn->query($schoolsQuery);
+
+$schoolStats = "";
+if ($schools->num_rows > 0) {
+    while($school = $schools->fetch_assoc()) {
+        $percentage = $school['overall_total'] > 0 
+            ? round(($school['total_count'] / $school['overall_total']) * 100, 1)
+            : 0;
+            
+        $schoolStats .= "
+            <h4 class='small font-weight-bold'>{$school['name']} <span
+                    class='float-right'>{$school['total_count']} ({$percentage}%)</span></h4>
+            <div class='progress mb-4'>
+                <div class='progress-bar bg-info' role='progressbar' style='width: {$percentage}%'
+                    aria-valuenow='{$percentage}' aria-valuemin='0' aria-valuemax='100'></div>
+            </div>";
+    }
+}
+
+// Get school year data for the chart
+$chartSql = "SELECT 
+        CONCAT(sy.start_year, '-', sy.end_year) as school_year,
+        SUM(a.count) as total
+    FROM attendance_summary a
+    JOIN school_year sy ON a.year = sy.end_year
+    WHERE a.type = '$reportType'
+    GROUP BY sy.id, sy.start_year, sy.end_year
+    ORDER BY sy.start_year ASC";
+
+    $chartResult = $conn->query($chartSql);
+    $yearLabels = [];
+    $yearValues = [];
+
+    while($row = $chartResult->fetch_assoc()) {
+        $yearLabels[] = $row['school_year'];
+        $yearValues[] = $row['total'];
+    }
+
+    // Pass the data to JavaScript
+    echo "<script>
+        var yearLabels = " . json_encode($yearLabels) . ";
+        var yearValues = " . json_encode($yearValues) . ";
+    </script>";
+
+// Add this query to get the pie chart data
+$pieChartQuery = "SELECT 
+    SUM(CASE 
+        WHEN a.type = 'als' THEN a.count 
+        ELSE 0 
+    END) as als_count,
+    SUM(CASE 
+        WHEN g.type = 'elem' THEN a.count 
+        ELSE 0 
+    END) as elem_count,
+    SUM(CASE 
+        WHEN g.type IN ('jhs', 'shs') THEN a.count 
+        ELSE 0 
+    END) as secondary_count
+FROM attendance_summary a
+LEFT JOIN grade_level g ON a.grade_level_id = g.id
+WHERE a.type = '$reportType' 
+AND a.year = $year";
+
+$pieResult = $conn->query($pieChartQuery);
+$pieData = $pieResult->fetch_assoc();
+
+// Pass data to JavaScript
+echo "<script>
+    var pieChartData = {
+        als: " . ($pieData['als_count'] ?? 0) . ",
+        elementary: " . ($pieData['elem_count'] ?? 0) . ",
+        secondary: " . ($pieData['secondary_count'] ?? 0) . "
+    };
+</script>";
 ?>
 
 <body id="page-top">
@@ -40,11 +135,35 @@ $sum = $sum->fetch_assoc()
                 <div class="container-fluid">
 
                     <!-- Page Heading -->
-                    <!-- <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-                        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-                                class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
-                    </div> -->
+                        <div class="dropdown">
+                            <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle" 
+                                    type="button" 
+                                    id="reportDropdown" 
+                                    data-toggle="dropdown" 
+                                    aria-haspopup="true" 
+                                    aria-expanded="false">
+                                <i class="fas fa-filter fa-sm text-white-50"></i> Filter Report
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="reportDropdown">
+                                <form action="dashboard.php" method="POST">
+                                    <button type="submit" name="report_type" value="enrollment" class="dropdown-item">
+                                        Enrollment
+                                    </button>
+                                    <button type="submit" name="report_type" value="dropout" class="dropdown-item">
+                                        Drop Out
+                                    </button>
+                                    <button type="submit" name="report_type" value="graduates" class="dropdown-item">
+                                        Graduates
+                                    </button>
+                                    <button type="submit" name="report_type" value="repeaters" class="dropdown-item">
+                                        Repeaters
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Content Row -->
                     <div class="row">
@@ -56,8 +175,8 @@ $sum = $sum->fetch_assoc()
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                ALS Attendance (Quarterly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_als'];?></div>
+                                                1st Quarter</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($sum['q1_total'], 0, '.', ',');?></div>
                                         </div>
                                         <div class="col-auto">
                                             <!-- <i class="fas fa-calendar fa-2x text-gray-300"></i> -->
@@ -74,8 +193,8 @@ $sum = $sum->fetch_assoc()
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Tardiness (Quarterly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_tardiness'];?></div>
+                                                2nd Quarter</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($sum['q2_total'], 0, '.', ',');?></div>
                                         </div>
                                         <div class="col-auto">
                                             <!-- <i class="fas fa-dollar-sign fa-2x text-gray-300"></i> -->
@@ -85,47 +204,34 @@ $sum = $sum->fetch_assoc()
                             </div>
                         </div>
 
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Absenteeism (Quarterly)
-                                            </div>
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $sum['total_absentism'];?></div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="progress progress-sm mr-2">
-                                                        <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: 50%" aria-valuenow="50" aria-valuemin="0"
-                                                            aria-valuemax="100"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <!-- <i class="fas fa-clipboard-list fa-2x text-gray-300"></i> -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pending Requests Card Example -->
                         <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-warning shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Severly Wasted</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $sum['total_severely_wasted'];?></div>
+                                                3rd Quarter</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($sum['q3_total'], 0, '.', ',');?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <!-- <i class="fas fa-comments fa-2x text-gray-300"></i> -->
+                                            <!-- <i class="fas fa-dollar-sign fa-2x text-gray-300"></i> -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                4th Quarter</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($sum['q4_total'], 0, '.', ',');?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <!-- <i class="fas fa-dollar-sign fa-2x text-gray-300"></i> -->
                                         </div>
                                     </div>
                                 </div>
@@ -138,11 +244,11 @@ $sum = $sum->fetch_assoc()
                             <div class="card shadow mb-4">
                                 <div class="card shadow mb-4">
                                     <div class="card-header py-3">
-                                        <h6 class="m-0 font-weight-bold text-primary">Enrollments Overview</h6>
+                                        <h6 class="m-0 font-weight-bold text-primary"><?php echo ucwords($reportType);?> Overview</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="chart-bar">
-                                            <canvas id="myBarChart"></canvas>
+                                            <canvas id="enrollmentBarChart"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -199,39 +305,10 @@ $sum = $sum->fetch_assoc()
                             <!-- Project Card Example -->
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Schools</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Schools <?php echo ucwords($reportType); ?> Distribution</h6>
                                 </div>
                                 <div class="card-body">
-                                    <h4 class="small font-weight-bold">Kinder <span
-                                            class="float-right">20%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 20%"
-                                            aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Elementary <span
-                                            class="float-right">40%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 40%"
-                                            aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Junior HighSchool <span
-                                            class="float-right">60%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar" role="progressbar" style="width: 60%"
-                                            aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Senior HighSchool <span
-                                            class="float-right">80%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 80%"
-                                            aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">ALS <span
-                                            class="float-right">100</span></h4>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"
-                                            aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
+                                    <?php echo $schoolStats; ?>
                                 </div>
                             </div>
 

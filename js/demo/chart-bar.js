@@ -27,18 +27,21 @@ function number_format(number, decimals, dec_point, thousands_sep) {
     return s.join(dec);
 }
 
+// Get the report type from PHP
+const reportType = document.getElementById('reportDropdown').textContent.trim();
+
 // Bar Chart Example
-var ctx = document.getElementById("myBarChart");
+var ctx = document.getElementById("enrollmentBarChart");
 var myBarChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ["January", "February", "March", "April", "May", "June"],
+        labels: yearLabels, // Will be populated from PHP with school years
         datasets: [{
-            label: "Percentage",
+            label: reportType.charAt(0).toUpperCase() + reportType.slice(1) + " Count",
             backgroundColor: "#4e73df",
             hoverBackgroundColor: "#2e59d9",
             borderColor: "#4e73df",
-            data: [28.14, 35.45, 41.72, 52.33, 65.55, 100],
+            data: yearValues, // Will be populated from PHP with yearly totals
         }],
     },
     options: {
@@ -54,7 +57,7 @@ var myBarChart = new Chart(ctx, {
         scales: {
             xAxes: [{
                 time: {
-                    unit: 'month'
+                    unit: 'year'
                 },
                 gridLines: {
                     display: false,
@@ -68,11 +71,10 @@ var myBarChart = new Chart(ctx, {
             yAxes: [{
                 ticks: {
                     min: 0,
-                    max: 100,
                     maxTicksLimit: 5,
                     padding: 10,
-                    callback: function(value, index, values) {
-                        return value + '%';
+                    callback: function(value) {
+                        return number_format(value);
                     }
                 },
                 gridLines: {
@@ -86,6 +88,11 @@ var myBarChart = new Chart(ctx, {
         },
         legend: {
             display: false
+        },
+        title: {
+            display: true,
+            text: reportType.charAt(0).toUpperCase() + reportType.slice(1) + ' by School Year',
+            fontSize: 16
         },
         tooltips: {
             titleMarginBottom: 10,
@@ -101,8 +108,7 @@ var myBarChart = new Chart(ctx, {
             caretPadding: 10,
             callbacks: {
                 label: function(tooltipItem, chart) {
-                    var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                    return datasetLabel + ': ' + number_format(tooltipItem.yLabel, 2) + '%';
+                    return reportType.charAt(0).toUpperCase() + reportType.slice(1) + ' Count: ' + number_format(tooltipItem.yLabel);
                 }
             }
         },

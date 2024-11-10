@@ -197,7 +197,7 @@ function exportCSV($conn) {
     // Write the header row
     fputcsv($output, ['Grade Level', 'School Name', 'Male', 'Female', 'Total']);
 
-    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'tardiness', 'absenteeism', 'severly_wasted', 'wasted', 'normal', 'obese', 'overweight', 'no_classes', 'modules'];
+    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
 
     foreach ($types as $type) {
         $gradeLevels = $conn->query("SELECT * FROM grade_level ORDER BY id");
@@ -427,28 +427,28 @@ if (isset($_POST['export_pdf'])) {
                                         <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Enrollment</a>
+                                        <a class="nav-link" href="#" id="enrollment">Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism">Drop Outs</a>
+                                        <a class="nav-link" href="#" id="dropouts">Drop Outs</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted">Graduates</a>
+                                        <a class="nav-link" href="#" id="graduates">Graduates</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted">Completers</a>
+                                        <a class="nav-link" href="#" id="completers">Completers</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal">Leavers</a>
+                                        <a class="nav-link" href="#" id="leavers">Leavers</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese">Repeaters</a>
+                                        <a class="nav-link" href="#" id="repeaters">Repeaters</a>
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="overweight">Overweight</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes">Subjects</a>
+                                        <a class="nav-link" href="#" id="subjects">Subjects</a>
                                     </li>
                                     <li class="nav-item-custom">
                                         <a class="nav-link" href="#" id="modules">Modules</a>
@@ -525,17 +525,17 @@ if (isset($_POST['export_pdf'])) {
                                     </div>
                                 </div>
 
-                                <div id="content-tardiness" class="content-tab">
+                                <div id="content-enrollment" class="content-tab">
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'enrollment', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent4">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'enrollment', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -545,13 +545,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'dropouts', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent5">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'dropouts', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -561,13 +561,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'graduates', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent6">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'graduates', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -577,13 +577,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'completers', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent7">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'completers', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -593,13 +593,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'leavers', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent8">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'leavers', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -609,13 +609,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'repeaters', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent9">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'repeaters', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -641,13 +641,13 @@ if (isset($_POST['export_pdf'])) {
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'no_classes', $grade_levels); ?>
+                                                <?php echo str_replace('dynamicId', 'subjects', $grade_levels); ?>
                                             </div>
                                         </div>
 
                                         <div class="col-md-9">
                                             <div class="tab-content" id="v-pills-tabContent11">
-                                                <?php echo str_replace('dynamicId', 'no_classes', $grade_level_inputs); ?>
+                                                <?php echo str_replace('dynamicId', 'subjects', $grade_level_inputs); ?>
                                             </div>
                                         </div>
                                     </div>

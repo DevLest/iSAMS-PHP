@@ -209,13 +209,13 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
                                         <a class="nav-link" href="#" id="als">ALS Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">Enrollment</a>
+                                        <a class="nav-link" href="#" id="enrollment">Enrollment</a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher">Drop Outs </a>
+                                        <a class="nav-link" href="#" id="dropouts">Drop Outs </a>
                                     </li>
                                     <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness">Completers</a>
+                                        <a class="nav-link" href="#" id="completers">Completers</a>
                                     </li>
                                 </ul>
                             </div>
@@ -248,7 +248,7 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
                             </div>
 
                             <?php
-                            $types = ['pardos_sardos', 'pivate_vourcher', 'tardiness', 'absenteeism', 'severly_wasted', 'wasted', 'normal', 'obese', 'overweight', 'no_classes'];
+                            $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects'];
                             foreach ($types as $type) {
                                 echo "<div id='content-$type' class='content-tab'>
                                         <div class='row'>
