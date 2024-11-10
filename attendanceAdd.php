@@ -16,7 +16,7 @@ $year = date('Y');
 if (isset($_POST['quarter'])) {
     $selectedQuarter = $_POST['quarter'];
 } else {
-    $selectedQuarter = $currentQuarter; // default to current quarter if none selected
+    $selectedQuarter = $currentQuarter;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
@@ -184,117 +184,6 @@ if ($grade_level->num_rows > 0) {
     }
 }
 
-// Add these new functions at the top of the file, after the existing PHP code
-
-function exportCSV($conn) {
-    // Set the headers to force download
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment;filename="attendance_summary.csv"');
-
-    // Open output stream
-    $output = fopen('php://output', 'w');
-
-    // Write the header row
-    fputcsv($output, ['Grade Level', 'School Name', 'Male', 'Female', 'Total']);
-
-    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
-
-    foreach ($types as $type) {
-        $gradeLevels = $conn->query("SELECT * FROM grade_level ORDER BY id");
-        while ($gradeLevel = $gradeLevels->fetch_assoc()) {
-            $schools = $conn->query("SELECT * FROM schools ORDER BY id");
-            while ($school = $schools->fetch_assoc()) {
-                $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 1 AND type = '$type'")->fetch_assoc();
-                $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 2 AND type = '$type'")->fetch_assoc();
-
-                $total = ($male['count'] ?? 0) + ($female['count'] ?? 0);
-
-                // Write the data row
-                fputcsv($output, [
-                    $gradeLevel['name'],
-                    $school['name'],
-                    $male['count'] ?? 0,
-                    $female['count'] ?? 0,
-                    $total
-                ]);
-            }
-        }
-    }
-
-    // Close the output stream
-    fclose($output);
-    exit;
-}
-
-function exportPDF($conn, $activeTab, $activeGradeLevel) {
-    require_once('vendor/tecnickcom/tcpdf/tcpdf.php');
-
-    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-    $pdf->SetCreator(PDF_CREATOR);
-    $pdf->SetAuthor('Your Name');
-    $pdf->SetTitle('Attendance Summary');
-    $pdf->SetSubject('Attendance Summary');
-    $pdf->SetKeywords('TCPDF, PDF, Attendance, Summary');
-
-    $pdf->SetHeaderData('', 0, 'Attendance Summary', '');
-
-    $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
-    $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
-
-    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-    $pdf->AddPage('L');
-
-    $html = '<h1>' . ucfirst(str_replace('_', ' ', $activeTab)) . ' - Grade ' . $activeGradeLevel . '</h1>';
-    $html .= '<table border="1" cellpadding="5">
-                <tr>
-                    <th>School Name</th>
-                    <th>Male</th>
-                    <th>Female</th>
-                    <th>Total</th>
-                </tr>';
-
-    $schools = $conn->query("SELECT * FROM schools ORDER BY id");
-    while ($school = $schools->fetch_assoc()) {
-        $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = $activeGradeLevel AND gender = 1 AND type = '$activeTab'")->fetch_assoc();
-        $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = $activeGradeLevel AND gender = 2 AND type = '$activeTab'")->fetch_assoc();
-
-        $maleCount = $male['count'] ?? 0;
-        $femaleCount = $female['count'] ?? 0;
-        $total = $maleCount + $femaleCount;
-
-        $html .= "<tr>
-                    <td>{$school['name']}</td>
-                    <td>{$maleCount}</td>
-                    <td>{$femaleCount}</td>
-                    <td>{$total}</td>
-                  </tr>";
-    }
-
-    $html .= '</table>';
-
-    $pdf->writeHTML($html, true, false, true, false, '');
-
-    $pdf->Output('attendance_summary.pdf', 'D');
-    exit;
-}
-
-if (isset($_POST['export_csv'])) {
-    exportCSV($conn);
-}
-
-if (isset($_POST['export_pdf'])) {
-    $activeTab = $_POST['activeTab'] ?? '';
-    $activeGradeLevel = $_POST['activeGradeLevel'] ?? '';
-    if (empty($activeTab) || empty($activeGradeLevel)) {
-        echo "Invalid active tab or grade level.";
-        exit;
-    }
-    exportPDF($conn, $activeTab, $activeGradeLevel);
-}
-
 ?>
 
 <body id="page-top">
@@ -387,6 +276,35 @@ if (isset($_POST['export_pdf'])) {
                             background-color: #fff;
                             color: #495057;
                         }
+                        
+                        .nav-tabs {
+                            border-bottom: 1px solid #dee2e6;
+                            margin-bottom: 1rem;
+                        }
+                        .nav-tabs .nav-item {
+                            margin-bottom: -1px;
+                        }
+                        .nav-tabs .nav-link {
+                            border: 1px solid transparent;
+                            border-top-left-radius: 0.25rem;
+                            border-top-right-radius: 0.25rem;
+                            padding: 0.5rem 1rem;
+                            color: #495057;
+                        }
+                        .nav-tabs .nav-link:hover {
+                            border-color: #e9ecef #e9ecef #dee2e6;
+                        }
+                        .nav-tabs .nav-link.active {
+                            color: #495057;
+                            background-color: #fff;
+                            border-color: #dee2e6 #dee2e6 #fff;
+                        }
+                        .tab-content {
+                            padding: 1rem;
+                            border: 1px solid #dee2e6;
+                            border-top: none;
+                            border-radius: 0 0 0.25rem 0.25rem;
+                        }
                     </style>
 
                     <div class="container-fluid">
@@ -409,262 +327,255 @@ if (isset($_POST['export_pdf'])) {
                             <div class="col-md-6 text-right">
                                 Last Edited By: <?php echo $lastUserSave;?>
                                 <button type="submit" class="btn btn-primary" name="save">Save</button>
-                                <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
-                                <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
                             </div>
                         </div>
                         
-                        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                            <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="als">ALS</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">PARDOS SARDOS</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher">Pivate Vourcher</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="enrollment">Enrollment</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="dropouts">Drop Outs</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="graduates">Graduates</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="completers">Completers</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="leavers">Leavers</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="repeaters">Repeaters</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="overweight">Overweight</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="subjects">Subjects</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="modules">Modules</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </nav>
-                        
+                        <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="als-tab" data-toggle="tab" href="#content-als" role="tab" onclick="$('#activeTab').val('als-1')">ALS</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="pardos_sardos-tab" data-toggle="tab" href="#content-pardos_sardos" role="tab" onclick="$('#activeTab').val('pardos_sardos-1')">PARDOS SARDOS</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="pivate_vourcher-tab" data-toggle="tab" href="#content-pivate_vourcher" role="tab" onclick="$('#activeTab').val('pivate_vourcher-1')">Private Voucher</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="enrollment-tab" data-toggle="tab" href="#content-enrollment" role="tab" onclick="$('#activeTab').val('enrollment-1')">Enrollment</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="dropouts-tab" data-toggle="tab" href="#content-dropouts" role="tab" onclick="$('#activeTab').val('dropouts-1')">Drop Outs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="graduates-tab" data-toggle="tab" href="#content-graduates" role="tab" onclick="$('#activeTab').val('graduates-1')">Graduates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="completers-tab" data-toggle="tab" href="#content-completers" role="tab" onclick="$('#activeTab').val('completers-1')">Completers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="leavers-tab" data-toggle="tab" href="#content-leavers" role="tab" onclick="$('#activeTab').val('leavers-1')">Leavers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="repeaters-tab" data-toggle="tab" href="#content-repeaters" role="tab" onclick="$('#activeTab').val('repeaters-1')">Repeaters</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="overweight-tab" data-toggle="tab" href="#content-overweight" role="tab" onclick="$('#activeTab').val('overweight-1')">Overweight</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="subjects-tab" data-toggle="tab" href="#content-subjects" role="tab" onclick="$('#activeTab').val('subjects-1')">Subjects</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="modules-tab" data-toggle="tab" href="#content-modules" role="tab" onclick="$('#activeTab').val('modules-1')">Modules</a>
+                            </li>
+                        </ul>
+
                         <input type="hidden" name="activeTab" id="activeTab" value="">
                         <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="">
-                        <div id="tabContent">
-                            <div id="tabContent">
-                                <div id="content-als" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
-                                                <a class="nav-link active" id="v-pills-blp-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-blp" role="tab" aria-controls="v-pills-blp" aria-selected="true">BLP</a>
-                                                <a class="nav-link" id="v-pills-ae-elem-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-ae-elem" role="tab" aria-controls="v-pills-ae-elem" aria-selected="false">A & E - Elementary</a>
-                                                <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A&E - JHS</a>
-                                            </div>
-                                        </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent1">
-                                                <div class="tab-pane fade show active" id="v-pills-blp" role="tabpanel" aria-labelledby="v-pills-blp-tab">
-                                                    <table class="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col">Name</th>
-                                                                <th scope="col">Male</th>
-                                                                <th scope="col">Female</th>
-                                                                <th scope="col">Total</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php echo str_replace('dynamicId', 'als', $inputTables); ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                        <div class="tab-content" id="myTabContent">
+                            <div id="content-als" class="tab-pane fade show active">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
+                                            <a class="nav-link active" id="v-pills-blp-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-blp" role="tab" aria-controls="v-pills-blp" aria-selected="true">BLP</a>
+                                            <a class="nav-link" id="v-pills-ae-elem-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-ae-elem" role="tab" aria-controls="v-pills-ae-elem" aria-selected="false">A & E - Elementary</a>
+                                            <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A&E - JHS</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent1">
+                                            <div class="tab-pane fade show active" id="v-pills-blp" role="tabpanel" aria-labelledby="v-pills-blp-tab">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Name</th>
+                                                            <th scope="col">Male</th>
+                                                            <th scope="col">Female</th>
+                                                            <th scope="col">Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php echo str_replace('dynamicId', 'als', $inputTables); ?>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div id="content-pardos_sardos" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab2" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-pardos_sardos" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab2" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent2">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent2">
+                                            <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div id="content-pivate_vourcher" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab3" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_levels); ?>
-                                            </div>
+                            <div id="content-pivate_vourcher" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab3" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent3">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent3">
+                                            <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div id="content-enrollment" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'enrollment', $grade_levels); ?>
-                                            </div>
+                            <div id="content-enrollment" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'enrollment', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent4">
-                                                <?php echo str_replace('dynamicId', 'enrollment', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent4">
+                                            <?php echo str_replace('dynamicId', 'enrollment', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div id="content-absenteeism" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'dropouts', $grade_levels); ?>
-                                            </div>
+                            <div id="content-dropouts" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'dropouts', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent5">
-                                                <?php echo str_replace('dynamicId', 'dropouts', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent5">
+                                            <?php echo str_replace('dynamicId', 'dropouts', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div id="content-severly_wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'graduates', $grade_levels); ?>
-                                            </div>
+                            <div id="content-graduates" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'graduates', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent6">
-                                                <?php echo str_replace('dynamicId', 'graduates', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent6">
+                                            <?php echo str_replace('dynamicId', 'graduates', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div id="content-wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'completers', $grade_levels); ?>
-                                            </div>
+                            <div id="content-completers" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'completers', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent7">
-                                                <?php echo str_replace('dynamicId', 'completers', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent7">
+                                            <?php echo str_replace('dynamicId', 'completers', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div id="content-normal" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'leavers', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-leavers" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'leavers', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent8">
-                                                <?php echo str_replace('dynamicId', 'leavers', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent8">
+                                            <?php echo str_replace('dynamicId', 'leavers', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div id="content-obese" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'repeaters', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-repeaters" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'repeaters', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent9">
-                                                <?php echo str_replace('dynamicId', 'repeaters', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent9">
+                                            <?php echo str_replace('dynamicId', 'repeaters', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div id="content-overweight" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab10" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-overweight" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab10" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'overweight', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent10">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent10">
+                                            <?php echo str_replace('dynamicId', 'overweight', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div id="content-no_classes" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'subjects', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-subjects" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'subjects', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent11">
-                                                <?php echo str_replace('dynamicId', 'subjects', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent11">
+                                            <?php echo str_replace('dynamicId', 'subjects', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div id="content-modules" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab12" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'modules', $grade_levels); ?>
-                                            </div>
+                            </div>
+                            
+                            <div id="content-modules" class="tab-pane fade">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="nav flex-column nav-pills" id="v-pills-tab12" role="tablist" aria-orientation="vertical">
+                                            <?php echo str_replace('dynamicId', 'modules', $grade_levels); ?>
                                         </div>
+                                    </div>
 
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent12">
-                                                <?php echo str_replace('dynamicId', 'modules', $grade_level_inputs); ?>
-                                            </div>
+                                    <div class="col-md-9">
+                                        <div class="tab-content" id="v-pills-tabContent12">
+                                            <?php echo str_replace('dynamicId', 'modules', $grade_level_inputs); ?>
                                         </div>
                                     </div>
                                 </div>
@@ -778,6 +689,13 @@ if (isset($_POST['export_pdf'])) {
             });
 
             $(".nav-item-custom:first-child a").click();
+
+            // Initialize Bootstrap tabs
+            $('#myTab a').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+                lockFields();
+            });
         });
 
         function updateActiveTab(tab, gradeLevel) {

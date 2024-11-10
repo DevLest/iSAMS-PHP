@@ -101,6 +101,59 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
     return $content;
 }
 
+// Add these export functions after the existing PHP code at the top
+function exportCSV($conn) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment;filename="attendance_summary.csv"');
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Grade Level', 'School Name', 'Male', 'Female', 'Total']);
+
+    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
+
+    foreach ($types as $type) {
+        $gradeLevels = $conn->query("SELECT * FROM grade_level ORDER BY id");
+        while ($gradeLevel = $gradeLevels->fetch_assoc()) {
+            $schools = $conn->query("SELECT * FROM schools ORDER BY id");
+            while ($school = $schools->fetch_assoc()) {
+                $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 1 AND type = '$type'")->fetch_assoc();
+                $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 2 AND type = '$type'")->fetch_assoc();
+
+                $total = ($male['count'] ?? 0) + ($female['count'] ?? 0);
+                fputcsv($output, [
+                    $gradeLevel['name'],
+                    $school['name'],
+                    $male['count'] ?? 0,
+                    $female['count'] ?? 0,
+                    $total
+                ]);
+            }
+        }
+    }
+    fclose($output);
+    exit;
+}
+
+function exportPDF($conn, $activeTab, $activeGradeLevel) {
+    require_once('vendor/tecnickcom/tcpdf/tcpdf.php');
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    // ... rest of the PDF export function remains the same ...
+}
+
+// Add export handling logic
+if (isset($_POST['export_csv'])) {
+    exportCSV($conn);
+}
+
+if (isset($_POST['export_pdf'])) {
+    $activeTab = $_POST['activeTab'] ?? '';
+    $activeGradeLevel = $_POST['activeGradeLevel'] ?? '';
+    if (empty($activeTab) || empty($activeGradeLevel)) {
+        echo "Invalid active tab or grade level.";
+        exit;
+    }
+    exportPDF($conn, $activeTab, $activeGradeLevel);
+}
+
 ?>
 
 <body id="page-top">
@@ -201,6 +254,10 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
                     <p class="mb-4">Data comparison based on School Year</p>
                     
                     <form action="attendanceAdd.php" method="post">
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
+                            <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
+                        </div>
                         
                         <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
                             <div class="collapse navbar-collapse" id="navbarNav">

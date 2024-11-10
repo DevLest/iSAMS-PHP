@@ -10,7 +10,7 @@ require_once "connection/db.php";
 include_once('header.php');
 
 $sql = "SELECT * FROM schools ORDER BY name ASC";
-$result = $conn->query($sql);
+$schoolResult = $conn->query($sql);
 ?>
 
 <body id="page-top">
@@ -31,7 +31,14 @@ $result = $conn->query($sql);
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Active Schools</h6>
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Active Schools</h6>
+                                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                                    <a href="addSchool.php" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus"></i> Add School Year
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -52,9 +59,9 @@ $result = $conn->query($sql);
                                     </tfoot>
                                     <tbody>
                                         <?php 
-                                            if ($result->num_rows > 0) {
+                                            if ($schoolResult->num_rows > 0) {
                                                 // Output data of each row
-                                                while($row = $result->fetch_assoc()) {
+                                                while($row = $schoolResult->fetch_assoc()) {
                                                     echo "
                                                         <tr>
                                                             <td>".$row["name"]."</td>

@@ -10,7 +10,7 @@ require_once "connection/db.php";
 include_once('header.php');
 
 $sql = "SELECT * FROM school_year ORDER BY start_year DESC";
-$result = $conn->query($sql);
+$syResult = $conn->query($sql);
 ?>
 
 <body id="page-top">
@@ -30,8 +30,13 @@ $result = $conn->query($sql);
                             href="https://datatables.net">official DataTables documentation</a>.</p>
 
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Active Schools</h6>
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">School Year List</h6>
+                            <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                            <a href="addSchoolYear.php" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add School Year
+                            </a>
+                            <?php endif; ?>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -50,9 +55,9 @@ $result = $conn->query($sql);
                                     </tfoot>
                                     <tbody>
                                         <?php 
-                                            if ($result->num_rows > 0) {
+                                            if ($syResult->num_rows > 0) {
                                                 // Output data of each row
-                                                while($row = $result->fetch_assoc()) {
+                                                while($row = $syResult->fetch_assoc()) {
                                                     echo "
                                                         <tr>
                                                             <td> S.Y. ".$row["start_year"]." - ".$row["end_year"]." ( ".$row['start_month']."/".$row["start_year"]." - ".$row['end_month']."/".$row["end_year"]." ) </td>

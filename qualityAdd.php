@@ -192,7 +192,12 @@ $qualityKeys = array_keys($qualityData);
                                 <label for="quarter">Select Quarter:</label>
                                 <select id="quarter" name="quarter">
                                     <?php for($i = 1; $i <= 4; $i++): ?>
-                                        <option value="<?php echo $i; ?>" <?php echo ($selectedQuarter == $i) ? 'selected' : ''; ?>><?php echo $i; ?>st Quarter</option>
+                                        <option value="<?php echo $i; ?>" <?php echo ($selectedQuarter == $i) ? 'selected' : ''; ?>><?php echo $i; ?><?php 
+                                            if($i == 1) echo 'st';
+                                            else if($i == 2) echo 'nd'; 
+                                            else if($i == 3) echo 'rd';
+                                            else echo 'th';
+                                        ?> Quarter</option>
                                     <?php endfor; ?>
                                 </select>
                                 <button type="submit" class="btn btn-success" name="filter">Select</button>

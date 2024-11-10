@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $facilitating_factors = $_POST['facilitating_factors'][$school_id] ?? null;
         $hindering_factors = $_POST['hindering_factors'][$school_id] ?? null;
         $actions_to_be_taken = $_POST['actions_to_be_taken'][$school_id] ?? null;
-        $type = 'quality';
+        $type = 'rwb';
 
         // Check if any of the fields have values
         if (!empty($issues) || !empty($facilitating_factors) || !empty($hindering_factors) || !empty($actions_to_be_taken)) {
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 $existingData = [];
 $existingDataQuery = "SELECT * FROM issues_and_concerns WHERE quarter = ? AND year = ? AND type = ?";
 $existingDataStmt = $conn->prepare($existingDataQuery);
-$type = "quality"; // Create variable to pass by reference
+$type = "rwb"; // Create variable to pass by reference
 $existingDataStmt->bind_param("iis", $selectedQuarter, $year, $type);
 $existingDataStmt->execute();
 $result = $existingDataStmt->get_result();
@@ -191,7 +191,7 @@ if ($schools->num_rows > 0) {
                     <h1 class="h3 mb-2 text-gray-800">Issues and Concerns</h1>
                     <p class="mb-4">Issues and concerns on Access Pilar</p>
                     
-                    <form action="qualityConcerns.php" method="post">
+                    <form action="rwbConcerns.php" method="post">
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="quarter">Select Quarter:</label>

@@ -22,17 +22,18 @@ if (isset($_POST['quarter'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
-    $issuesStmt = $conn->prepare("INSERT INTO issues_and_concerns (school_id, issues, facilitating_facts, hindering_factors, actions_taken, quarter, year, last_user_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $issuesStmt = $conn->prepare("INSERT INTO issues_and_concerns (school_id, issues, facilitating_facts, hindering_factors, actions_taken, quarter, year, last_user_save, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     foreach ($_POST['issues'] as $school_id => $value) {
         $issues = $_POST['issues'][$school_id] ?? null;
         $facilitating_factors = $_POST['facilitating_factors'][$school_id] ?? null;
         $hindering_factors = $_POST['hindering_factors'][$school_id] ?? null;
         $actions_to_be_taken = $_POST['actions_to_be_taken'][$school_id] ?? null;
+        $type = 'attendance';
 
         // Check if any of the fields have values
         if (!empty($issues) || !empty($facilitating_factors) || !empty($hindering_factors) || !empty($actions_to_be_taken)) {
-            $issuesStmt->bind_param("issssiii", $school_id, $issues, $facilitating_factors, $hindering_factors, $actions_to_be_taken, $selectedQuarter, $year, $current_user_id);
+            $issuesStmt->bind_param("issssiiss", $school_id, $issues, $facilitating_factors, $hindering_factors, $actions_to_be_taken, $selectedQuarter, $year, $current_user_id, $type);
             $issuesStmt->execute();
         }
     }
@@ -40,9 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
 // Fetch existing data for the selected quarter and year
 $existingData = [];
-$existingDataQuery = "SELECT * FROM issues_and_concerns WHERE quarter = ? AND year = ?";
+$existingDataQuery = "SELECT * FROM issues_and_concerns WHERE quarter = ? AND year = ? AND type = ?";
 $existingDataStmt = $conn->prepare($existingDataQuery);
-$existingDataStmt->bind_param("ii", $selectedQuarter, $year);
+$type = "attendance"; // Create variable to pass by reference
+$existingDataStmt->bind_param("iis", $selectedQuarter, $year, $type);
 $existingDataStmt->execute();
 $result = $existingDataStmt->get_result();
 while ($row = $result->fetch_assoc()) {
@@ -74,10 +76,10 @@ if ($schools->num_rows > 0) {
         $inputTables .= "
             <tr>
                 <td>".$row["name"]."</td>
-                <td><input type='text' class='form-control form-control-sm' name='issues[".$school_id."]' value='".$issues."' ".(!empty($issues) ? "readonly" : "")." ondblclick='requestEdit(this)'></td>
-                <td><input type='text' class='form-control form-control-sm' name='facilitating_factors[".$school_id."]' value='".$facilitating_factors."' ".(!empty($facilitating_factors) ? "readonly" : "")." ondblclick='requestEdit(this)'></td>
-                <td><input type='text' class='form-control form-control-sm' name='hindering_factors[".$school_id."]' value='".$hindering_factors."' ".(!empty($hindering_factors) ? "readonly" : "")." ondblclick='requestEdit(this)'></td>
-                <td><input type='text' class='form-control form-control-sm' name='actions_to_be_taken[".$school_id."]' value='".$actions_to_be_taken."' ".(!empty($actions_to_be_taken) ? "readonly" : "")." ondblclick='requestEdit(this)'></td>
+                <td><textarea class='form-control form-control-sm auto-resize' name='issues[".$school_id."]' ".(!empty($issues) ? "readonly" : "")." ondblclick='requestEdit(this)'>".$issues."</textarea></td>
+                <td><textarea class='form-control form-control-sm auto-resize' name='facilitating_factors[".$school_id."]' ".(!empty($facilitating_factors) ? "readonly" : "")." ondblclick='requestEdit(this)'>".$facilitating_factors."</textarea></td>
+                <td><textarea class='form-control form-control-sm auto-resize' name='hindering_factors[".$school_id."]' ".(!empty($hindering_factors) ? "readonly" : "")." ondblclick='requestEdit(this)'>".$hindering_factors."</textarea></td>
+                <td><textarea class='form-control form-control-sm auto-resize' name='actions_to_be_taken[".$school_id."]' ".(!empty($actions_to_be_taken) ? "readonly" : "")." ondblclick='requestEdit(this)'>".$actions_to_be_taken."</textarea></td>
             </tr>
         ";
     }
@@ -229,6 +231,12 @@ if ($grade_level->num_rows > 0) {
                             margin: 0;
                             background-color: #fff;
                             color: #495057;
+                        }
+
+                        .auto-resize {
+                            min-height: 38px;
+                            overflow: hidden;
+                            resize: none;
                         }
                     </style>
 
@@ -412,6 +420,23 @@ if ($grade_level->num_rows > 0) {
             $('#confirmEditRequest').data('confirmed', true);
             $('#editRequestModal').modal('hide');
         }
+    </script>
+    <script>
+        // Function to adjust textarea height
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+        // Initialize all textareas
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.auto-resize').forEach(function(textarea) {
+                adjustTextareaHeight(textarea);
+                // Add input event listener for real-time adjustment
+                textarea.addEventListener('input', function() {
+                    adjustTextareaHeight(this);
+                });
+            });
+        });
     </script>
 
 </body>
