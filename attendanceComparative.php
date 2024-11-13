@@ -1,4 +1,6 @@
 <?php
+ini_set('max_input_vars', '3000');
+
 session_start();
 
 if(!isset($_SESSION['user_id'])) {
@@ -57,16 +59,25 @@ while ($row = $attendanceResult->fetch_assoc()) {
 function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $attendanceData) {
     $inputTable = "";
     foreach ($schools as $school) {
-        $inputTable .= "<tr><td>".$school["name"]."</td>";
-        foreach ($schoolYears as $sy) {
-            $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
-            $maleValue = isset($attendanceData[$key][1]) ? $attendanceData[$key][1] : '';
-            $femaleValue = isset($attendanceData[$key][2]) ? $attendanceData[$key][2] : '';
-            
-            $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-male[".$school['id']."]' value='$maleValue' readonly></td>";
-            $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-female[".$school['id']."]' value='$femaleValue' readonly></td>";
+        // Special handling for A&E JHS/SHS (grade level 3 in als type)
+        $showRow = true;
+        if ($type === 'als' && $gradeLevel === 3) {
+            $allowedSchoolIds = [18, 19, 20];
+            $showRow = in_array($school['id'], $allowedSchoolIds);
         }
-        $inputTable .= "</tr>";
+
+        if ($showRow) {
+            $inputTable .= "<tr class='school-row' data-school-id='".$school['id']."'><td>".$school["name"]."</td>";
+            foreach ($schoolYears as $sy) {
+                $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
+                $maleValue = isset($attendanceData[$key][1]) ? $attendanceData[$key][1] : '';
+                $femaleValue = isset($attendanceData[$key][2]) ? $attendanceData[$key][2] : '';
+                
+                $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-male[".$school['id']."]' value='$maleValue' readonly></td>";
+                $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-female[".$school['id']."]' value='$femaleValue' readonly></td>";
+            }
+            $inputTable .= "</tr>";
+        }
     }
     return $inputTable;
 }
@@ -102,56 +113,159 @@ function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, 
 }
 
 // Add these export functions after the existing PHP code at the top
-function exportCSV($conn) {
+function exportCSV($conn, $activeTab) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment;filename="attendance_summary.csv"');
     $output = fopen('php://output', 'w');
-    fputcsv($output, ['Grade Level', 'School Name', 'Male', 'Female', 'Total']);
+    
+    // Split activeTab to get type and grade level
+    list($type, $gradeLevel) = explode('-', $activeTab);
+    
+    // Get grade level name
+    $gradeLevelName = $conn->query("SELECT name FROM grade_level WHERE id = $gradeLevel")->fetch_assoc()['name'];
+    
+    // CSV headers
+    fputcsv($output, ['School Name', 'School Year', 'Male', 'Female', 'Total']);
 
-    $types = ['als', 'pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
+    // Get school years
+    $schoolYears = $conn->query("SELECT * FROM school_year ORDER BY start_year DESC")->fetch_all(MYSQLI_ASSOC);
+    
+    // Get schools
+    $schools = $conn->query("SELECT * FROM schools ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 
-    foreach ($types as $type) {
-        $gradeLevels = $conn->query("SELECT * FROM grade_level ORDER BY id");
-        while ($gradeLevel = $gradeLevels->fetch_assoc()) {
-            $schools = $conn->query("SELECT * FROM schools ORDER BY id");
-            while ($school = $schools->fetch_assoc()) {
-                $male = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 1 AND type = '$type'")->fetch_assoc();
-                $female = $conn->query("SELECT count FROM attendance_summary WHERE school_id = {$school['id']} AND grade_level_id = {$gradeLevel['id']} AND gender = 2 AND type = '$type'")->fetch_assoc();
-
-                $total = ($male['count'] ?? 0) + ($female['count'] ?? 0);
-                fputcsv($output, [
-                    $gradeLevel['name'],
-                    $school['name'],
-                    $male['count'] ?? 0,
-                    $female['count'] ?? 0,
-                    $total
-                ]);
+    foreach ($schools as $school) {
+        // Skip schools for A&E JHS/SHS if not in allowed list
+        if ($type === 'als' && $gradeLevel == 3) {
+            if (!in_array($school['id'], [18, 19, 20])) {
+                continue;
             }
         }
+
+        foreach ($schoolYears as $sy) {
+            $male = $conn->query("SELECT count FROM attendance_summary 
+                WHERE school_id = {$school['id']} 
+                AND grade_level_id = $gradeLevel 
+                AND gender = 1 
+                AND type = '$type'
+                AND year = {$sy['start_year']}")->fetch_assoc();
+
+            $female = $conn->query("SELECT count FROM attendance_summary 
+                WHERE school_id = {$school['id']} 
+                AND grade_level_id = $gradeLevel 
+                AND gender = 2 
+                AND type = '$type'
+                AND year = {$sy['start_year']}")->fetch_assoc();
+
+            $maleCount = $male['count'] ?? 0;
+            $femaleCount = $female['count'] ?? 0;
+            $total = $maleCount + $femaleCount;
+
+            fputcsv($output, [
+                $school['name'],
+                "S.Y {$sy['start_year']}-{$sy['end_year']}",
+                $maleCount,
+                $femaleCount,
+                $total
+            ]);
+        }
     }
+    
     fclose($output);
     exit;
 }
 
-function exportPDF($conn, $activeTab, $activeGradeLevel) {
-    require_once('vendor/tecnickcom/tcpdf/tcpdf.php');
-    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-    // ... rest of the PDF export function remains the same ...
+function exportPDF($conn, $activeTab) {
+    // Split activeTab to get type and grade level
+    list($type, $gradeLevel) = explode('-', $activeTab);
+    
+    // Get data
+    $schoolYears = $conn->query("SELECT * FROM school_year ORDER BY start_year DESC")->fetch_all(MYSQLI_ASSOC);
+    $schools = $conn->query("SELECT * FROM schools ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+    $gradeLevelName = $conn->query("SELECT name FROM grade_level WHERE id = $gradeLevel")->fetch_assoc()['name'];
+    
+    // Start HTML content
+    $html = '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f5f5f5; }
+            h2 { margin-bottom: 20px; }
+        </style>
+    </head>
+    <body>
+        <h2>'. ucfirst($type) .' - '. $gradeLevelName .'</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>School Name</th>';
+    
+    foreach ($schoolYears as $sy) {
+        $html .= "<th>S.Y {$sy['start_year']}-{$sy['end_year']} (M)</th>";
+        $html .= "<th>S.Y {$sy['start_year']}-{$sy['end_year']} (F)</th>";
+    }
+    
+    $html .= '</tr></thead><tbody>';
+
+    foreach ($schools as $school) {
+        // Skip schools for A&E JHS/SHS if not in allowed list
+        if ($type === 'als' && $gradeLevel == 3) {
+            if (!in_array($school['id'], [18, 19, 20])) {
+                continue;
+            }
+        }
+
+        $html .= "<tr><td>{$school['name']}</td>";
+        
+        foreach ($schoolYears as $sy) {
+            $male = $conn->query("SELECT count FROM attendance_summary 
+                WHERE school_id = {$school['id']} 
+                AND grade_level_id = $gradeLevel 
+                AND gender = 1 
+                AND type = '$type'
+                AND year = {$sy['start_year']}")->fetch_assoc();
+
+            $female = $conn->query("SELECT count FROM attendance_summary 
+                WHERE school_id = {$school['id']} 
+                AND grade_level_id = $gradeLevel 
+                AND gender = 2 
+                AND type = '$type'
+                AND year = {$sy['start_year']}")->fetch_assoc();
+
+            $html .= "<td>" . ($male['count'] ?? '0') . "</td>";
+            $html .= "<td>" . ($female['count'] ?? '0') . "</td>";
+        }
+        
+        $html .= "</tr>";
+    }
+    
+    $html .= '</tbody></table></body></html>';
+
+    // Output the HTML and trigger print
+    echo $html;
+    echo "<script>window.print();</script>";
+    exit;
 }
 
-// Add export handling logic
+// Update the export handling logic
 if (isset($_POST['export_csv'])) {
-    exportCSV($conn);
+    $activeTab = $_POST['activeTab'] ?? '';
+    if (empty($activeTab)) {
+        echo "Invalid active tab.";
+        exit;
+    }
+    exportCSV($conn, $activeTab);
 }
 
 if (isset($_POST['export_pdf'])) {
     $activeTab = $_POST['activeTab'] ?? '';
-    $activeGradeLevel = $_POST['activeGradeLevel'] ?? '';
-    if (empty($activeTab) || empty($activeGradeLevel)) {
-        echo "Invalid active tab or grade level.";
+    if (empty($activeTab)) {
+        echo "Invalid active tab.";
         exit;
     }
-    exportPDF($conn, $activeTab, $activeGradeLevel);
+    exportPDF($conn, $activeTab);
 }
 
 ?>
@@ -253,79 +367,84 @@ if (isset($_POST['export_pdf'])) {
                     <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
                     <p class="mb-4">Data comparison based on School Year</p>
                     
-                    <form action="attendanceAdd.php" method="post">
-                        <div class="text-right">
+                    <div class="text-right">
+                        <form action="" method="post" style="display: inline-block;">
+                            <input type="hidden" name="activeTab" id="exportCsvTab">
                             <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
+                        </form>
+                        <form action="" method="post" style="display: inline-block;">
+                            <input type="hidden" name="activeTab" id="exportPdfTab">
                             <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
+                        </form>
+                    </div>
+                    
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav">
+                                <li class="nav-item-custom active">
+                                    <a class="nav-link" href="#" id="als">ALS Enrollment</a>
+                                </li>
+                                <li class="nav-item-custom">
+                                    <a class="nav-link" href="#" id="enrollment">Enrollment</a>
+                                </li>
+                                <li class="nav-item-custom">
+                                    <a class="nav-link" href="#" id="dropouts">Drop Outs </a>
+                                </li>
+                                <li class="nav-item-custom">
+                                    <a class="nav-link" href="#" id="completers">Completers</a>
+                                </li>
+                            </ul>
                         </div>
-                        
-                        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                            <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="als">ALS Enrollment</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="enrollment">Enrollment</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="dropouts">Drop Outs </a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="completers">Completers</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </nav>
-                        
-                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
-                        <div id="tabContent">
-                            <div id="content-als" class="content-tab">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
-                                            <a class="nav-link active" id="v-pills-als-1-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-als-1" role="tab" aria-controls="v-pills-als-1" aria-selected="true">BLP</a>
-                                            <a class="nav-link" id="v-pills-als-2-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-als-2" role="tab" aria-controls="v-pills-als-2" aria-selected="false">A & E - Elementary</a>
-                                            <a class="nav-link" id="v-pills-als-3-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-als-3" role="tab" aria-controls="v-pills-als-3" aria-selected="false">A&E - JHS</a>
-                                        </div>
+                    </nav>
+                    
+                    <input type="hidden" name="activeTab" id="activeTab" value="blp">
+                    <div id="tabContent">
+                        <div id="content-als" class="content-tab">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
+                                        <a class="nav-link active" id="v-pills-als-1-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-als-1" role="tab" aria-controls="v-pills-als-1" aria-selected="true">BLP</a>
+                                        <a class="nav-link" id="v-pills-als-2-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-als-2" role="tab" aria-controls="v-pills-als-2" aria-selected="false">A & E - Elementary</a>
+                                        <a class="nav-link" id="v-pills-als-3-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-als-3" role="tab" aria-controls="v-pills-als-3" aria-selected="false">A&E - JHS</a>
                                     </div>
-                                    <div class="col-md-9">
-                                        <div class="tab-content" id="v-pills-tabContent1">
-                                            <?php
-                                            $alsLevels = [
-                                                ['id' => 1, 'name' => 'BLP'],
-                                                ['id' => 2, 'name' => 'A & E - Elementary'],
-                                                ['id' => 3, 'name' => 'A&E - JHS']
-                                            ];
-                                            echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $attendanceData, $syrows);
-                                            ?>
-                                        </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="tab-content" id="v-pills-tabContent1">
+                                        <?php
+                                        $alsLevels = [
+                                            ['id' => 1, 'name' => 'BLP'],
+                                            ['id' => 2, 'name' => 'A & E - Elementary'],
+                                            ['id' => 3, 'name' => 'A & E JHS / SHS']
+                                        ];
+                                        echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $attendanceData, $syrows);
+                                        ?>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <?php
-                            $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects'];
-                            foreach ($types as $type) {
-                                echo "<div id='content-$type' class='content-tab'>
-                                        <div class='row'>
-                                            <div class='col-md-3'>
-                                                <div class='nav flex-column nav-pills' id='v-pills-tab-$type' role='tablist' aria-orientation='vertical'>
-                                                    ".generateGradeLevelTabs($type, $gradeLevels)."
-                                                </div>
-                                            </div>
-                                            <div class='col-md-9'>
-                                                <div class='tab-content' id='v-pills-tabContent-$type'>
-                                                    ".generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows)."
-                                                </div>
+                        <?php
+                        $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects'];
+                        foreach ($types as $type) {
+                            echo "<div id='content-$type' class='content-tab'>
+                                    <div class='row'>
+                                        <div class='col-md-3'>
+                                            <div class='nav flex-column nav-pills' id='v-pills-tab-$type' role='tablist' aria-orientation='vertical'>
+                                                ".generateGradeLevelTabs($type, $gradeLevels)."
                                             </div>
                                         </div>
-                                      </div>";
-                            }
-                            ?>
-                        </div>
-                    </form>
-                    <br>
+                                        <div class='col-md-9'>
+                                            <div class='tab-content' id='v-pills-tabContent-$type'>
+                                                ".generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows)."
+                                            </div>
+                                        </div>
+                                    </div>
+                                  </div>";
+                        }
+                        ?>
+                    </div>
+                </form>
+                <br>
 
                 </div>
 
@@ -373,6 +492,42 @@ if (isset($_POST['export_pdf'])) {
 
         $(".nav-item-custom:first-child a").click();
         lockFields();
+
+        // Add this new function to handle A&E JHS/SHS visibility
+        function handleAEJHSVisibility() {
+            var activeTab = $('#activeTab').val();
+            if (activeTab === 'als-3') {
+                // Show only specific schools for A&E JHS/SHS
+                $('.school-row').each(function() {
+                    var schoolId = $(this).data('school-id');
+                    if ([18, 19, 20].includes(schoolId)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            } else {
+                // Show all schools for other tabs
+                $('.school-row').show();
+            }
+        }
+
+        // Call the function when tab changes
+        $('.nav-link').on('click', function() {
+            setTimeout(handleAEJHSVisibility, 100);
+        });
+
+        // Initial call
+        handleAEJHSVisibility();
+
+        // Update hidden inputs before form submission
+        $('button[name="export_csv"]').click(function() {
+            $('#exportCsvTab').val($('#activeTab').val());
+        });
+        
+        $('button[name="export_pdf"]').click(function() {
+            $('#exportPdfTab').val($('#activeTab').val());
+        });
     });
     </script>
 

@@ -379,7 +379,7 @@ if ($grade_level->num_rows > 0) {
                                         <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
                                             <a class="nav-link active" id="v-pills-blp-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-blp" role="tab" aria-controls="v-pills-blp" aria-selected="true">BLP</a>
                                             <a class="nav-link" id="v-pills-ae-elem-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-ae-elem" role="tab" aria-controls="v-pills-ae-elem" aria-selected="false">A & E - Elementary</a>
-                                            <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A&E - JHS</a>
+                                            <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A & E JHS / SHS</a>
                                         </div>
                                     </div>
 
@@ -395,7 +395,7 @@ if ($grade_level->num_rows > 0) {
                                                             <th scope="col">Total</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
+                                                    <tbody class='als-schools'>
                                                         <?php echo str_replace('dynamicId', 'als', $inputTables); ?>
                                                     </tbody>
                                                 </table>
@@ -643,6 +643,7 @@ if ($grade_level->num_rows > 0) {
                     }
                 }
             }
+            handleAEJHSVisibility();
         }
         
         function updateTotal(row) {
@@ -696,6 +697,33 @@ if ($grade_level->num_rows > 0) {
                 $(this).tab('show');
                 lockFields();
             });
+
+            // Add this new function to handle A&E JHS/SHS visibility
+            function handleAEJHSVisibility() {
+                var activeTab = $('#activeTab').val();
+                if (activeTab === 'als-3') {
+                    // Show only specific schools for A&E JHS/SHS
+                    $('.als-schools tr').each(function() {
+                        var schoolId = $(this).find('input').first().attr('name').match(/\[(\d+)\]/)[1];
+                        if ([18, 19, 20].includes(parseInt(schoolId))) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                } else {
+                    // Show all schools for other tabs
+                    $('.als-schools tr').show();
+                }
+            }
+
+            // Call the function when tab changes
+            $('.nav-link').on('click', function() {
+                setTimeout(handleAEJHSVisibility, 100);
+            });
+
+            // Call on page load
+            handleAEJHSVisibility();
         });
 
         function updateActiveTab(tab, gradeLevel) {

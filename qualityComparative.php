@@ -47,16 +47,25 @@ while ($row = $qualityResult->fetch_assoc()) {
 function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $qualityData) {
     $inputTable = "";
     foreach ($schools as $school) {
-        $inputTable .= "<tr><td>".$school["name"]."</td>";
-        foreach ($schoolYears as $sy) {
-            $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
-            $maleValue = isset($qualityData[$key][1]) ? $qualityData[$key][1] : '';
-            $femaleValue = isset($qualityData[$key][2]) ? $qualityData[$key][2] : '';
-            
-            $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$maleValue' readonly></td>";
-            $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$femaleValue' readonly></td>";
+        // Special handling for A&E JHS/SHS
+        $showRow = true;
+        if ($type === 'als' && $gradeLevel === 3) {
+            $allowedSchoolIds = [18, 19, 20];
+            $showRow = in_array($school['id'], $allowedSchoolIds);
         }
-        $inputTable .= "</tr>";
+
+        if ($showRow) {
+            $inputTable .= "<tr class='school-row' data-school-id='".$school['id']."'><td>".$school["name"]."</td>";
+            foreach ($schoolYears as $sy) {
+                $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
+                $maleValue = isset($qualityData[$key][1]) ? $qualityData[$key][1] : '';
+                $femaleValue = isset($qualityData[$key][2]) ? $qualityData[$key][2] : '';
+                
+                $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$maleValue' readonly></td>";
+                $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$femaleValue' readonly></td>";
+            }
+            $inputTable .= "</tr>";
+        }
     }
     return $inputTable;
 }
@@ -154,7 +163,7 @@ if (isset($_POST['export_csv'])) {
                                             $alsLevels = [
                                                 ['id' => 1, 'name' => 'BLP'],
                                                 ['id' => 2, 'name' => 'A & E - Elementary'],
-                                                ['id' => 3, 'name' => 'A&E - JHS']
+                                                ['id' => 3, 'name' => 'A & E JHS / SHS']
                                             ];
                                             foreach ($alsLevels as $index => $level) {
                                                 $active = $index == 0 ? 'active' : '';
@@ -233,9 +242,34 @@ if (isset($_POST['export_csv'])) {
             $("#content-" + tabId).show();
             $(".nav-item-custom").removeClass("active");
             $(this).parent().addClass("active");
+            handleAEJHSVisibility();
+        });
+
+        function handleAEJHSVisibility() {
+            var activeTab = $('.nav-link.active').attr('href');
+            if (activeTab === '#v-pills-als-3') {
+                // Show only specific schools for A&E JHS/SHS
+                $('.school-row').each(function() {
+                    var schoolId = $(this).data('school-id');
+                    if ([18, 19, 20].includes(schoolId)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            } else {
+                // Show all schools for other tabs
+                $('.school-row').show();
+            }
+        }
+
+        $('.nav-pills .nav-link').on('click', function() {
+            setTimeout(handleAEJHSVisibility, 100);
         });
 
         $(".nav-item-custom:first-child a").click();
+        
+        handleAEJHSVisibility();
     });
     </script>
 </body>
