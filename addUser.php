@@ -80,6 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 $roles = [];
+$schools = [];
 
 $sql = "SELECT * FROM roles";
 $result = $conn->query($sql);
@@ -87,6 +88,15 @@ $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
         $roles[] = $row;
+    }
+}
+
+$sql = "SELECT * FROM schools";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $schools[] = $row;
     }
 }
 
