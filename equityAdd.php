@@ -113,13 +113,18 @@ function saveEquityData($conn, $params) {
 }
 
 function getExistingData($conn, $quarter, $year) {
-  $query = "SELECT * FROM equity_assessment WHERE quarter = ? AND year = ?";
+  $query = "SELECT equity_assessment.*, users.first_name, users.last_name, schools.name as school_name 
+            FROM equity_assessment 
+            INNER JOIN users ON users.id = equity_assessment.last_user_save
+            LEFT JOIN schools ON schools.id = users.school_id 
+            WHERE quarter = ? AND year = ?";
   $stmt = $conn->prepare($query);
-  $stmt->bind_param('ii', $quarter, $year);
+  $stmt->bind_param("ii", $quarter, $year);
   $stmt->execute();
   $result = $stmt->get_result();
   
   $data = [];
+  $lastUserSave = "";
   while ($row = $result->fetch_assoc()) {
     if ($row['type'] === 'cfs') {
       $data['cfs-'.$row['points']][$row['school_id']] = $row['count'];
@@ -129,13 +134,17 @@ function getExistingData($conn, $quarter, $year) {
     } else {
       $data['wash-stars'][$row['school_id']] = $row['count'];
     }
+    // Set last editor info
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'No School').')';
   }
   
-  return $data;
+  return ['data' => $data, 'lastUserSave' => $lastUserSave];
 }
 
 // Get existing data
-$existingData = getExistingData($conn, $selectedQuarter, $year);
+$existingDataResult = getExistingData($conn, $selectedQuarter, $year);
+$existingData = $existingDataResult['data'];
+$lastUserSave = $existingDataResult['lastUserSave'];
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
@@ -307,6 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 </select>
               </div>
               <div class="col-md-6 text-right">
+                Last Edited By: <?php echo $lastUserSave; ?>
                 <button type="submit" class="btn btn-primary" name="save">Save Changes</button>
               </div>
             </div>

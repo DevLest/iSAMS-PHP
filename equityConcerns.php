@@ -204,7 +204,7 @@ if ($schools->num_rows > 0) {
                                 <button type="submit" class="btn btn-success" name="filter">Select</button>
                             </div>
                             <div class="col-md-6 text-right">
-                                Last Edited By: <?php echo $lastUserSave;?>
+                                Last Edited By: <?php echo $lastUserSave; ?>
                                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                             </div>
                         </div>

@@ -206,29 +206,33 @@ $year = date('Y');
 
 // Get existing quality assessment data
 function getExistingData($conn, $quarter, $year) {
-  $query = "SELECT * FROM quality_assessment WHERE quarter = ? AND year = ?";
+  $query = "SELECT quality_assessment.*, users.first_name, users.last_name, schools.name as school_name 
+            FROM quality_assessment 
+            INNER JOIN users ON users.id = quality_assessment.last_user_save
+            LEFT JOIN schools ON schools.id = users.school_id 
+            WHERE quarter = ? AND year = ?";
   $stmt = $conn->prepare($query);
-  $stmt->bind_param("ss", $quarter, $year);
+  $stmt->bind_param("ii", $quarter, $year);
   $stmt->execute();
   $result = $stmt->get_result();
   
   $data = [];
-  while($row = $result->fetch_assoc()) {
-    
-    if ($row['type'] === 'als') {
-      // For ALS data
-      $data['als-'.($row['grade_level'] == 1 ? 'blp' : ($row['grade_level'] == 2 ? 'elementary' : 'jhs'))][$row['school_id']] = $row['count'];
-    } else {
-      // For Reading data
-      $gender = ($row['gender'] == 1) ? 'male' : 'female';
-      $data[$row['type'].'-'.$gender][$row['school_id']] = $row['count'];
-    }
+  $lastUserSave = "No edits yet"; // Default value
+  while ($row = $result->fetch_assoc()) {
+    $gender = ($row['gender'] == 1) ? 'male' : 'female';
+    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level'].'-'.$row['school_id'];
+    $data[$keyId] = $row['count'];
+    // Update last editor info
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'No School').')';
   }
-
-  return $data;
+  
+  return ['data' => $data, 'lastUserSave' => $lastUserSave];
 }
 
-$existingData = getExistingData($conn, $selectedQuarter, $year);
+// Call the function and extract both the data and lastUserSave
+$existingDataResult = getExistingData($conn, $selectedQuarter, $year);
+$qualityData = $existingDataResult['data'];
+$lastUserSave = $existingDataResult['lastUserSave'];
 
 ?>
 
@@ -286,7 +290,7 @@ $existingData = getExistingData($conn, $selectedQuarter, $year);
             <div class="row mb-4">
               <div class="col-md-6">
                 <label for="quarter">Select Quarter:</label>
-                <select id="quarter" name="quarter">
+                <select id="quarter" name="quarter" class="form-control d-inline-block w-auto mr-2">
                   <?php for($i = 1; $i <= 4; $i++): ?>
                     <option value="<?php echo $i; ?>" <?php echo ($selectedQuarter == $i) ? 'selected' : ''; ?>><?php echo $i; ?><?php 
                       if($i == 1) echo 'st';
@@ -296,12 +300,15 @@ $existingData = getExistingData($conn, $selectedQuarter, $year);
                     ?> Quarter</option>
                   <?php endfor; ?>
                 </select>
-                <button type="submit" class="btn btn-success" name="filter">Select</button>
+                <select id="year" name="year" class="form-control d-inline-block w-auto mr-2">
+                  <?php for($i = $year; $i <= $year + 1; $i++): ?>
+                    <option value="<?php echo $i; ?>" <?php echo ($year == $i) ? 'selected' : ''; ?>><?php echo $i; ?></option>
+                  <?php endfor; ?>
+                </select>
               </div>
               <div class="col-md-6 text-right">
-                <button type="submit" class="btn btn-primary" name="save">Save</button>
-                <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
-                <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
+                Last Edited By: <?php echo $lastUserSave; ?>
+                <button type="submit" class="btn btn-primary" name="save">Save Changes</button>
               </div>
             </div>
 

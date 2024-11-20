@@ -26,7 +26,7 @@ if(isset($_GET["type"]) && !empty(trim($_GET["type"]))){
             $firstName = $row['first_name'];
             $lastName = $row['last_name'];
             $roleID = $row['role'];
-            $schoolID = $row['school_id'];
+            $schoolID = isset($row['school_id']) ? $row['school_id'] : "";
         }
     }
     if($type == "delete"){

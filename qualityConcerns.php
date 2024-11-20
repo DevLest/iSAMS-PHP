@@ -41,16 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
 // Fetch existing data for the selected quarter and year
 $existingData = [];
-$existingDataQuery = "SELECT * FROM issues_and_concerns WHERE quarter = ? AND year = ? AND type = ?";
+$existingDataQuery = "SELECT ic.*, u.first_name, u.last_name, s.name as school_name 
+                     FROM issues_and_concerns ic
+                     INNER JOIN users u ON u.id = ic.last_user_save
+                     LEFT JOIN schools s ON s.id = u.school_id 
+                     WHERE ic.quarter = ? AND ic.year = ? AND ic.type = ?";
 $existingDataStmt = $conn->prepare($existingDataQuery);
-$type = "quality"; // Create variable to pass by reference
+$type = "quality";
 $existingDataStmt->bind_param("iis", $selectedQuarter, $year, $type);
 $existingDataStmt->execute();
 $result = $existingDataStmt->get_result();
 
-$lastUserSave = "";
+$lastUserSave = "No edits yet";
 while ($row = $result->fetch_assoc()) {
     $existingData[$row['school_id']] = $row;
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'No School').')';
 }
 
 $schoolYearsql = "SELECT * FROM school_year";

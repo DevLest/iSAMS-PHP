@@ -137,7 +137,11 @@ if ($schools->num_rows > 0) {
     }
 }
 
-$attendanceQuery = "SELECT attendance_summary.*, users.first_name, users.last_name FROM attendance_summary INNER JOIN users on users.id = attendance_summary.last_user_save WHERE quarter = $selectedQuarter AND year = $year";
+$attendanceQuery = "SELECT attendance_summary.*, users.first_name, users.last_name, schools.name as school_name 
+                   FROM attendance_summary 
+                   INNER JOIN users ON users.id = attendance_summary.last_user_save
+                   LEFT JOIN schools ON schools.id = users.school_id 
+                   WHERE quarter = $selectedQuarter AND year = $year";
 $attendanceResult = $conn->query($attendanceQuery);
 $attendance = $attendanceResult->fetch_assoc();
 
@@ -147,7 +151,7 @@ foreach ($attendanceResult as $row) {
     $gender = ($row['gender'] == 1) ? 'male' : 'female';
     $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
     $attendanceData[$keyId] = $row['count'];
-    $lastUserSave = $row['last_name'].', '.$row['first_name'];
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
 }
 $attendanceKeys = array_keys($attendanceData);
 

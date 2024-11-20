@@ -104,20 +104,28 @@ function saveRwbData($conn, $params) {
 }
 
 function getExistingData($conn, $quarter, $year) {
-  $query = "SELECT * FROM rwb_assessment WHERE quarter = ? AND year = ?";
+  $query = "SELECT rwb_assessment.*, users.first_name, users.last_name, schools.name as school_name 
+            FROM rwb_assessment 
+            INNER JOIN users ON users.id = rwb_assessment.last_user_save
+            LEFT JOIN schools ON schools.id = users.school_id 
+            WHERE quarter = ? AND year = ?";
   $stmt = $conn->prepare($query);
-  $stmt->bind_param('ii', $quarter, $year);
+  $stmt->bind_param("ii", $quarter, $year);
   $stmt->execute();
   $result = $stmt->get_result();
   
   $data = [];
+  $lastUserSave = "";
   while ($row = $result->fetch_assoc()) {
-    $gender = ($row['gender'] == 1) ? 'male' : 'female';
-    $key = $row['type'] . '-' . $row['grade_level'] . '-' . $gender;
-    $data[$key][$row['school_id']] = $row['count'];
+    if ($row['type'] === 'bmi') {
+      $gender = ($row['gender'] == 1) ? 'male' : 'female';
+      $data['bmi-'.$row['grade_level'].'-'.$gender][$row['school_id']] = $row['count'];
+    }
+    // Set last editor info
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'No School').')';
   }
   
-  return $data;
+  return ['data' => $data, 'lastUserSave' => $lastUserSave];
 }
 
 // Get existing data
@@ -247,6 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 </select>
               </div>
               <div class="col-md-6 text-right">
+                Last Edited By: <?php echo $lastUserSave; ?>
                 <button type="submit" class="btn btn-primary" name="save">Save Changes</button>
               </div>
             </div>
