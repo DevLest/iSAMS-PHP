@@ -9,547 +9,365 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
+// Get current quarter and year
 $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
-$year = date('Y');
+$selectedQuarter = isset($_GET['quarter']) ? $_GET['quarter'] : (isset($_POST['quarter']) ? $_POST['quarter'] : $currentQuarter);
 
-if (isset($_POST['quarter'])) {
-    $selectedQuarter = $_POST['quarter'];
-} else {
-    $selectedQuarter = $currentQuarter;
-}
+// Fetch school years
+$currentYear = date('Y');
+$nextYear = $currentYear + 1;
+$schoolYearQuery = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
+$schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $stmt = $conn->prepare("INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $gender_male = 1;
-    $gender_female = 2;
-    $current_user_id = $_SESSION['user_id'];
-}
+// Get schools
+$schoolQuery = "SELECT * FROM schools WHERE id <= 17 ORDER BY name";
+$schools = $conn->query($schoolQuery)->fetch_all(MYSQLI_ASSOC);
 
-$schoolYearsql = "SELECT * FROM school_year";
-$schoolYearResult = $conn->query($schoolYearsql);
-$syrows = "";
-if ($schoolYearResult->num_rows > 0) {
-    while($row = $schoolYearResult->fetch_assoc()) {
-        $syrows .= "<th scope='col'> S.Y ".$row['start_year']." - ".$row['end_year']."</th>";
+// Get grade levels
+$gradeLevelQuery = "SELECT * FROM grade_level ORDER BY id";
+$gradeLevels = $conn->query($gradeLevelQuery)->fetch_all(MYSQLI_ASSOC);
+
+// Generate table headers for school years
+function generateSchoolYearHeaders($type, $schoolYears) {
+    $headers = '<th>School Name</th>';
+    foreach ($schoolYears as $sy) {
+        if ($type === 'sbfp') {
+            $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (M)</th>";
+            $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (F)</th>";
+        } else {
+            $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']}</th>";
+        }
     }
+    return $headers;
 }
 
-$sql = "SELECT * FROM schools";
-$schools = $conn->query($sql);
-
-$inputTables = "";
-
-if ($schools->num_rows > 0) {
-    $schoolYearsql = "SELECT * FROM school_year";
-    $schoolYearResult = $conn->query($schoolYearsql);
-    $SYrowreturns = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
+// Generate table content
+function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
+    $html = '<table class="table table-bordered">
+             <thead><tr>' . generateSchoolYearHeaders($type, $schoolYears) . '</tr></thead>
+             <tbody>';
     
-    while($row = $schools->fetch_assoc()) {
-        $inputTables .= "
-            <tr>
-                <td>".$row["name"]."</td>";
-                
-            if ($schoolYearResult->num_rows > 0) {
-                foreach ($SYrowreturns as $SYrowreturn) {
-                    $inputTables .= "<td><input type='number' class='form-control form-control-sm' name='year-".$SYrowreturn['start_year']."-".$SYrowreturn['end_year']."[".$row['id']."]' readonly></td>";
-                }
-            }
-
-        $inputTables .= "
-            </tr>
-        ";
-    }
-}
-
-$attendanceQuery = "SELECT * FROM attendance_summary WHERE quarter = $selectedQuarter AND year = $year";
-$attendanceResult = $conn->query($attendanceQuery);
-$attendance = $attendanceResult->fetch_assoc();
-
-$attendanceData = [];
-foreach ($attendanceResult as $row) {
-    $gender = ($row['gender'] == 1) ? 'male' : 'female';
-    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
-    $attendanceData[$keyId] = $row['count'];
-}
-$attendanceKeys = array_keys($attendanceData);
-
-$sql = "SELECT * FROM grade_level";
-$grade_level = $conn->query($sql);
-
-$grade_levels = "";
-if ($grade_level->num_rows > 0) {
-    $count = 0;
-    while($row = $grade_level->fetch_assoc()) {
-        $grade_level_inputs = "";
-        $active = $count == 0 ? "true" : "false";
-        $rowid = $row['id'];
-
-        $grade_levels .= "<a class='nav-link ".($count == 0 ? 'active' : '')."' id='v-pills-dynamicId-$rowid-tab' onclick=\"activeTab('dynamicId-$rowid')\" data-toggle='pill' href='#v-pills-dynamicId-$rowid' role='tab' aria-controls='v-pills-dynamicId-$rowid' aria-selected='$active'>".$row['name']."</a>";
+    foreach ($schools as $school) {
+        $html .= "<tr><td>{$school['name']}</td>";
         
-        $grade_level_inputs .= "<div class='tab-pane fade show active' id='v-pills-dynamicId-$rowid' role='tabpanel' aria-labelledby='v-pills-dynamicId-$rowid-tab'>
-                                    <table class='table'>
-                                    <thead>
-                                        <tr>
-                                            <th scope='col'>Name</th>
-                                            ".$syrows."
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ".$inputTables."
-                                    </tbody>
-                                </table>
-                                </div>";
-
-        $count++;
+        foreach ($schoolYears as $sy) {
+            if ($type === 'cfs') {
+                $query = "SELECT points, count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'cfs' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $points = '';
+                while ($row = $result->fetch_assoc()) {
+                    $points .= "{$row['count']}({$row['points']}) ";
+                }
+                $html .= "<td>$points</td>";
+            }
+            else if ($type === 'sbfp') {
+                $query = "SELECT gender, SUM(count) as total 
+                         FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'sbfp' 
+                         AND quarter = ? AND year = ?
+                         GROUP BY gender";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $male = $female = 0;
+                while ($row = $result->fetch_assoc()) {
+                    if ($row['gender'] == 1) $male = $row['total'];
+                    if ($row['gender'] == 2) $female = $row['total'];
+                }
+                $html .= "<td>$male</td><td>$female</td>";
+            }
+            else { // wash
+                $query = "SELECT count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'wash' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $stars = $result->fetch_assoc()['count'] ?? 0;
+                $html .= "<td>$stars</td>";
+            }
+        }
+        $html .= "</tr>";
     }
+    
+    $html .= '</tbody></table>';
+    return $html;
+}
+
+// Export functions
+function exportCSV($conn, $type, $quarter, $schools, $schoolYears) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment;filename="equity_summary.csv"');
+    $output = fopen('php://output', 'w');
+    
+    // CSV headers
+    $headers = ['School Name'];
+    foreach ($schoolYears as $sy) {
+        if ($type === 'sbfp') {
+            $headers[] = "SY {$sy['start_year']}-{$sy['end_year']} (M)";
+            $headers[] = "SY {$sy['start_year']}-{$sy['end_year']} (F)";
+        } else {
+            $headers[] = "SY {$sy['start_year']}-{$sy['end_year']}";
+        }
+    }
+    fputcsv($output, $headers);
+    
+    // Data rows
+    foreach ($schools as $school) {
+        $row = [$school['name']];
+        
+        foreach ($schoolYears as $sy) {
+            if ($type === 'cfs') {
+                $query = "SELECT points, count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'cfs' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $points = '';
+                while ($rowData = $result->fetch_assoc()) {
+                    $points .= "{$rowData['count']}({$rowData['points']}) ";
+                }
+                $row[] = $points;
+            }
+            else if ($type === 'sbfp') {
+                $query = "SELECT gender, SUM(count) as total 
+                         FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'sbfp' 
+                         AND quarter = ? AND year = ?
+                         GROUP BY gender";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $male = $female = 0;
+                while ($rowData = $result->fetch_assoc()) {
+                    if ($rowData['gender'] == 1) $male = $rowData['total'];
+                    if ($rowData['gender'] == 2) $female = $rowData['total'];
+                }
+                $row[] = $male;
+                $row[] = $female;
+            }
+            else {
+                $query = "SELECT count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'wash' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $row[] = $result->fetch_assoc()['count'] ?? 0;
+            }
+        }
+        fputcsv($output, $row);
+    }
+    
+    fclose($output);
+    exit;
+}
+
+function exportPDF($conn, $type, $quarter, $schools, $schoolYears) {
+    // Start HTML content
+    $html = '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { margin: 0; color: #4e73df; font-size: 24px; }
+            .header p { margin: 5px 0; color: #666; font-size: 14px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+            th { background-color: #f5f5f5; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>SMEA - School Management Enrollment Analytics</h1>
+            <p>Equity Assessment Report - ' . ucfirst($type) . '</p>
+            <p>Quarter: ' . $quarter . '</p>
+            <p>Generated on: ' . date('F d, Y h:i A') . '</p>
+        </div>';
+
+    // Add table
+    $html .= '<table class="table table-bordered">
+              <thead><tr>' . generateSchoolYearHeaders($type, $schoolYears) . '</tr></thead>
+              <tbody>';
+    
+    foreach ($schools as $school) {
+        $html .= "<tr><td>{$school['name']}</td>";
+        
+        foreach ($schoolYears as $sy) {
+            if ($type === 'cfs') {
+                $query = "SELECT points, count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'cfs' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $points = '';
+                while ($row = $result->fetch_assoc()) {
+                    $points .= "{$row['count']}({$row['points']}) ";
+                }
+                $html .= "<td>$points</td>";
+            }
+            else if ($type === 'sbfp') {
+                $query = "SELECT gender, SUM(count) as total 
+                         FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'sbfp' 
+                         AND quarter = ? AND year = ?
+                         GROUP BY gender";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $male = $female = 0;
+                while ($row = $result->fetch_assoc()) {
+                    if ($row['gender'] == 1) $male = $row['total'];
+                    if ($row['gender'] == 2) $female = $row['total'];
+                }
+                $html .= "<td>$male</td><td>$female</td>";
+            }
+            else { // wash
+                $query = "SELECT count FROM equity_assessment 
+                         WHERE school_id = ? AND type = 'wash' 
+                         AND quarter = ? AND year = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $stars = $result->fetch_assoc()['count'] ?? 0;
+                $html .= "<td>$stars</td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+    
+    $html .= '</tbody></table></body></html>';
+
+    // Output the HTML and trigger print
+    echo $html;
+    echo "<script>window.print();</script>";
+    exit;
+}
+
+// Handle export requests
+if (isset($_POST['export_csv'])) {
+    $activeTab = $_POST['activeTab'] ?? 'cfs';
+    exportCSV($conn, $activeTab, $selectedQuarter, $schools, $schoolYears);
+}
+
+if (isset($_POST['export_pdf'])) {
+    $activeTab = $_POST['activeTab'] ?? 'cfs';
+    exportPDF($conn, $activeTab, $selectedQuarter, $schools, $schoolYears);
 }
 ?>
 
-<body id="page-top">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Equity Assessment Summary - SMEA</title>
+</head>
 
+<body id="page-top">
     <div id="wrapper">
         <?php include_once "sidebar.php"; ?>
-
         <div id="content-wrapper" class="d-flex flex-column">
-
             <div id="content">
-                <?php include_once "navbar.php"?>
+                <?php include_once "navbar.php"; ?>
+
                 <div class="container-fluid">
-                    
-                    <style>
-                        .navbar-custom {
-                            padding-bottom: 0;
-                        }
+                    <h1 class="h3 mb-2 text-gray-800">Equity Assessment Summary</h1>
+                    <p class="mb-4">View and export equity assessment data</p>
 
-                        .navbar-custom .navbar-nav {
-                            margin-top: 8px;
-                        }
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="quarter">Select Quarter:</label>
+                            <select id="quarter" name="quarter" class="form-control d-inline-block w-auto mr-2">
+                                <?php for ($i = 1; $i <= 4; $i++): ?>
+                                    <option value="<?php echo $i; ?>" <?php echo ($selectedQuarter == $i) ? 'selected' : ''; ?>>
+                                        <?php echo $i; ?><?php echo ($i == 1 ? 'st' : ($i == 2 ? 'nd' : ($i == 3 ? 'rd' : 'th'))); ?> Quarter
+                                    </option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportCsvTab" value="cfs">
+                                <button type="submit" class="btn btn-info" name="export_csv">
+                                    <i class="fas fa-file-csv mr-2"></i>Export CSV
+                                </button>
+                            </form>
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportPdfTab" value="cfs">
+                                <button type="submit" class="btn btn-warning" name="export_pdf">
+                                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
-                        .navbar-custom .navbar-nav .nav-link {
-                            border-radius: 20px 20px 0 0;
-                            margin-right: 2px;
-                            border: 1px solid transparent;
-                            border-bottom: none;
-                        }
+                    <div class="card">
+                        <div class="card-header">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="pill" href="#cfs">Child-Friendly School</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#sbfp">School-based Feeding Program</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#wash">Water Sanitation</a>
+                                </li>
+                            </ul>
+                        </div>
 
-                        .nav-item-custom.active .nav-link, .nav-link:hover {
-                            background-color: white;
-                            color: #007bff;
-                            border-color: #007bff;
-                        }
-
-                        /* New class for active tab content */
-                        .active-content-tab {
-                            display: block;
-                            padding: 20px;
-                            margin-top: -1px;
-                            border: 1px solid #007bff;
-                            color: #007bff;
-                            border-radius: 0 0 5px 5px;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                            background-color: white;
-                        }
-
-                        .table {
-                            border-collapse: collapse;
-                            width: 100%;
-                            background-color: #fff;
-                        }
-
-                        .table thead th {
-                            font-weight: 600;
-                            background-color: #f8f9fa;
-                            color: #333;
-                            padding: 12px;
-                        }
-
-                        .table tbody td {
-                            padding: 10px;
-                            color: #555;
-                        }
-
-                        .table tbody tr:nth-child(odd) {
-                            background-color: #f2f2f2;
-                        }
-
-                        .table th, .table td {
-                            border: none;
-                        }
-
-                        .table tbody tr:hover {
-                            background-color: #eaeaea;
-                        }
-
-                        .form-control {
-                            border-radius: 0.25rem;
-                            border: 1px solid #ced4da;
-                            box-shadow: none;
-                        }
-
-                        .table-responsive {
-                            border: none;
-                        }
-
-                        .table .form-control {
-                            margin: 0;
-                            background-color: #fff;
-                            color: #495057;
-                        }
-                    </style>
-
-                    <div class="container-fluid">
-
-                    <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
-                    <p class="mb-4">Data comparison based on School Year</p>
-                    
-                    <form action="attendanceAdd.php" method="post">
-                        
-                        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                            <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="als">ALS</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pardos_sardos">Learners SBFP</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="pivate_vourcher"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="tardiness"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="absenteeism"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="severly_wasted"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="wasted"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="normal"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="obese"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="overweight"></a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="no_classes"></a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </nav>
-                        
-                        <input type="hidden" name="activeTab" id="activeTab" value="blp">
-                        <div id="tabContent">
-                            <div id="tabContent">
-                                <div id="content-als" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
-                                                <a class="nav-link active" id="v-pills-blp-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-blp" role="tab" aria-controls="v-pills-blp" aria-selected="true">BLP</a>
-                                                <a class="nav-link" id="v-pills-ae-elem-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-ae-elem" role="tab" aria-controls="v-pills-ae-elem" aria-selected="false">A & E - Elementary</a>
-                                                <a class="nav-link" id="v-pills-ae-jhs-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-ae-jhs" role="tab" aria-controls="v-pills-ae-jhs" aria-selected="false">A&E - JHS</a>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent1">
-                                                <div class="tab-pane fade show active" id="v-pills-blp" role="tabpanel" aria-labelledby="v-pills-blp-tab">
-                                                    <table class="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col">Name</th>
-                                                                <?php
-                                                                    echo $syrows;
-                                                                ?>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php echo str_replace('dynamicId', 'als', $inputTables); ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="cfs">
+                                    <?php echo generateTableHTML($conn, 'cfs', $selectedQuarter, $schools, $schoolYears); ?>
                                 </div>
-
-                                <div id="content-pardos_sardos" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab2" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent2">
-                                                <?php echo str_replace('dynamicId', 'pardos_sardos', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="tab-pane fade" id="sbfp">
+                                    <?php echo generateTableHTML($conn, 'sbfp', $selectedQuarter, $schools, $schoolYears); ?>
                                 </div>
-
-                                <div id="content-pivate_vourcher" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab3" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent3">
-                                                <?php echo str_replace('dynamicId', 'pivate_vourcher', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-tardiness" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab4" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent4">
-                                                <?php echo str_replace('dynamicId', 'tardiness', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-absenteeism" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab5" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent5">
-                                                <?php echo str_replace('dynamicId', 'absenteeism', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-severly_wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab6" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent6">
-                                                <?php echo str_replace('dynamicId', 'severly_wasted', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="content-wasted" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab7" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent7">
-                                                <?php echo str_replace('dynamicId', 'wasted', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-normal" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab8" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent8">
-                                                <?php echo str_replace('dynamicId', 'normal', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-obese" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab9" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent9">
-                                                <?php echo str_replace('dynamicId', 'obese', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-overweight" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab10" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent10">
-                                                <?php echo str_replace('dynamicId', 'overweight', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="content-no_classses" class="content-tab">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="nav flex-column nav-pills" id="v-pills-tab11" role="tablist" aria-orientation="vertical">
-                                                <?php echo str_replace('dynamicId', 'no_classses', $grade_levels); ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-9">
-                                            <div class="tab-content" id="v-pills-tabContent11">
-                                                <?php echo str_replace('dynamicId', 'no_classses', $grade_level_inputs); ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="tab-pane fade" id="wash">
+                                    <?php echo generateTableHTML($conn, 'wash', $selectedQuarter, $schools, $schoolYears); ?>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                    <br>
-
-                </div>
-
-            </div>
-
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; YUMI 2024</span>
                     </div>
                 </div>
-            </footer>
-
+            </div>
+            <?php include_once "footer.php"; ?>
         </div>
-
     </div>
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <?php include_once "logout-modal.php"?>
-    <?php include_once "footer.php"?>
 
     <script>
-
-        function activeTab(tab) {
-            $('#activeTab').val(tab);
-            lockFields();
-        }
-
-        function lockFields(){
-            var activeTab = $('#activeTab').val().split('-')[0];
-            var activeTabGrade = $('#activeTab').val().split('-')[1];
-            
-            $('table input').each(function() {
-                // this.value = 0;
-                this.disabled = false;
-            });
-            
-            for (var i = 0; i < keys.length; i++) {
-                var parts = keys[i].split('-');
-                var gender = parts[0];
-                var type = parts[1];
-                var gradeLevel = parts[2];
-                var schoolId = parts[3];
-                var inputName = type + '-' + gender + '[' + schoolId + ']';
-                var inputBox = document.querySelector('input[name="' + inputName + '"]');
-                if (gradeLevel === activeTabGrade && type === activeTab) {
-                    if (inputBox) {
-                        inputBox.disabled = true;
-                        // inputBox.value = attendanceData[keys[i]];
-                        updateTotal($(inputBox).closest('tr'));
-                    }
-                }
-            }
-        }
-        
-        function updateTotal(row) {
-            // var male = parseInt(row.find('input')[0].value) || 0;
-            // var female = parseInt(row.find('input')[1].value) || 0;
-            // row.find('.total').text(male + female);
-        }
-        
-        var keys = <?php echo json_encode($attendanceKeys); ?>;
-        // var attendanceData = <?php echo json_encode($attendanceData); ?>;
-
-        $(document).ready(function(){
-
-            function clearZero(input) {
-                // if (input.find('input')[0].value == '0') {
-                //     input.find('input')[0].value = '';
-                // } else if (input.find('input')[0].value < 1 || input.find('input')[0].value == "") {
-                //     input.find('input')[0].value = '0';
-                // }
-            }
-
-            $('tbody tr').each(function() {
-                updateTotal($(this));
-            });
-
-            $('input[type="number"]').on('input', function() {
-                updateTotal($(this).closest('tr'));
-            });
-            
-            $('input[type="number"]').on('focus', function() {
-                clearZero($(this).closest('tr'));
-            });
-
-            $(".nav-item-custom a").click(function(e) {
-                e.preventDefault();
-
-                var tabId = $(this).attr("id");
-                $(".content-tab").hide();
-
-                $("#content-" + tabId).show(); 
-
-                $(".nav-item-custom").removeClass("active");
-                $(this).parent().addClass("active");
-
-                $('#activeTab').val(tabId+"-1");
-                lockFields();
-            });
-
-            $(".nav-item-custom:first-child a").click();
+    $(document).ready(function() {
+        // Handle quarter changes
+        $('#quarter').on('change', function() {
+            window.location.href = 'equityComparative.php?quarter=' + $(this).val();
         });
+
+        // Update active tab for exports
+        $('.nav-pills a').on('click', function() {
+            var tabId = $(this).attr('href').substring(1);
+            $('#exportCsvTab, #exportPdfTab').val(tabId);
+        });
+    });
     </script>
-
 </body>
-
 </html>

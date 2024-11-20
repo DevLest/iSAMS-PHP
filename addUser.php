@@ -13,6 +13,7 @@ $firstName = "";
 $lastName = "";
 $roleID = "";
 $id = (isset($_GET["id"])) ? trim($_GET["id"]) : "";
+$schoolID = "";
 
 if(isset($_GET["type"]) && !empty(trim($_GET["type"]))){
     $type = trim($_GET["type"]);
@@ -25,6 +26,7 @@ if(isset($_GET["type"]) && !empty(trim($_GET["type"]))){
             $firstName = $row['first_name'];
             $lastName = $row['last_name'];
             $roleID = $row['role'];
+            $schoolID = $row['school_id'];
         }
     }
     if($type == "delete"){
@@ -41,6 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $firstName = $conn->real_escape_string($_POST['firstName']);
     $lastName = $conn->real_escape_string($_POST['lastName']);
     $role = $conn->real_escape_string($_POST['role']);
+    $school = isset($_POST['school']) ? $conn->real_escape_string($_POST['school']) : null;
     $password = $_POST['password']; 
     $id = $_POST['id']; 
 
@@ -50,9 +53,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows > 0) {
             if(!empty($password)) {
                 $hashedPassword = md5($password);
-                $sql = "UPDATE users SET username = '$username', first_name = '$firstName', last_name = '$lastName', role = '$role', password = '$hashedPassword' WHERE id = $id";
+                $sql = "UPDATE users SET username = '$username', first_name = '$firstName', last_name = '$lastName', role = '$role', school_id = " . ($school ? "'$school'" : "NULL") . ", password = '$hashedPassword' WHERE id = $id";
             } else {
-                $sql = "UPDATE users SET username = '$username', first_name = '$firstName', last_name = '$lastName', role = '$role' WHERE id = $id";
+                $sql = "UPDATE users SET username = '$username', first_name = '$firstName', last_name = '$lastName', role = '$role', school_id = " . ($school ? "'$school'" : "NULL") . " WHERE id = $id";
             }
         } else {
             echo '<script>alert("No user found with the provided ID.");</script>';
@@ -64,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo '<script>alert("User already exists.");</script>';
         } else {
             $hashedPassword = md5($password);
-            $sql = "INSERT INTO users (username, first_name, last_name, role, password) VALUES ('$username', '$firstName', '$lastName', '$role', '$hashedPassword')";
+            $sql = "INSERT INTO users (username, first_name, last_name, role, school_id, password) VALUES ('$username', '$firstName', '$lastName', '$role', " . ($school ? "'$school'" : "NULL") . ", '$hashedPassword')";
         }
     }
     
@@ -129,11 +132,22 @@ include_once('header.php');
                             </div>
                             <div class="form-group">
                                 <label for="role">Role</label>
-                                <select class="form-control" id="role" name="role" required>
+                                <select class="form-control" id="role" name="role" required onchange="toggleSchoolField()">
                                     <option value="">Select a role</option>
                                     <?php foreach ($roles as $role): ?>
                                         <option value="<?php echo htmlspecialchars($role['id']); ?>" <?php if($role['id'] == $roleID) echo 'selected'; ?>>
                                             <?php echo htmlspecialchars($role['description']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group" id="schoolField" style="display: none;">
+                                <label for="school">School</label>
+                                <select class="form-control" id="school" name="school">
+                                    <option value="">Select a school</option>
+                                    <?php foreach ($schools as $school): ?>
+                                        <option value="<?php echo htmlspecialchars($school['id']); ?>" <?php if($school['id'] == $schoolID) echo 'selected'; ?>>
+                                            <?php echo htmlspecialchars($school['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -196,6 +210,25 @@ include_once('header.php');
                 eyeIcon.classList.add('fa-eye');
             }
         }
+
+        function toggleSchoolField() {
+            var roleSelect = document.getElementById('role');
+            var schoolField = document.getElementById('schoolField');
+            var schoolSelect = document.getElementById('school');
+            
+            if (roleSelect.value === '2') {
+                schoolField.style.display = 'block';
+                schoolSelect.required = true;
+            } else {
+                schoolField.style.display = 'none';
+                schoolSelect.required = false;
+                schoolSelect.value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleSchoolField();
+        });
     </script>
 
     <?php include_once "logout-modal.php"?>

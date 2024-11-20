@@ -132,98 +132,103 @@ if (isset($_POST['export_csv'])) {
                     <h1 class="h3 mb-2 text-gray-800">Quality Assessment Comparative</h1>
                     <p class="mb-4">Compare quality assessment data across schools</p>
 
-                    <form method="post">
-                        <div class="text-right mb-3">
+                    <div class="text-right">
+                        <form action="" method="post" style="display: inline-block;">
+                            <input type="hidden" name="activeTab" id="exportCsvTab">
                             <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
+                        </form>
+                        <form action="" method="post" style="display: inline-block;">
+                            <input type="hidden" name="activeTab" id="exportPdfTab">
+                            <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
+                        </form>
+                    </div>
+
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav">
+                                <li class="nav-item-custom active">
+                                    <a class="nav-link" href="#" id="als">ALS</a>
+                                </li>
+                                <li class="nav-item-custom">
+                                    <a class="nav-link" href="#" id="eng">English Reading</a>
+                                </li>
+                                <li class="nav-item-custom">
+                                    <a class="nav-link" href="#" id="fil">Filipino Reading</a>
+                                </li>
+                            </ul>
                         </div>
+                    </nav>
 
-                        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                            <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item-custom active">
-                                        <a class="nav-link" href="#" id="als">ALS</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="eng">English Reading</a>
-                                    </li>
-                                    <li class="nav-item-custom">
-                                        <a class="nav-link" href="#" id="fil">Filipino Reading</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </nav>
-
-                        <div id="tabContent">
-                            <!-- ALS Content -->
-                            <div id="content-als" class="content-tab">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="nav flex-column nav-pills">
-                                            <?php
-                                            $alsLevels = [
-                                                ['id' => 1, 'name' => 'BLP'],
-                                                ['id' => 2, 'name' => 'A & E - Elementary'],
-                                                ['id' => 3, 'name' => 'A & E JHS / SHS']
-                                            ];
-                                            foreach ($alsLevels as $index => $level) {
-                                                $active = $index == 0 ? 'active' : '';
-                                                echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-als-{$level['id']}'>{$level['name']}</a>";
-                                            }
-                                            ?>
-                                        </div>
+                    <div id="tabContent">
+                        <!-- ALS Content -->
+                        <div id="content-als" class="content-tab">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="nav flex-column nav-pills">
+                                        <?php
+                                        $alsLevels = [
+                                            ['id' => 1, 'name' => 'BLP'],
+                                            ['id' => 2, 'name' => 'A & E - Elementary'],
+                                            ['id' => 3, 'name' => 'A & E JHS / SHS']
+                                        ];
+                                        foreach ($alsLevels as $index => $level) {
+                                            $active = $index == 0 ? 'active' : '';
+                                            echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-als-{$level['id']}'>{$level['name']}</a>";
+                                        }
+                                        ?>
                                     </div>
-                                    <div class="col-md-9">
-                                        <div class="tab-content">
-                                            <?php echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $qualityData, $syrows); ?>
-                                        </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="tab-content">
+                                        <?php echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $qualityData, $syrows); ?>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Reading Assessment Contents -->
-                            <?php
-                            $readingTypes = [
-                                'eng' => ['frustration', 'instructional', 'independent'],
-                                'fil' => ['frustration', 'instructional', 'independent']
-                            ];
-
-                            foreach ($readingTypes as $type => $levels) {
-                                echo "<div id='content-$type' class='content-tab' style='display:none;'>
-                                        <div class='row'>
-                                            <div class='col-md-3'>
-                                                <div class='nav flex-column nav-pills'>";
-                                foreach ($levels as $index => $level) {
-                                    $active = $index == 0 ? 'active' : '';
-                                    echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-$type-$level'>".ucfirst($level)."</a>";
-                                }
-                                echo "</div>
-                                    </div>
-                                    <div class='col-md-9'>
-                                        <div class='tab-content'>";
-                                foreach ($levels as $index => $level) {
-                                    $active = $index == 0 ? 'show active' : '';
-                                    echo "<div class='tab-pane fade $active' id='v-pills-$type-$level'>
-                                            <table class='table'>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        $syrows
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ".generateInputTable("$type-$level", 1, $schools, $schoolYears, $qualityData)."
-                                                </tbody>
-                                            </table>
-                                          </div>";
-                                }
-                                echo "</div>
-                                    </div>
-                                  </div>
-                                </div>";
-                            }
-                            ?>
                         </div>
-                    </form>
+
+                        <!-- Reading Assessment Contents -->
+                        <?php
+                        $readingTypes = [
+                            'eng' => ['frustration', 'instructional', 'independent'],
+                            'fil' => ['frustration', 'instructional', 'independent']
+                        ];
+
+                        foreach ($readingTypes as $type => $levels) {
+                            echo "<div id='content-$type' class='content-tab' style='display:none;'>
+                                    <div class='row'>
+                                        <div class='col-md-3'>
+                                            <div class='nav flex-column nav-pills'>";
+                            foreach ($levels as $index => $level) {
+                                $active = $index == 0 ? 'active' : '';
+                                echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-$type-$level'>".ucfirst($level)."</a>";
+                            }
+                            echo "</div>
+                                        </div>
+                                        <div class='col-md-9'>
+                                            <div class='tab-content'>";
+                            foreach ($levels as $index => $level) {
+                                $active = $index == 0 ? 'show active' : '';
+                                echo "<div class='tab-pane fade $active' id='v-pills-$type-$level'>
+                                        <table class='table'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    $syrows
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ".generateInputTable("$type-$level", 1, $schools, $schoolYears, $qualityData)."
+                                            </tbody>
+                                        </table>
+                                      </div>";
+                            }
+                            echo "</div>
+                                        </div>
+                                      </div>
+                                    </div>";
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
             <?php include_once "footer.php"; ?>
@@ -270,6 +275,14 @@ if (isset($_POST['export_csv'])) {
         $(".nav-item-custom:first-child a").click();
         
         handleAEJHSVisibility();
+
+        $('button[name="export_csv"]').click(function() {
+            $('#exportCsvTab').val($('#activeTab').val());
+        });
+
+        $('button[name="export_pdf"]').click(function() {
+            $('#exportPdfTab').val($('#activeTab').val());
+        });
     });
     </script>
 </body>

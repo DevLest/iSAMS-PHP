@@ -130,17 +130,19 @@ function exportCSV($conn, $activeTab) {
     // Get school years
     $schoolYears = $conn->query("SELECT * FROM school_year ORDER BY start_year DESC")->fetch_all(MYSQLI_ASSOC);
     
-    // Get schools
-    $schools = $conn->query("SELECT * FROM schools ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+    // Special handling for ALS type
+    if ($type === 'als') {
+        $alsSchools = [
+            1 => [['id' => 1, 'name' => 'BLP']],
+            2 => [['id' => 2, 'name' => 'A & E - Elementary']],
+            3 => [['id' => 3, 'name' => 'A & E - JHS/SHS']]
+        ];
+        $schoolsToUse = $alsSchools[$gradeLevel] ?? [];
+    } else {
+        $schoolsToUse = $schools;
+    }
 
-    foreach ($schools as $school) {
-        // Skip schools for A&E JHS/SHS if not in allowed list
-        if ($type === 'als' && $gradeLevel == 3) {
-            if (!in_array($school['id'], [18, 19, 20])) {
-                continue;
-            }
-        }
-
+    foreach ($schoolsToUse as $school) {
         foreach ($schoolYears as $sy) {
             $male = $conn->query("SELECT count FROM attendance_summary 
                 WHERE school_id = {$school['id']} 
@@ -183,25 +185,54 @@ function exportPDF($conn, $activeTab) {
     $schools = $conn->query("SELECT * FROM schools ORDER BY name")->fetch_all(MYSQLI_ASSOC);
     $gradeLevelName = $conn->query("SELECT name FROM grade_level WHERE id = $gradeLevel")->fetch_assoc()['name'];
     
-    // Start HTML content
+    // Format the report title
+    $reportTitle = $type === 'als' ? 'ALS' : ucfirst($type);
+    $reportTitle .= ' - ' . $gradeLevelName . ' Report';
+    
+    // Start HTML content with updated header
     $html = '
     <!DOCTYPE html>
     <html>
     <head>
         <style>
+            body { font-family: Arial, sans-serif; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { margin: 0; color: #4e73df; font-size: 24px; }
+            .header p { margin: 5px 0; color: #666; font-size: 14px; }
+            .report-title { margin: 20px 0; font-size: 18px; color: #333; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
             th { background-color: #f5f5f5; }
-            h2 { margin-bottom: 20px; }
+            .date-generated { text-align: right; font-size: 12px; color: #666; margin-bottom: 20px; }
         </style>
+        <script>
+            window.onafterprint = function() {
+                window.location.href = document.referrer;
+            };
+            
+            // Also handle if user cancels the print dialog
+            setTimeout(function() {
+                if (!document.hidden) {
+                    window.location.href = document.referrer;
+                }
+            }, 1000);
+        </script>
     </head>
     <body>
-        <h2>'. ucfirst($type) .' - '. $gradeLevelName .'</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>School Name</th>';
-    
+        <div class="header">
+            <h1>SMEA - School Management Enrollment Analytics</h1>
+            <p>Comparative Report</p>
+        </div>
+        <div class="date-generated">
+            Generated on: ' . date('F d, Y h:i A') . '
+        </div>
+        <div class="report-title">
+            ' . $reportTitle . '
+        </div>';
+
+    // Continue with the existing table structure
+    $html .= '<table><thead><tr><th>School Name</th>';
+
     foreach ($schoolYears as $sy) {
         $html .= "<th>S.Y {$sy['start_year']}-{$sy['end_year']} (M)</th>";
         $html .= "<th>S.Y {$sy['start_year']}-{$sy['end_year']} (F)</th>";
@@ -209,14 +240,19 @@ function exportPDF($conn, $activeTab) {
     
     $html .= '</tr></thead><tbody>';
 
-    foreach ($schools as $school) {
-        // Skip schools for A&E JHS/SHS if not in allowed list
-        if ($type === 'als' && $gradeLevel == 3) {
-            if (!in_array($school['id'], [18, 19, 20])) {
-                continue;
-            }
-        }
+    // Special handling for ALS type
+    if ($type === 'als') {
+        $alsSchools = [
+            ['id' => 1, 'name' => 'BLP'],
+            ['id' => 2, 'name' => 'A & E - Elementary'],
+            ['id' => 3, 'name' => 'A & E - JHS/SHS']
+        ];
+        $schoolsToUse = $alsSchools;
+    } else {
+        $schoolsToUse = $schools;
+    }
 
+    foreach ($schoolsToUse as $school) {
         $html .= "<tr><td>{$school['name']}</td>";
         
         foreach ($schoolYears as $sy) {
