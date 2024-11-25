@@ -7,7 +7,10 @@ $result = $conn->query($pendingRequestsQuery);
 $pendingCount = $result->fetch_assoc()['count'];
 
 // Fetch pending edit requests for dropdown
-$requestsQuery = "SELECT er.*, uc.username AS user_name, ic.issues FROM edit_requests er JOIN users uc ON er.requested_by = uc.id JOIN issues_and_concerns ic ON er.issue_id = ic.id WHERE er.status = 'pending'";
+$requestsQuery = "SELECT er.*, u.username AS user_name 
+                 FROM edit_requests er 
+                 JOIN users u ON er.requested_by = u.id 
+                 WHERE er.status = 'pending'";
 $requests = $conn->query($requestsQuery);
 ?>
 
@@ -74,7 +77,10 @@ $requests = $conn->query($requestsQuery);
                 </h6>
                 <?php if ($pendingCount > 0): ?>
                     <?php while ($row = $requests->fetch_assoc()): ?>
-                        <a class="dropdown-item text-center small text-gray-500" href="adminEditRequests.php">Edit request from <?php echo $row['user_name']; ?> for issue: <?php echo $row['issues']; ?></a>
+                        <a class="dropdown-item text-center small text-gray-500" href="adminEditRequests.php">
+                            Edit request from <?php echo $row['user_name']; ?> for 
+                            <?php echo $row['type']; ?> (Grade <?php echo $row['grade_level']; ?>, <?php echo ucfirst($row['gender']); ?>)
+                        </a>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <div class="dropdown-item text-center small text-gray-500">No pending requests</div>

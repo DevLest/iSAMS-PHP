@@ -118,8 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 }
 
 $sql = "SELECT * FROM schools";
-
-$schools = "";
 $schools = $conn->query($sql);
 
 $inputTables = "";
@@ -137,23 +135,30 @@ if ($schools->num_rows > 0) {
     }
 }
 
-$attendanceQuery = "SELECT attendance_summary.*, users.first_name, users.last_name, schools.name as school_name 
-                   FROM attendance_summary 
-                   INNER JOIN users ON users.id = attendance_summary.last_user_save
-                   LEFT JOIN schools ON schools.id = users.school_id 
-                   WHERE quarter = $selectedQuarter AND year = $year";
-$attendanceResult = $conn->query($attendanceQuery);
-$attendance = $attendanceResult->fetch_assoc();
+$attendanceQuery = "SELECT a.*, 
+                          u.id as editor_id,
+                          u.username as editor_name,
+                          a.created_at,
+                          a.updated_at,
+                          a.last_user_save
+                   FROM attendance_summary a 
+                   LEFT JOIN users u ON a.last_user_save = u.id 
+                   WHERE a.quarter = ? AND a.year = ?";
+$stmt = $conn->prepare($attendanceQuery);
+$stmt->bind_param("ii", $selectedQuarter, $year);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $attendanceData = [];
-$lastUserSave = "";
-foreach ($attendanceResult as $row) {
-    $gender = ($row['gender'] == 1) ? 'male' : 'female';
-    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level_id'].'-'.$row['school_id'];
-    $attendanceData[$keyId] = $row['count'];
-    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
+$attendanceKeys = [];
+while ($row = $result->fetch_assoc()) {
+    $key = $row['gender'] . '-' . $row['type'] . '-' . $row['grade_level_id'] . '-' . $row['school_id'];
+    $attendanceData[$key] = $row['count'];
+    $attendanceData[$key . '_editor'] = $row['editor_id'];
+    $attendanceData[$key . '_editor_name'] = $row['editor_name'];
+    $attendanceData[$key . '_last_update'] = $row['updated_at'] ?? $row['created_at'];
+    $attendanceKeys[] = $key;
 }
-$attendanceKeys = array_keys($attendanceData);
 
 $sql = "SELECT * FROM grade_level";
 $grade_level = $conn->query($sql);
@@ -187,6 +192,31 @@ if ($grade_level->num_rows > 0) {
         $count++;
     }
 }
+
+$editRequestsQuery = "SELECT school_id, type, grade_level, gender, status 
+                     FROM edit_requests 
+                     WHERE requested_by = {$_SESSION['user_id']} 
+                     AND status IN ('pending', 'approved')";
+$editRequestsResult = $conn->query($editRequestsQuery);
+$editPermissions = [];
+
+while ($row = $editRequestsResult->fetch_assoc()) {
+    $key = "{$row['type']}-{$row['gender']}-{$row['grade_level']}-{$row['school_id']}";
+    $editPermissions[$key] = $row['status'];
+}
+
+// Get the last user who saved data for the current quarter and year
+$lastUserQuery = "SELECT u.username as last_user_save
+                 FROM attendance_summary a
+                 JOIN users u ON a.last_user_save = u.id
+                 WHERE a.quarter = ? AND a.year = ?
+                 ORDER BY a.updated_at DESC
+                 LIMIT 1";
+$stmt = $conn->prepare($lastUserQuery);
+$stmt->bind_param("ii", $selectedQuarter, $year);
+$stmt->execute();
+$lastUserResult = $stmt->get_result();
+$lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries yet';
 
 ?>
 
@@ -309,6 +339,41 @@ if ($grade_level->num_rows > 0) {
                             border-top: none;
                             border-radius: 0 0 0.25rem 0.25rem;
                         }
+
+                        .approved-edit {
+                            background-color: #e8f5e9 !important;
+                            border-color: #4caf50 !important;
+                        }
+                        
+                        .pending-edit {
+                            background-color: #fff3e0 !important;
+                            border-color: #ff9800 !important;
+                        }
+                        
+                        .edit-status-tooltip {
+                            position: relative;
+                        }
+                        
+                        .edit-status-tooltip:after {
+                            content: attr(data-status);
+                            position: absolute;
+                            right: -5px;
+                            top: -5px;
+                            font-size: 10px;
+                            padding: 2px 5px;
+                            border-radius: 3px;
+                            color: white;
+                        }
+                        
+                        .edit-status-tooltip.approved-edit:after {
+                            background-color: #4caf50;
+                            content: "Approved";
+                        }
+                        
+                        .edit-status-tooltip.pending-edit:after {
+                            background-color: #ff9800;
+                            content: "Pending";
+                        }
                     </style>
 
                     <div class="container-fluid">
@@ -329,7 +394,7 @@ if ($grade_level->num_rows > 0) {
                                 <button type="submit" class="btn btn-success" name="filter">Select</button>
                             </div>
                             <div class="col-md-6 text-right">
-                                Last Edited By: <?php echo $lastUserSave;?>
+                                Last Edited By: <?php echo $lastUserSave; ?>
                                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                             </div>
                         </div>
@@ -610,23 +675,79 @@ if ($grade_level->num_rows > 0) {
     <?php include_once "logout-modal.php"?>
     <?php include_once "footer.php"?>
 
+    <!-- Add this new modal -->
+    <div class="modal fade" id="editRequestModal" tabindex="-1" role="dialog" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRequestModalLabel">Request Edit Permission</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>This field is currently locked. Would you like to request permission to edit it?</p>
+                    <form id="editRequestForm">
+                        <input type="hidden" id="requestSchoolId" name="school_id">
+                        <input type="hidden" id="requestType" name="type">
+                        <input type="hidden" id="requestGradeLevel" name="grade_level">
+                        <input type="hidden" id="requestGender" name="gender">
+                        <div class="form-group">
+                            <label for="requestReason">Reason for Edit:</label>
+                            <textarea class="form-control" id="requestReason" name="reason" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-body" id="editRequestStatus" style="display: none;">
+                    <div class="alert" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitEditRequest">Submit Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var keys = <?php echo json_encode($attendanceKeys); ?>;
         var attendanceData = <?php echo json_encode($attendanceData); ?>;
         var role = <?php echo $_SESSION['role']?>;
+        var editPermissions = <?php echo json_encode($editPermissions); ?>;
+        var currentUserId = <?php echo $_SESSION['user_id']; ?>;
 
         function activeTab(tab) {
             $('#activeTab').val(tab);
             lockFields();
         }
 
-        function lockFields(){
+        function handleAEJHSVisibility() {
+            var activeTab = $('#activeTab').val();
+            if (activeTab === 'als-3') {
+                $('.als-schools tr').each(function() {
+                    var schoolId = $(this).find('input').first().attr('name').match(/\[(\d+)\]/)[1];
+                    if ([18, 19, 20].includes(parseInt(schoolId))) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            } else {
+                $('.als-schools tr').show();
+            }
+        }
+
+        function lockFields() {
             var activeTab = $('#activeTab').val().split('-')[0];
             var activeTabGrade = $('#activeTab').val().split('-')[1];
             
             $('table input').each(function() {
-                this.value = 0;
-                this.disabled = false;
+                var inputName = $(this).attr('name');
+                if (inputName) {
+                    this.value = 0;
+                    this.disabled = true;
+                    $(this).removeClass('approved-edit pending-edit');
+                }
             });
             
             for (var i = 0; i < keys.length; i++) {
@@ -637,14 +758,30 @@ if ($grade_level->num_rows > 0) {
                 var schoolId = parts[3];
                 var inputName = type + '-' + gender + '[' + schoolId + ']';
                 var inputBox = document.querySelector('input[name="' + inputName + '"]');
-                if (gradeLevel === activeTabGrade && type === activeTab) {
-                    if (inputBox) {
-                        if (role == 2) {
-                            inputBox.disabled = true; 
+                
+                if (gradeLevel === activeTabGrade && type === activeTab && inputBox) {
+                    inputBox.value = attendanceData[keys[i]] || 0;
+                    
+                    // Check if current user is the last editor
+                    var lastEditor = attendanceData[keys[i] + '_editor'];
+                    if (lastEditor === currentUserId) {
+                        inputBox.disabled = false;
+                    } else {
+                        // Check for edit permissions
+                        var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
+                        var permission = editPermissions[permissionKey];
+                        
+                        if (permission === 'approved') {
+                            inputBox.disabled = false;
+                            $(inputBox).addClass('approved-edit');
+                        } else if (permission === 'pending') {
+                            inputBox.disabled = true;
+                            $(inputBox).addClass('pending-edit');
+                        } else {
+                            inputBox.disabled = true;
                         }
-                        inputBox.value = attendanceData[keys[i]];
-                        updateTotal($(inputBox).closest('tr'));
                     }
+                    updateTotal($(inputBox).closest('tr'));
                 }
             }
             handleAEJHSVisibility();
@@ -728,11 +865,108 @@ if ($grade_level->num_rows > 0) {
 
             // Call on page load
             handleAEJHSVisibility();
+
+            // Initialize the double-click handler
+            $(document).on('dblclick', 'input[type="number"]', function() {
+                if ($(this).prop('disabled')) {
+                    const $input = $(this);
+                    const inputName = $input.attr('name');
+                    const matches = inputName.match(/([^-]+)-([^[]+)\[(\d+)\]/);
+                    
+                    if (matches) {
+                        const type = matches[1];
+                        const gender = matches[2];
+                        const schoolId = matches[3];
+                        const gradeLevel = $('#activeTab').val().split('-')[1];
+
+                        $('#requestSchoolId').val(schoolId);
+                        $('#requestType').val(type);
+                        $('#requestGradeLevel').val(gradeLevel);
+                        $('#requestGender').val(gender);
+                        
+                        $('#editRequestModal').modal('show');
+                    }
+                }
+            });
+
+            // Handle edit request submission
+            $('#submitEditRequest').on('click', function() {
+                const formData = {
+                    school_id: $('#requestSchoolId').val(),
+                    type: $('#requestType').val(),
+                    grade_level: $('#requestGradeLevel').val(),
+                    gender: $('#requestGender').val(),
+                    reason: $('#requestReason').val()
+                };
+
+                $.ajax({
+                    url: 'requestEdit.php',
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        const result = JSON.parse(response);
+                        $('#editRequestForm').hide();
+                        $('#editRequestStatus').show();
+                        $('#editRequestStatus .alert')
+                            .removeClass('alert-danger alert-success')
+                            .addClass('alert-success')
+                            .text(result.message);
+                        
+                        // Hide submit button after successful submission
+                        $('#submitEditRequest').hide();
+                    },
+                    error: function() {
+                        $('#editRequestStatus').show();
+                        $('#editRequestStatus .alert')
+                            .removeClass('alert-danger alert-success')
+                            .addClass('alert-danger')
+                            .text('An error occurred. Please try again.');
+                    }
+                });
+            });
+
+            // Reset modal when closed
+            $('#editRequestModal').on('hidden.bs.modal', function () {
+                $('#editRequestForm').show();
+                $('#editRequestStatus').hide();
+                $('#submitEditRequest').show();
+                $('#requestReason').val('');
+            });
         });
 
         function updateActiveTab(tab, gradeLevel) {
             document.getElementById('activeTab').value = tab;
             document.getElementById('activeGradeLevel').value = gradeLevel;
+        }
+
+        // Update the checkNotifications function
+        function checkNotifications() {
+            $.ajax({
+                url: 'checkNotifications.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.count !== undefined) {  // Check if response is valid
+                        $('#alertsDropdown .badge-counter').text(data.count > 0 ? data.count : '');
+                        let dropdown = $('#alertsDropdown .dropdown-list');
+                        dropdown.empty();
+                        dropdown.append('<h6 class="dropdown-header">Alerts Center</h6>');
+                        if (data.requests && data.requests.length > 0) {
+                            data.requests.forEach(function(request) {
+                                dropdown.append('<a class="dropdown-item text-center small text-gray-500" href="adminEditRequests.php">Edit request from ' + request.user_name + ' for ' + request.type + '</a>');
+                            });
+                        } else {
+                            dropdown.append('<div class="dropdown-item text-center small text-gray-500">No pending requests</div>');
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    if (xhr.responseText) {
+                        console.error("Response:", xhr.responseText);
+                    }
+                }
+            });
         }
     </script>
 

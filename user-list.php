@@ -9,7 +9,7 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
-$sql = "SELECT users.*, roles.description FROM users JOIN roles ON users.role = roles.id ORDER BY users.created_at DESC";
+$sql = "SELECT users.*, roles.description, schools.name as school FROM users JOIN roles ON users.role = roles.id LEFT JOIN schools ON users.school_id = schools.id ORDER BY users.created_at DESC";
 $resultUsers = $conn->query($sql);
 ?>
 
@@ -58,6 +58,7 @@ $resultUsers = $conn->query($sql);
                                             <th>Username</th>
                                             <th>Fullname</th>
                                             <th>Role</th>
+                                            <th>School</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -66,6 +67,7 @@ $resultUsers = $conn->query($sql);
                                             <th>Username</th>
                                             <th>Fullname</th>
                                             <th>Role</th>
+                                            <th>School</th>
                                             <th>Action</th>
                                         </tr>
                                     </tfoot>
@@ -79,6 +81,7 @@ $resultUsers = $conn->query($sql);
                                                             <td>".$row["username"]."</td>
                                                             <td>".$row["first_name"]. " ".$row["last_name"]."</td>
                                                             <td>".$row["description"]."</td>
+                                                            <td>".$row["school"]."</td>
                                                             <td>";
                                                     echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
                                                             <a href='addUser.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>

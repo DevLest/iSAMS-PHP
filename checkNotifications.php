@@ -2,18 +2,33 @@
 session_start();
 require_once "connection/db.php";
 
-if ($_SESSION['role'] != 1) { // Only allow admins to access this
-    echo json_encode(['count' => 0, 'requests' => []]);
-    exit;
+$response = ['count' => 0, 'requests' => []];
+
+if ($_SESSION['role'] == 1) { // Admin
+    $query = "SELECT er.*, u.username 
+              FROM edit_requests er 
+              JOIN users u ON er.requested_by = u.id 
+              WHERE er.status = 'pending'";
+    $result = $conn->query($query);
+    
+    $response['count'] = $result->num_rows;
+    while ($row = $result->fetch_assoc()) {
+        $response['requests'][] = $row;
+    }
+} else { // Regular user
+    $query = "SELECT * FROM edit_requests 
+              WHERE requested_by = ? AND status IN ('approved', 'denied') 
+              AND processed_date > DATE_SUB(NOW(), INTERVAL 1 DAY)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $response['count'] = $result->num_rows;
+    while ($row = $result->fetch_assoc()) {
+        $response['requests'][] = $row;
+    }
 }
 
-$pendingRequestsQuery = "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'";
-$result = $conn->query($pendingRequestsQuery);
-$pendingCount = $result->fetch_assoc()['count'];
-
-$requestsQuery = "SELECT er.*, uc.username AS user_name, ic.issues FROM edit_requests er JOIN users uc ON er.requested_by = uc.id JOIN issues_and_concerns ic ON er.issue_id = ic.id WHERE er.status = 'pending'";
-$requests = $conn->query($requestsQuery);
-$requestsArray = $requests->fetch_all(MYSQLI_ASSOC);
-
-echo json_encode(['count' => $pendingCount, 'requests' => $requestsArray]);
+echo json_encode($response);
 ?>

@@ -8,7 +8,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) { // Assuming role 1
 require_once "connection/db.php";
 
 // Fetch edit requests
-$requestsQuery = "SELECT er.*, uc.username AS user_name, ic.issues FROM edit_requests er JOIN users uc ON er.user_id = uc.id JOIN issues_and_concerns ic ON er.issue_id = ic.id WHERE er.status = 'pending'";
+$requestsQuery = "SELECT er.*, u.username AS user_name 
+                 FROM edit_requests er 
+                 JOIN users u ON er.requested_by = u.id 
+                 WHERE er.status = 'pending'";
 $requests = $conn->query($requestsQuery);
 ?>
 
@@ -26,7 +29,10 @@ $requests = $conn->query($requestsQuery);
             <thead>
                 <tr>
                     <th>User</th>
-                    <th>Issue</th>
+                    <th>Type</th>
+                    <th>Grade Level</th>
+                    <th>Gender</th>
+                    <th>Reason</th>
                     <th>Request Date</th>
                     <th>Action</th>
                 </tr>
@@ -34,8 +40,11 @@ $requests = $conn->query($requestsQuery);
             <tbody>
                 <?php while ($row = $requests->fetch_assoc()): ?>
                 <tr>
-                    <td><?php echo $row['user_name']; ?></td>
-                    <td><?php echo $row['issues']; ?></td>
+                    <td><?php echo htmlspecialchars($row['user_name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['type']); ?></td>
+                    <td><?php echo htmlspecialchars($row['grade_level']); ?></td>
+                    <td><?php echo htmlspecialchars($row['gender']); ?></td>
+                    <td><?php echo htmlspecialchars($row['reason']); ?></td>
                     <td><?php echo $row['request_date']; ?></td>
                     <td>
                         <form action="processEditRequest.php" method="post">
