@@ -124,12 +124,27 @@ $inputTables = "";
 
 if ($schools->num_rows > 0) {
     while($row = $schools->fetch_assoc()) {
+        // Get the stored values for this school
+        $male_value = 0;
+        $female_value = 0;
+        
+        // Build the key for looking up stored values
+        $male_key = "1-dynamicId-1-" . $row['id'];    // 1 for male
+        $female_key = "2-dynamicId-1-" . $row['id'];  // 2 for female
+        
+        if (isset($attendanceData[$male_key])) {
+            $male_value = $attendanceData[$male_key];
+        }
+        if (isset($attendanceData[$female_key])) {
+            $female_value = $attendanceData[$female_key];
+        }
+
         $inputTables .= "
             <tr>
                 <td>".$row["name"]."</td>
-                <td><input type='number' class='form-control form-control-sm' name='dynamicId-male[".$row['id']."]' value='0'></td>
-                <td><input type='number' class='form-control form-control-sm' name='dynamicId-female[".$row['id']."]' value='0'></td>
-                <td class='total'>0</td>
+                <td><input type='number' class='form-control form-control-sm' name='dynamicId-male[".$row['id']."]' value='".$male_value."'></td>
+                <td><input type='number' class='form-control form-control-sm' name='dynamicId-female[".$row['id']."]' value='".$female_value."'></td>
+                <td class='total'>".($male_value + $female_value)."</td>
             </tr>
         ";
     }
@@ -741,47 +756,56 @@ $lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries 
             var activeTab = $('#activeTab').val().split('-')[0];
             var activeTabGrade = $('#activeTab').val().split('-')[1];
             
+            // First reset all inputs
             $('table input').each(function() {
                 var inputName = $(this).attr('name');
                 if (inputName) {
-                    this.value = 0;
-                    this.disabled = true;
+                    $(this).val(0);
+                    $(this).prop('disabled', true);
                     $(this).removeClass('approved-edit pending-edit');
                 }
             });
             
+            // Then populate with actual data
             for (var i = 0; i < keys.length; i++) {
                 var parts = keys[i].split('-');
-                var gender = parts[0];
-                var type = parts[1];
+                var gender = parts[0];  // 1 for male, 2 for female
+                var type = parts[1];    // als, enrollment, etc.
                 var gradeLevel = parts[2];
                 var schoolId = parts[3];
-                var inputName = type + '-' + gender + '[' + schoolId + ']';
-                var inputBox = document.querySelector('input[name="' + inputName + '"]');
                 
-                if (gradeLevel === activeTabGrade && type === activeTab && inputBox) {
-                    inputBox.value = attendanceData[keys[i]] || 0;
+                // Convert gender number to string
+                var genderStr = (gender === '1') ? 'male' : 'female';
+                
+                // Construct input name
+                var inputName = type + '-' + genderStr + '[' + schoolId + ']';
+                var inputBox = $('input[name="' + inputName + '"]');
+                
+                if (gradeLevel === activeTabGrade && type === activeTab && inputBox.length) {
+                    // Set the value
+                    inputBox.val(attendanceData[keys[i]] || 0);
                     
-                    // Check if current user is the last editor
+                    // Check permissions
                     var lastEditor = attendanceData[keys[i] + '_editor'];
                     if (lastEditor === currentUserId) {
-                        inputBox.disabled = false;
+                        inputBox.prop('disabled', false);
                     } else {
-                        // Check for edit permissions
                         var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
                         var permission = editPermissions[permissionKey];
                         
                         if (permission === 'approved') {
-                            inputBox.disabled = false;
-                            $(inputBox).addClass('approved-edit');
+                            inputBox.prop('disabled', false);
+                            inputBox.addClass('approved-edit');
                         } else if (permission === 'pending') {
-                            inputBox.disabled = true;
-                            $(inputBox).addClass('pending-edit');
+                            inputBox.prop('disabled', true);
+                            inputBox.addClass('pending-edit');
                         } else {
-                            inputBox.disabled = true;
+                            inputBox.prop('disabled', true);
                         }
                     }
-                    updateTotal($(inputBox).closest('tr'));
+                    
+                    // Update the total
+                    updateTotal(inputBox.closest('tr'));
                 }
             }
             handleAEJHSVisibility();
