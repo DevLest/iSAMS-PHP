@@ -117,6 +117,31 @@ echo "<script>
         secondary: " . ($pieData['secondary_count'] ?? 0) . "
     };
 </script>";
+
+// Add after the existing SQL queries
+$issuesQuery = "SELECT ic.*, s.name as school_name 
+                FROM issues_and_concerns ic 
+                LEFT JOIN schools s ON ic.school_id = s.id
+                WHERE ic.type = 'attendance' 
+                AND ic.year = $year 
+                AND ic.quarter = $currentQuarter
+                ORDER BY ic.updated_at DESC";
+$issuesResult = $conn->query($issuesQuery);
+
+// Get trend analysis
+$trendQuery = "SELECT 
+    s.name as school_name,
+    SUM(CASE WHEN a.quarter = $currentQuarter-1 THEN a.count ELSE 0 END) as last_quarter,
+    SUM(CASE WHEN a.quarter = $currentQuarter THEN a.count ELSE 0 END) as this_quarter,
+    a.type
+FROM attendance_summary a
+JOIN schools s ON a.school_id = s.id
+WHERE a.year = $year 
+AND a.type IN ('leavers', 'enrollment')
+GROUP BY s.id, a.type
+HAVING this_quarter < last_quarter
+ORDER BY (last_quarter - this_quarter) DESC";
+$trendResult = $conn->query($trendQuery);
 ?>
 
 <body id="page-top">
@@ -298,6 +323,124 @@ echo "<script>
 
                     <!-- Content Row -->
                     <div class="row">
+                        <!-- Attendance Analysis Column -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Attendance Analysis & Interventions</h6>
+                                    <span class="badge badge-warning"><?php echo $trendResult->num_rows; ?> Schools Need Attention</span>
+                                </div>
+                                <div class="card-body">
+                                    <?php if($trendResult->num_rows > 0): ?>
+                                        <div id="schoolCards" class="carousel slide" data-ride="carousel" data-interval="false">
+                                            <div class="carousel-inner">
+                                                <?php 
+                                                $counter = 0;
+                                                $itemsPerPage = 3;
+                                                $trends = [];
+                                                while($trend = $trendResult->fetch_assoc()) {
+                                                    $trends[] = $trend;
+                                                }
+                                                
+                                                for($i = 0; $i < count($trends); $i += $itemsPerPage):
+                                                    $active = $i === 0 ? 'active' : '';
+                                                ?>
+                                                    <div class="carousel-item <?php echo $active; ?>">
+                                                        <?php 
+                                                        for($j = $i; $j < min($i + $itemsPerPage, count($trends)); $j++):
+                                                            $trend = $trends[$j];
+                                                            $decrease = $trend['last_quarter'] - $trend['this_quarter'];
+                                                            $percentChange = round(($decrease / $trend['last_quarter']) * 100, 1);
+                                                        ?>
+                                                            <div class="school-card mb-3 border-left-warning">
+                                                                <h6 class="font-weight-bold mb-1"><?php echo $trend['school_name']; ?></h6>
+                                                                <p class="text-danger mb-2">Enrollment decreased by <?php echo $percentChange; ?>%</p>
+                                                                <div class="intervention-list">
+                                                                    <div class="intervention-item">
+                                                                        <i class="fas fa-calendar-check text-primary"></i>
+                                                                        <span>Schedule parent-teacher conference</span>
+                                                                    </div>
+                                                                    <div class="intervention-item">
+                                                                        <i class="fas fa-home text-info"></i>
+                                                                        <span>Conduct home visitation</span>
+                                                                    </div>
+                                                                    <div class="intervention-item">
+                                                                        <i class="fas fa-list-ul text-warning"></i>
+                                                                        <span>Review reported issues</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endfor; ?>
+                                                    </div>
+                                                <?php endfor; ?>
+                                            </div>
+                                            <?php if(count($trends) > $itemsPerPage): ?>
+                                                <div class="carousel-controls">
+                                                    <a class="carousel-control-prev" href="#schoolCards" role="button" data-slide="prev">
+                                                        <span class="carousel-control-prev-icon bg-secondary rounded-circle" aria-hidden="true"></span>
+                                                        <span class="sr-only">Previous</span>
+                                                    </a>
+                                                    <a class="carousel-control-next" href="#schoolCards" role="button" data-slide="next">
+                                                        <span class="carousel-control-next-icon bg-secondary rounded-circle" aria-hidden="true"></span>
+                                                        <span class="sr-only">Next</span>
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Issues Column -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Recent Issues & Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0" id="issuesTable">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>School</th>
+                                                    <th>Issue</th>
+                                                    <th width="100">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            <?php while($issue = $issuesResult->fetch_assoc()): ?>
+                                                <tr>
+                                                    <td class="small"><?php echo $issue['school_name']; ?></td>
+                                                    <td class="small">
+                                                        <?php echo $issue['issues']; ?>
+                                                        <?php if(!empty($issue['actions_taken'])): ?>
+                                                            <br>
+                                                            <small class="text-success">
+                                                                <i class="fas fa-check-circle"></i> 
+                                                                <?php echo $issue['actions_taken']; ?>
+                                                            </small>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <?php if(empty($issue['actions_taken'])): ?>
+                                                            <span class="badge badge-danger">Pending</span>
+                                                        <?php else: ?>
+                                                            <span class="badge badge-success">Addressed</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endwhile; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Row -->
+                    <div class="row">
 
                         <!-- Content Column -->
                         <div class="col-lg-12 mb-4">
@@ -312,110 +455,8 @@ echo "<script>
                                 </div>
                             </div>
 
-                            <!-- Color System -->
-                            <!-- <div class="row">
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-primary text-white shadow">
-                                        <div class="card-body">
-                                            Primary
-                                            <div class="text-white-50 small">#4e73df</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-success text-white shadow">
-                                        <div class="card-body">
-                                            Success
-                                            <div class="text-white-50 small">#1cc88a</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-info text-white shadow">
-                                        <div class="card-body">
-                                            Info
-                                            <div class="text-white-50 small">#36b9cc</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-warning text-white shadow">
-                                        <div class="card-body">
-                                            Warning
-                                            <div class="text-white-50 small">#f6c23e</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-danger text-white shadow">
-                                        <div class="card-body">
-                                            Danger
-                                            <div class="text-white-50 small">#e74a3b</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-secondary text-white shadow">
-                                        <div class="card-body">
-                                            Secondary
-                                            <div class="text-white-50 small">#858796</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-light text-black shadow">
-                                        <div class="card-body">
-                                            Light
-                                            <div class="text-black-50 small">#f8f9fc</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card bg-dark text-white shadow">
-                                        <div class="card-body">
-                                            Dark
-                                            <div class="text-white-50 small">#5a5c69</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> -->
-
                         </div>
 
-                        <!-- <div class="col-lg-6 mb-4">
-
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Illustrations</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="text-center">
-                                        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
-                                            src="img/undraw_posting_photo.svg" alt="...">
-                                    </div>
-                                    <p>Add some quality, svg illustrations to your project courtesy of <a
-                                            target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>, a
-                                        constantly updated collection of beautiful svg images that you can use
-                                        completely free and without attribution!</p>
-                                    <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on
-                                        unDraw &rarr;</a>
-                                </div>
-                            </div>
-
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce
-                                        CSS bloat and poor page performance. Custom CSS classes are used to create
-                                        custom components and custom utility classes.</p>
-                                    <p class="mb-0">Before working with this theme, you should become familiar with the
-                                        Bootstrap framework, especially the utility classes.</p>
-                                </div>
-                            </div>
-
-                        </div> -->
                     </div>
 
                 </div>
