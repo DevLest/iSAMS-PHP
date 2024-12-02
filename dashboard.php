@@ -130,17 +130,20 @@ $issuesResult = $conn->query($issuesQuery);
 
 // Get trend analysis
 $trendQuery = "SELECT 
+    s.id as school_id,
     s.name as school_name,
-    SUM(CASE WHEN a.quarter = $currentQuarter-1 THEN a.count ELSE 0 END) as last_quarter,
-    SUM(CASE WHEN a.quarter = $currentQuarter THEN a.count ELSE 0 END) as this_quarter,
-    a.type
+    SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) as last_year,
+    SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) as this_year,
+    a.type,
+    $currentQuarter as quarter
 FROM attendance_summary a
 JOIN schools s ON a.school_id = s.id
-WHERE a.year = $year 
-AND a.type IN ('leavers', 'enrollment')
-GROUP BY s.id, a.type
-HAVING this_quarter < last_quarter
-ORDER BY (last_quarter - this_quarter) DESC";
+WHERE a.type = '$reportType'
+AND a.year IN ($year, $year-1)
+AND a.quarter = $currentQuarter
+GROUP BY s.id, s.name, a.type
+HAVING this_year < last_year
+ORDER BY (last_year - this_year) DESC";
 $trendResult = $conn->query($trendQuery);
 ?>
 
@@ -338,8 +341,38 @@ $trendResult = $conn->query($trendQuery);
                                                 $counter = 0;
                                                 $itemsPerPage = 3;
                                                 $trends = [];
+                                                
+                                                // Get current and previous school year
+                                                $currentYear = date('Y');
+                                                $lastYear = $currentYear - 1;
+                                                
+                                                // Fetch data for comparison
                                                 while($trend = $trendResult->fetch_assoc()) {
-                                                    $trends[] = $trend;
+                                                    // Get current year's data
+                                                    $currentYearQuery = "SELECT SUM(count) as total 
+                                                               FROM attendance_summary 
+                                                               WHERE school_id = {$trend['school_id']} 
+                                                               AND type = 'enrollment'
+                                                               AND year = $currentYear
+                                                               AND quarter = {$trend['quarter']}";
+                                                    
+                                                    // Get previous year's data
+                                                    $lastYearQuery = "SELECT SUM(count) as total 
+                                                            FROM attendance_summary 
+                                                            WHERE school_id = {$trend['school_id']} 
+                                                            AND type = 'enrollment'
+                                                            AND year = $lastYear
+                                                            AND quarter = {$trend['quarter']}";
+                                                    
+                                                    $currentResult = $conn->query($currentYearQuery)->fetch_assoc();
+                                                    $lastResult = $conn->query($lastYearQuery)->fetch_assoc();
+                                                    
+                                                    $trend['this_quarter'] = $currentResult['total'] ?? 0;
+                                                    $trend['last_quarter'] = $lastResult['total'] ?? 0;
+                                                    
+                                                    if($trend['last_quarter'] > 0 && $trend['this_quarter'] < $trend['last_quarter']) {
+                                                        $trends[] = $trend;
+                                                    }
                                                 }
                                                 
                                                 for($i = 0; $i < count($trends); $i += $itemsPerPage):
@@ -354,7 +387,12 @@ $trendResult = $conn->query($trendQuery);
                                                         ?>
                                                             <div class="school-card mb-3 border-left-warning">
                                                                 <h6 class="font-weight-bold mb-1"><?php echo $trend['school_name']; ?></h6>
-                                                                <p class="text-danger mb-2">Enrollment decreased by <?php echo $percentChange; ?>%</p>
+                                                                <p class="text-danger mb-2">
+                                                                    Enrollment decreased by <?php echo $percentChange; ?>% compared to last year
+                                                                    <small class="d-block text-muted">
+                                                                        (<?php echo $trend['this_quarter']; ?> vs <?php echo $trend['last_quarter']; ?> students)
+                                                                    </small>
+                                                                </p>
                                                                 <div class="intervention-list">
                                                                     <div class="intervention-item">
                                                                         <i class="fas fa-calendar-check text-primary"></i>
