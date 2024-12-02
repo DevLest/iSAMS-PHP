@@ -25,8 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $gender_female = 2;
     $current_user_id = $_SESSION['user_id'];
 
-    print_r($_POST);
-    exit;
     list($type, $grade_level_id) = explode('-', $_POST['activeTab']);
 
     if (isset($_POST[$type.'-male']) || isset($_POST[$type.'-female'])) {
@@ -46,19 +44,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 $result = $conn->query($query);
                 if ($result->num_rows > 0) {
                     $query = sprintf(
-                        "UPDATE attendance_summary SET count = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s' AND last_user_save = '%s'",
+                        "UPDATE attendance_summary SET count = '%s', updated_at = CURRENT_TIMESTAMP, last_user_save = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s'",
                         mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $current_user_id),
                         mysqli_real_escape_string($conn, $school_id),
                         mysqli_real_escape_string($conn, $grade_level_id),
                         mysqli_real_escape_string($conn, $gender_male),
                         mysqli_real_escape_string($conn, $type),
                         mysqli_real_escape_string($conn, $_POST['quarter']),
-                        mysqli_real_escape_string($conn, $year),
-                        mysqli_real_escape_string($conn, $current_user_id)
+                        mysqli_real_escape_string($conn, $year)
                     );
                 } else {
                     $query = sprintf(
-                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                         mysqli_real_escape_string($conn, $school_id),
                         mysqli_real_escape_string($conn, $grade_level_id),
                         mysqli_real_escape_string($conn, $gender_male),
@@ -88,19 +86,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 $result = $conn->query($query);
                 if ($result->num_rows > 0) {
                     $query = sprintf(
-                        "UPDATE attendance_summary SET count = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s' AND last_user_save = '%s'",
+                        "UPDATE attendance_summary SET count = '%s', updated_at = CURRENT_TIMESTAMP, last_user_save = '%s' WHERE school_id = '%s' AND grade_level_id = '%s' AND gender = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s'",
                         mysqli_real_escape_string($conn, $count),
+                        mysqli_real_escape_string($conn, $current_user_id),
                         mysqli_real_escape_string($conn, $school_id),
                         mysqli_real_escape_string($conn, $grade_level_id),
                         mysqli_real_escape_string($conn, $gender_female),
                         mysqli_real_escape_string($conn, $type),
                         mysqli_real_escape_string($conn, $_POST['quarter']),
-                        mysqli_real_escape_string($conn, $year),
-                        mysqli_real_escape_string($conn, $current_user_id)
+                        mysqli_real_escape_string($conn, $year)
                     );
                 } else {
                     $query = sprintf(
-                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                        "INSERT INTO attendance_summary (school_id, grade_level_id, gender, type, count, quarter, year, last_user_save, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                         mysqli_real_escape_string($conn, $school_id),
                         mysqli_real_escape_string($conn, $grade_level_id),
                         mysqli_real_escape_string($conn, $gender_female),
