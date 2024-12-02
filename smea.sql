@@ -57,15 +57,10 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.attendance_summary: ~5 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~2 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`) VALUES
-	(1, 1, 1, 1, 'als', 2322, 4, 2024, 6, '2024-12-02 10:15:09', '2024-12-02 10:14:57'),
-	(2, 2, 1, 1, 'als', 312, 4, 2024, 5, '2024-12-02 10:15:07', '2024-12-02 10:15:07'),
-	(3, 3, 1, 1, 'enrollment', 80, 2, 2024, 5, '2024-12-02 10:37:33', '2024-12-02 10:26:10'),
-	(4, 1, 1, 1, 'enrollment', 120, 3, 2023, 5, '2024-12-02 10:38:49', '2024-12-02 10:26:10'),
-	(5, 3, 1, 1, 'enrollment', 100, 3, 2024, 5, '2024-12-02 10:32:05', '2024-12-02 10:26:10'),
-	(6, 2, 1, 1, 'enrollment', 120, 4, 2023, 5, '2024-12-02 10:38:49', '2024-12-02 10:38:42'),
-	(7, 2, 1, 1, 'enrollment', 80, 4, 2024, 5, '2024-12-02 10:38:42', '2024-12-02 10:38:42');
+	(10, 2, 1, 1, 'enrollment', 100, 4, 2024, 5, '2024-12-02 11:21:10', '2024-12-02 10:40:39'),
+	(11, 2, 1, 1, 'enrollment', 80, 4, 2023, 5, '2024-12-02 11:21:13', '2024-12-02 10:40:39');
 
 -- Dumping structure for table smea.edit_requests
 CREATE TABLE IF NOT EXISTS `edit_requests` (

@@ -142,10 +142,8 @@ WHERE a.type = '$reportType'
 AND a.year IN ($year, $year-1)
 AND a.quarter = $currentQuarter
 GROUP BY s.id, s.name, a.type
-HAVING SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) < 
-       SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END)
-ORDER BY (SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) - 
-         SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END)) DESC";
+HAVING last_year > 0 OR this_year > 0
+ORDER BY (this_year - last_year) ASC";
 $trendResult = $conn->query($trendQuery);
 if (!$trendResult) {
     echo "Error: " . $conn->error;
@@ -336,7 +334,7 @@ if (!$trendResult) {
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold text-primary">Attendance Analysis & Interventions</h6>
-                                    <span class="badge badge-warning"><?php echo $trendResult->num_rows; ?> Schools Need Attention</span>
+                                    <span class="badge badge-info"><?php echo $trendResult->num_rows; ?> Schools Report</span>
                                 </div>
                                 <div class="card-body">
                                     <?php if($trendResult->num_rows > 0): ?>
@@ -347,37 +345,8 @@ if (!$trendResult) {
                                                 $itemsPerPage = 3;
                                                 $trends = [];
                                                 
-                                                // Get current and previous school year
-                                                $currentYear = date('Y');
-                                                $lastYear = $currentYear - 1;
-                                                
-                                                // Fetch data for comparison
                                                 while($trend = $trendResult->fetch_assoc()) {
-                                                    // Get current year's data
-                                                    $currentYearQuery = "SELECT SUM(count) as total 
-                                                               FROM attendance_summary 
-                                                               WHERE school_id = {$trend['school_id']} 
-                                                               AND type = 'enrollment'
-                                                               AND year = $currentYear
-                                                               AND quarter = {$trend['quarter']}";
-                                                    
-                                                    // Get previous year's data
-                                                    $lastYearQuery = "SELECT SUM(count) as total 
-                                                            FROM attendance_summary 
-                                                            WHERE school_id = {$trend['school_id']} 
-                                                            AND type = 'enrollment'
-                                                            AND year = $lastYear
-                                                            AND quarter = {$trend['quarter']}";
-                                                    
-                                                    $currentResult = $conn->query($currentYearQuery)->fetch_assoc();
-                                                    $lastResult = $conn->query($lastYearQuery)->fetch_assoc();
-                                                    
-                                                    $trend['this_quarter'] = $currentResult['total'] ?? 0;
-                                                    $trend['last_quarter'] = $lastResult['total'] ?? 0;
-                                                    
-                                                    if($trend['last_quarter'] > 0 && $trend['this_quarter'] < $trend['last_quarter']) {
-                                                        $trends[] = $trend;
-                                                    }
+                                                    $trends[] = $trend;
                                                 }
                                                 
                                                 for($i = 0; $i < count($trends); $i += $itemsPerPage):
@@ -387,17 +356,25 @@ if (!$trendResult) {
                                                         <?php 
                                                         for($j = $i; $j < min($i + $itemsPerPage, count($trends)); $j++):
                                                             $trend = $trends[$j];
-                                                            $decrease = $trend['last_quarter'] - $trend['this_quarter'];
-                                                            $percentChange = round(($decrease / $trend['last_quarter']) * 100, 1);
+                                                            $change = $trend['this_year'] - $trend['last_year'];
+                                                            $percentChange = $trend['last_year'] > 0 ? 
+                                                                round(($change / $trend['last_year']) * 100, 1) : 
+                                                                ($trend['this_year'] > 0 ? 100 : 0);
+                                                            
+                                                            $isDecrease = $change < 0;
+                                                            $cardClass = $isDecrease ? 'border-left-warning' : 'border-left-success';
+                                                            $textClass = $isDecrease ? 'text-danger' : 'text-success';
+                                                            $changeText = $isDecrease ? 'decreased' : 'increased';
                                                         ?>
-                                                            <div class="school-card mb-3 border-left-warning">
+                                                            <div class="school-card mb-3 <?php echo $cardClass; ?>">
                                                                 <h6 class="font-weight-bold mb-1"><?php echo $trend['school_name']; ?></h6>
-                                                                <p class="text-danger mb-2">
-                                                                    Enrollment decreased by <?php echo $percentChange; ?>% compared to last year
+                                                                <p class="<?php echo $textClass; ?> mb-2">
+                                                                    <?php echo ucfirst($reportType); ?> <?php echo $changeText; ?> by <?php echo abs($percentChange); ?>% compared to last year
                                                                     <small class="d-block text-muted">
-                                                                        (<?php echo $trend['this_quarter']; ?> vs <?php echo $trend['last_quarter']; ?> students)
+                                                                        (<?php echo $trend['this_year']; ?> vs <?php echo $trend['last_year']; ?> students)
                                                                     </small>
                                                                 </p>
+                                                                <?php if($isDecrease): ?>
                                                                 <div class="intervention-list">
                                                                     <div class="intervention-item">
                                                                         <i class="fas fa-calendar-check text-primary"></i>
@@ -412,6 +389,18 @@ if (!$trendResult) {
                                                                         <span>Review reported issues</span>
                                                                     </div>
                                                                 </div>
+                                                                <?php else: ?>
+                                                                <div class="intervention-list">
+                                                                    <div class="intervention-item">
+                                                                        <i class="fas fa-chart-line text-success"></i>
+                                                                        <span>Maintain positive growth strategies</span>
+                                                                    </div>
+                                                                    <div class="intervention-item">
+                                                                        <i class="fas fa-star text-warning"></i>
+                                                                        <span>Document best practices</span>
+                                                                    </div>
+                                                                </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         <?php endfor; ?>
                                                     </div>
