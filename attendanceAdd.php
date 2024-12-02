@@ -25,6 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $gender_female = 2;
     $current_user_id = $_SESSION['user_id'];
 
+    print_r($_POST);
+    exit;
     list($type, $grade_level_id) = explode('-', $_POST['activeTab']);
 
     if (isset($_POST[$type.'-male']) || isset($_POST[$type.'-female'])) {
@@ -787,22 +789,18 @@ $lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries 
                     // Check permissions
                     var lastEditor = attendanceData[keys[i] + '_editor'];
                     if (lastEditor === currentUserId) {
-                        console.log("lastEditor: " + lastEditor);
                         inputBox.prop('disabled', false);
                     } else {
                         var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
                         var permission = editPermissions[permissionKey];
                         
                         if (permission === 'approved') {
-                            console.log("permission: " + permission);
                             inputBox.prop('disabled', false);
                             inputBox.addClass('approved-edit');
                         } else if (permission === 'pending') {
-                            console.log("permission: " + permission);
                             inputBox.prop('disabled', true);
                             inputBox.addClass('pending-edit');
                         } else {
-                            console.log("permission: " + permission);
                             inputBox.prop('disabled', true);
                         }
                     }
@@ -959,9 +957,19 @@ $lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries 
                 $('#submitEditRequest').show();
                 $('#requestReason').val('');
             });
+
+            // Set the default active tab to als-1
+            $('#activeTab').val('als-1');
+            $('#v-pills-blp-tab').addClass('active');
+            $('#v-pills-blp').addClass('show active');
+
+            // Initialize the fields based on the default active tab
+            lockFields();
+            handleAEJHSVisibility();
         });
 
         function updateActiveTab(tab, gradeLevel) {
+            console.log(tab);
             document.getElementById('activeTab').value = tab;
             document.getElementById('activeGradeLevel').value = gradeLevel;
         }
