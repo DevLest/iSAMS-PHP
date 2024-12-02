@@ -761,7 +761,6 @@ $lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries 
                 var inputName = $(this).attr('name');
                 if (inputName) {
                     $(this).val(0);
-                    $(this).prop('disabled', true);
                     $(this).removeClass('approved-edit pending-edit');
                 }
             });
@@ -788,18 +787,22 @@ $lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries 
                     // Check permissions
                     var lastEditor = attendanceData[keys[i] + '_editor'];
                     if (lastEditor === currentUserId) {
+                        console.log("lastEditor: " + lastEditor);
                         inputBox.prop('disabled', false);
                     } else {
                         var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
                         var permission = editPermissions[permissionKey];
                         
                         if (permission === 'approved') {
+                            console.log("permission: " + permission);
                             inputBox.prop('disabled', false);
                             inputBox.addClass('approved-edit');
                         } else if (permission === 'pending') {
+                            console.log("permission: " + permission);
                             inputBox.prop('disabled', true);
                             inputBox.addClass('pending-edit');
                         } else {
+                            console.log("permission: " + permission);
                             inputBox.prop('disabled', true);
                         }
                     }
