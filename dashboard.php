@@ -142,8 +142,10 @@ WHERE a.type = '$reportType'
 AND a.year IN ($year, $year-1)
 AND a.quarter = $currentQuarter
 GROUP BY s.id, s.name, a.type
-HAVING last_year > 0 OR this_year > 0
-ORDER BY (this_year - last_year) ASC";
+HAVING SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) > 0 
+    OR SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) > 0
+ORDER BY (SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) 
+         - SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END)) ASC";
 $trendResult = $conn->query($trendQuery);
 if (!$trendResult) {
     echo "Error: " . $conn->error;
