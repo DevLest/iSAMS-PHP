@@ -55,7 +55,7 @@ $result = $existingDataStmt->get_result();
 $lastUserSave = "No edits yet";
 while ($row = $result->fetch_assoc()) {
     $existingData[$row['school_id']] = $row;
-    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'No School').')';
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
 }
 
 $schoolYearsql = "SELECT * FROM school_year";
