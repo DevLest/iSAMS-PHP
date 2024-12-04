@@ -125,9 +125,30 @@ function getExistingData($conn, $quarter, $year) {
 }
 
 // Get existing data
-$existingData = getExistingData($conn, $selectedQuarter, $year);
-$tableData = $existingData['data'];
-$lastUserSave = $existingData['lastUserSave'] ?? '';
+$existingDataResult = getExistingData($conn, $selectedQuarter, $year);
+$tableData = $existingDataResult['data'];
+$lastUserSave = $existingDataResult['lastUserSave'] ?? '';
+
+// Get edit permissions
+$editRequestsQuery = "SELECT school_id, type, grade_level, gender, status 
+                     FROM edit_requests 
+                     WHERE requested_by = {$_SESSION['user_id']} 
+                     AND status IN ('pending', 'approved')";
+$editRequestsResult = $conn->query($editRequestsQuery);
+$editPermissions = [];
+
+while ($row = $editRequestsResult->fetch_assoc()) {
+    $key = "{$row['type']}-{$row['grade_level']}-{$row['gender']}-{$row['school_id']}";
+    $editPermissions[$key] = $row['status'];
+}
+
+// Make sure these variables are available to JavaScript
+echo "<script>
+    var tableData = ".json_encode($tableData).";
+    var currentUserId = ".$_SESSION['user_id'].";
+    var role = ".$_SESSION['role'].";
+    var editPermissions = ".json_encode($editPermissions).";
+</script>";
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
@@ -195,6 +216,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Welfare and Behavior Assessment - SMEA</title>
+  <style>
+    .approved-edit {
+        background-color: #e8f5e9 !important;
+        border-color: #4caf50 !important;
+    }
+
+    .pending-edit {
+        background-color: #fff3e0 !important;
+        border-color: #ff9800 !important;
+    }
+
+    .edit-status-tooltip.approved-edit:after {
+        background-color: #4caf50;
+        content: "Approved";
+    }
+
+    .edit-status-tooltip.pending-edit:after {
+        background-color: #ff9800;
+        content: "Pending";
+    }
+  </style>
 </head>
 
 <body id="page-top">
@@ -521,7 +563,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   </div>
 
   <script>
+  var existingData = <?php echo json_encode($existingDataResult['data']); ?>;
+  var role = <?php echo $_SESSION['role']; ?>;
+  var currentUserId = <?php echo $_SESSION['user_id']; ?>;
+  var editPermissions = <?php echo json_encode($editPermissions); ?>;
+
   $(document).ready(function() {
+    function lockFields() {
+
+        // First enable all fields by default
+        $('input[type="number"]').prop('readonly', false);
+        $('input[type="number"]').removeClass('approved-edit pending-edit');
+        
+        // Lock fields based on last editor and permissions
+        $('input[type="number"]').each(function() {
+            var $input = $(this);
+            var inputName = $input.attr('name');
+            var value = parseInt($input.val()) || 0;
+            
+            // Only process fields that have data (value > 0)
+            if (value > 0) {
+                var matches = inputName.match(/(\w+)-(\d+)-(\w+)\[(\d+)\]/);
+                if (matches) {
+                    var type = matches[1];          // displaced, bullying, equipped, or bmi
+                    var gradeLevel = matches[2];    // grade level id
+                    var gender = matches[3];        // male or female
+                    var schoolId = matches[4];      // school id
+                    var genderCode = gender === 'male' ? '1' : '2';
+
+                    // Get the last editor ID from the data structure
+                    var dataKey = type + '-' + gradeLevel + '-' + gender;
+                    var permissionKey = type + '-' + gradeLevel + '-' + genderCode + '-' + schoolId;
+                    
+                    // Check if current user is the last editor
+                    var lastEditorId = null;
+                    if (tableData[dataKey] && tableData[dataKey][schoolId + '_editor']) {
+                        lastEditorId = tableData[dataKey][schoolId + '_editor'];
+                    }
+                    var isLastEditor = lastEditorId === currentUserId;
+
+                    // Admin can always edit
+                    if (role === 1) {
+                        $input.prop('readonly', false);
+                    }
+                    // Last editor can edit their own entries
+                    else if (isLastEditor) {
+                        $input.prop('readonly', false);
+                    }
+                    // Check edit permissions for other users
+                    else {
+                        var permission = editPermissions[permissionKey];
+                        
+                        if (permission === 'approved') {
+                            $input.prop('readonly', false);
+                            $input.addClass('approved-edit');
+                            $input.attr('title', 'Edit permission approved');
+                        } else if (permission === 'pending') {
+                            $input.prop('readonly', true);
+                            $input.addClass('pending-edit');
+                            $input.attr('title', 'Edit permission pending approval');
+                        } else {
+                            $input.prop('readonly', true);
+                            $input.attr('title', 'Double-click to request edit permission');
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize fields on page load
+    lockFields();
+
+    // Handle tab changes
+    $('.nav-link').on('click', function() {
+        setTimeout(lockFields, 100);
+    });
+
+    // Handle double-click on readonly inputs
+    $(document).on('dblclick', 'input[type="number"]', function() {
+        if ($(this).prop('readonly')) {
+            const $input = $(this);
+            const inputName = $input.attr('name');
+            const matches = inputName.match(/(\w+)-(\d+)-(\w+)\[(\d+)\]/);
+            
+            if (matches) {
+                const type = matches[1];
+                const gradeLevel = matches[2];
+                const gender = matches[3] === 'male' ? '1' : '2';
+                const schoolId = matches[4];
+
+                $('#requestSchoolId').val(schoolId);
+                $('#requestType').val(type);
+                $('#requestGradeLevel').val(gradeLevel);
+                $('#requestGender').val(gender);
+                
+                $('#editRequestModal').modal('show');
+            }
+        }
+    });
+
     // Remove the automatic form submission on select change
     $('#quarter, #year').off('change');
 
@@ -572,8 +713,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $(this).val(0);
       }
     });
+
+    // Handle edit request submission
+    $('#submitEditRequest').on('click', function() {
+        // Get form data
+        const formData = {
+            school_id: $('#requestSchoolId').val(),
+            type: $('#requestType').val(),
+            grade_level: $('#requestGradeLevel').val(),
+            gender: $('#requestGender').val(),
+            reason: $('#requestReason').val()
+        };
+
+        console.log('Submitting edit request:', formData); // Debug log
+
+        // Validate required fields
+        if (!formData.reason) {
+            alert('Please provide a reason for the edit request');
+            return;
+        }
+
+        // Disable submit button to prevent double submission
+        $('#submitEditRequest').prop('disabled', true);
+
+        // Send AJAX request
+        $.ajax({
+            url: 'requestEdit.php',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                console.log('Response received:', response); // Debug log
+                
+                try {
+                    const result = JSON.parse(response);
+                    $('#editRequestForm').hide();
+                    $('#editRequestStatus').show();
+                    
+                    if (result.success) {
+                        $('#editRequestStatus .alert')
+                            .removeClass('alert-danger')
+                            .addClass('alert-success')
+                            .text(result.message || 'Edit request submitted successfully');
+                        
+                        // Update permissions and refresh field states
+                        if (editPermissions) {
+                            const permissionKey = `${formData.type}-${formData.grade_level}-${formData.gender}-${formData.school_id}`;
+                            editPermissions[permissionKey] = 'pending';
+                            lockFields();
+                        }
+                    } else {
+                        $('#editRequestStatus .alert')
+                            .removeClass('alert-success')
+                            .addClass('alert-danger')
+                            .text(result.message || 'Failed to submit edit request');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    $('#editRequestStatus .alert')
+                        .removeClass('alert-success')
+                        .addClass('alert-danger')
+                        .text('An error occurred while processing the response');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error); // Debug log
+                $('#editRequestStatus').show();
+                $('#editRequestStatus .alert')
+                    .removeClass('alert-success')
+                    .addClass('alert-danger')
+                    .text('An error occurred while submitting the request. Please try again.');
+            },
+            complete: function() {
+                // Re-enable submit button
+                $('#submitEditRequest').prop('disabled', false);
+            }
+        });
+    });
+
+    // Reset modal when closed
+    $('#editRequestModal').on('hidden.bs.modal', function () {
+        $('#editRequestForm').show();
+        $('#editRequestStatus').hide();
+        $('#submitEditRequest').prop('disabled', false);
+        $('#requestReason').val('');
+        $('#editRequestStatus .alert').removeClass('alert-success alert-danger').text('');
+    });
   });
   </script>
+
+  <!-- Add the edit request modal -->
+  <div class="modal fade" id="editRequestModal" tabindex="-1" role="dialog" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRequestModalLabel">Request Edit Permission</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This field is currently locked. Would you like to request permission to edit it?</p>
+                <form id="editRequestForm">
+                    <input type="hidden" id="requestSchoolId" name="school_id">
+                    <input type="hidden" id="requestType" name="type">
+                    <input type="hidden" id="requestGradeLevel" name="grade_level">
+                    <input type="hidden" id="requestGender" name="gender">
+                    <div class="form-group">
+                        <label for="requestReason">Reason for Edit:</label>
+                        <textarea class="form-control" id="requestReason" name="reason" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-body" id="editRequestStatus" style="display: none;">
+                <div class="alert" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitEditRequest">Submit Request</button>
+            </div>
+        </div>
+    </div>
+  </div>
 </body>
-</html>
-</html>
+</html></html>
