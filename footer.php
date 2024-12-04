@@ -47,7 +47,7 @@
                                 <div>
                                     <div class="small text-gray-500">${request.request_date}</div>
                                     <span>${requestTypeText} from <strong>${displayUsername}</strong> for ${request.type}</span>
-                                    <div class="small">Grade ${request.grade_level}, ${request.gender.charAt(0).toUpperCase() + request.gender.slice(1)}</div>
+                                    <div class="small">${request.grade_level_name}, ${request.gender.charAt(0).toUpperCase() + request.gender.slice(1)}</div>
                                 </div>
                             </a>
                         `);

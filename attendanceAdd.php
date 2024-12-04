@@ -788,6 +788,25 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                 }
             });
             
+            // Fetch current edit requests status
+            $.ajax({
+                url: 'checkNotifications.php',
+                method: 'GET',
+                async: false, // Make this synchronous to ensure we have the data before continuing
+                success: function(response) {
+                    if (typeof response === 'string') {
+                        response = JSON.parse(response);
+                    }
+                    
+                    // Update editPermissions with the latest requests
+                    response.requests.forEach(function(request) {
+                        var permissionKey = request.type + '-' + request.gender + '-' + request.grade_level + '-' + request.school_id;
+                        editPermissions[permissionKey] = request.status;
+                        console.log(permissionKey + ' ' + request.status);
+                    });
+                }
+            });
+            
             // Then populate with actual data
             for (var i = 0; i < keys.length; i++) {
                 var parts = keys[i].split('-');
@@ -809,20 +828,34 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                     
                     // Check permissions
                     var lastEditor = attendanceData[keys[i] + '_editor'];
-                    if (lastEditor === currentUserId) {
+                    var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
+                    
+                    // Admin can always edit
+                    if (role === 1) {
                         inputBox.prop('readonly', false);
-                    } else {
-                        var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
+                    }
+                    // Last editor can edit their own entries
+                    else if (lastEditor === currentUserId) {
+                        inputBox.prop('readonly', false);
+                    }
+                    // Check edit permissions for other users
+                    else {
                         var permission = editPermissions[permissionKey];
                         
                         if (permission === 'approved') {
                             inputBox.prop('readonly', false);
                             inputBox.addClass('approved-edit');
+                            // Add tooltip with approval info
+                            inputBox.attr('title', 'Edit permission approved');
                         } else if (permission === 'pending') {
                             inputBox.prop('readonly', true);
                             inputBox.addClass('pending-edit');
+                            // Add tooltip with pending info
+                            inputBox.attr('title', 'Edit permission pending approval');
                         } else {
                             inputBox.prop('readonly', true);
+                            // Add tooltip with instruction
+                            inputBox.attr('title', 'Double-click to request edit permission');
                         }
                     }
                     

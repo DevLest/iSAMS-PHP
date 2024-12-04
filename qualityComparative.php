@@ -17,7 +17,10 @@ $selectedQuarter = isset($_GET['quarter']) ? $_GET['quarter'] : (isset($_POST['q
 // Fetch school years
 $currentYear = date('Y');
 $nextYear = $currentYear + 1;
-$schoolYearQuery = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
+$schoolYearQuery = "SELECT * FROM school_year 
+                   WHERE (start_year = $currentYear OR start_year = $currentYear - 1)
+                   ORDER BY start_year DESC 
+                   LIMIT 2";
 $schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Get schools
@@ -32,8 +35,10 @@ $gradeLevels = $conn->query($gradeLevelQuery)->fetch_all(MYSQLI_ASSOC);
 function generateSchoolYearHeaders($schoolYears) {
     $headers = '<th>School Name</th>';
     foreach ($schoolYears as $sy) {
-        $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (M)</th>";
-        $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (F)</th>";
+        $startYear = $sy['start_year'];
+        $endYear = $sy['end_year'];
+        $headers .= "<th>SY {$startYear}-{$endYear} (M)</th>";
+        $headers .= "<th>SY {$startYear}-{$endYear} (F)</th>";
     }
     return $headers;
 }
@@ -54,7 +59,7 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
                      AND quarter = ? AND year = ? AND grade_level = ?
                      GROUP BY gender";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['end_year'], $gradeLevel);
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['start_year'], $gradeLevel);
             $stmt->execute();
             $result = $stmt->get_result();
             

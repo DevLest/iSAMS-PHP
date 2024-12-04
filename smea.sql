@@ -62,7 +62,10 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
 
 -- Dumping data for table smea.attendance_summary: ~2 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`, `school_year_id`) VALUES
-	(1, 2, 1, 1, 'pivate_vourcher', 23, 4, 2024, 5, '2024-12-04 15:14:19', '2024-12-04 15:01:33', NULL);
+	(1, 2, 1, 1, 'pivate_vourcher', 23, 4, 2024, 5, '2024-12-04 15:14:19', '2024-12-04 15:01:33', NULL),
+	(2, 1, 1, 1, 'pivate_vourcher', 2322, 4, 2025, 5, '2024-12-04 22:17:45', '2024-12-04 22:17:45', NULL),
+	(3, 4, 5, 1, 'enrollment', 3216, 4, 2025, 5, '2024-12-04 22:18:11', '2024-12-04 22:18:11', NULL),
+	(4, 4, 4, 1, 'enrollment', 223, 4, 2024, 5, '2024-12-04 22:18:35', '2024-12-04 22:18:35', NULL);
 
 -- Dumping structure for table smea.edit_requests
 CREATE TABLE IF NOT EXISTS `edit_requests` (
@@ -84,7 +87,14 @@ CREATE TABLE IF NOT EXISTS `edit_requests` (
   CONSTRAINT `edit_requests_ibfk_2` FOREIGN KEY (`processed_by`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.edit_requests: ~0 rows (approximately)
+-- Dumping data for table smea.edit_requests: ~6 rows (approximately)
+INSERT INTO `edit_requests` (`id`, `school_id`, `type`, `grade_level`, `gender`, `reason`, `requested_by`, `processed_by`, `status`, `request_date`, `processed_date`) VALUES
+	(1, 2, 'pivate_vourcher', 1, 'male', 'Edit please', 6, 5, 'approved', '2024-12-04 21:59:55', '2024-12-04 22:06:16'),
+	(2, 2, 'pivate_vourcher', 1, 'male', 'pa edit po', 6, 5, 'approved', '2024-12-04 22:09:40', '2024-12-04 22:09:53'),
+	(3, 2, 'pivate_vourcher', 1, 'male', 'aaa', 6, 5, 'approved', '2024-12-04 22:12:28', '2024-12-04 22:12:32'),
+	(4, 2, 'pivate_vourcher', 1, 'male', 'aasd', 6, 5, 'approved', '2024-12-04 22:15:17', '2024-12-04 22:15:22'),
+	(5, 2, 'pivate_vourcher', 1, 'male', 'asdasafg', 6, 5, 'approved', '2024-12-04 22:15:40', '2024-12-04 22:15:43'),
+	(6, 2, 'pivate_vourcher', 1, 'male', 'Pa edit', 6, 5, 'approved', '2024-12-04 22:36:37', '2024-12-04 22:36:57');
 
 -- Dumping structure for table smea.equity_assessment
 CREATE TABLE IF NOT EXISTS `equity_assessment` (
@@ -109,7 +119,7 @@ CREATE TABLE IF NOT EXISTS `equity_assessment` (
   CONSTRAINT `equity_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=315 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.equity_assessment: ~4 rows (approximately)
+-- Dumping data for table smea.equity_assessment: ~263 rows (approximately)
 INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `points`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(40, 1, 1, 1, 'sbfp', 3, NULL, 4, 2025, 6, '2024-12-03 06:22:29', '2024-12-03 06:38:21'),
 	(41, 2, 1, 1, 'sbfp', 3, NULL, 4, 2025, 6, '2024-12-03 06:22:29', '2024-12-03 06:38:21'),
@@ -420,7 +430,7 @@ CREATE TABLE IF NOT EXISTS `issues_and_concerns` (
   CONSTRAINT `FK_issues_and_concerns_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.issues_and_concerns: ~14 rows (approximately)
+-- Dumping data for table smea.issues_and_concerns: ~57 rows (approximately)
 INSERT INTO `issues_and_concerns` (`id`, `school_id`, `quarter`, `year`, `type`, `issues`, `facilitating_facts`, `hindering_factors`, `actions_taken`, `last_user_save`, `updated_at`, `created_at`) VALUES
 	(73, 2, 4, 2024, 'attendance', 'increasing number of severely wasted and wasted pupils', '', 'intake of unhealthy food due to pandemic', 'School canteen should offer food like arroz caldo with egg, camote, veggie burger, etc. Canteen should minimize and/or not offer junk foods, soft drinks and other unhealthy food for kids.', 5, '2024-11-10 08:47:10', '2024-10-07 05:24:36'),
 	(75, 3, 4, 2024, 'attendance', 'Uncontrolled number of malnourished learners', 'Production of modules are equal with the number of learners', '*Economic status of family         *Some parents take for granted their child\'s health', 'Conduct advocacy on health and wellness to parents       *Involve parents to participate in school\'s activities/programs regarding health and wellness', 5, '2024-11-10 08:42:57', '2024-10-07 05:29:23'),
@@ -516,7 +526,9 @@ INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `t
 	(15, 1, 1, 1, 'fil-independent', 1, 1, 2024, 9, '2024-12-03 00:18:40', '2024-12-03 00:18:40'),
 	(16, 1, 1, 2, 'fil-independent', 1, 1, 2024, 9, '2024-12-03 00:18:40', '2024-12-03 00:18:40'),
 	(20, 1, 2, 1, 'als', 55, 4, 2024, 5, '2024-12-04 21:33:40', '2024-12-04 21:33:40'),
-	(21, 2, 4, 1, 'eng-instructional', 2222, 4, 2024, 5, '2024-12-04 21:33:54', '2024-12-04 21:33:54');
+	(21, 2, 4, 1, 'eng-instructional', 2222, 4, 2024, 5, '2024-12-04 21:33:54', '2024-12-04 21:33:54'),
+	(23, 2, 3, 1, 'eng-frustration', 225, 4, 2024, 5, '2024-12-04 21:50:03', '2024-12-04 21:50:03'),
+	(24, 1, 2, 1, 'eng-frustration', 256, 4, 2024, 5, '2024-12-04 22:57:18', '2024-12-04 22:57:18');
 
 -- Dumping structure for table smea.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -555,7 +567,7 @@ CREATE TABLE IF NOT EXISTS `rwb_assessment` (
   CONSTRAINT `rwb_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=497 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.rwb_assessment: ~3 rows (approximately)
+-- Dumping data for table smea.rwb_assessment: ~496 rows (approximately)
 INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(1, 1, 1, 1, 'displaced', 505, 4, 2024, 5, '2024-11-10 16:41:41', '2024-11-10 16:41:41'),
 	(2, 1, 1, 1, 'displaced', 19, 3, 2024, 6, '2024-12-04 04:07:13', '2024-12-04 04:28:06'),
@@ -1099,7 +1111,7 @@ CREATE TABLE IF NOT EXISTS `school_year` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.school_year: ~4 rows (approximately)
+-- Dumping data for table smea.school_year: ~5 rows (approximately)
 INSERT INTO `school_year` (`id`, `start_month`, `start_year`, `end_month`, `end_year`, `updated_at`, `created_at`) VALUES
 	(3, 8, 2025, 7, 2026, '2024-12-03 10:25:16', '2024-09-10 23:19:14'),
 	(4, 8, 2027, 7, 2028, '2024-12-03 10:25:40', '2024-09-10 23:18:26'),
@@ -1146,7 +1158,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `users_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.users: ~2 rows (approximately)
+-- Dumping data for table smea.users: ~21 rows (approximately)
 INSERT INTO `users` (`id`, `username`, `password`, `first_name`, `last_name`, `role`, `updated_at`, `created_at`, `school_id`) VALUES
 	(5, 'donaldelma', '5f4dcc3b5aa765d61d8327deb882cf99', 'Donald', 'Elma', 1, '2024-03-18 10:59:36', '2024-12-02 11:44:18', NULL),
 	(6, 'bea', '5f4dcc3b5aa765d61d8327deb882cf99', 'Bea', 'Sasi', 2, '2024-03-27 08:31:14', '2024-11-20 07:14:06', 19),

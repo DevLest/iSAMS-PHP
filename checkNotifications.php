@@ -7,10 +7,12 @@ $response = ['count' => 0, 'requests' => []];
 if ($_SESSION['role'] == 1) { // Admin
     $query = "SELECT er.*, 
               COALESCE(u1.username, 'Unknown User') as requester_username,
-              COALESCE(u2.username, 'Unknown User') as processor_username
+              COALESCE(u2.username, 'Unknown User') as processor_username,
+              gr.name as grade_level_name
               FROM edit_requests er 
               LEFT JOIN users u1 ON er.requested_by = u1.id
               LEFT JOIN users u2 ON er.processed_by = u2.id 
+              LEFT JOIN grade_level gr ON er.grade_level = gr.id
               WHERE er.status = 'pending'";
     $result = $conn->query($query);
     
@@ -23,11 +25,13 @@ if ($_SESSION['role'] == 1) { // Admin
 } else { // Regular user
     $query = "SELECT er.*,
               COALESCE(u1.username, 'Unknown User') as requester_username,
-              COALESCE(u2.username, 'Unknown User') as processor_username
+              COALESCE(u2.username, 'Unknown User') as processor_username,
+              gr.name as grade_level_name
               FROM edit_requests er
               LEFT JOIN users u1 ON er.requested_by = u1.id
               LEFT JOIN users u2 ON er.processed_by = u2.id
-              WHERE er.requested_by = ? AND er.status IN ('approved', 'denied') 
+              LEFT JOIN grade_level gr ON er.grade_level = gr.id
+              WHERE er.requested_by = ? AND er.status IN ('approved', 'denied')
               AND er.processed_date > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $_SESSION['user_id']);
