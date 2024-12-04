@@ -53,30 +53,46 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
         
         foreach ($schoolYears as $sy) {
             if ($type === 'cfs') {
-                $query = "SELECT points, count FROM equity_assessment 
-                         WHERE school_id = ? AND type = 'cfs' 
-                         AND quarter = ? AND year = ?
+                $query = "SELECT points, count FROM equity_assessment ea
+                         JOIN school_year sy ON
+                            (ea.year = sy.start_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month)
+                            OR (ea.year = sy.end_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) < sy.start_month)
+                         WHERE ea.school_id = ? 
+                         AND ea.type = 'cfs'
+                         AND ea.quarter = ?
+                         AND sy.start_year = ?
                          ORDER BY points ASC";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['start_year']);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                $points = [];
-                while ($row = $result->fetch_assoc()) {
-                    if ($row['count'] > 0) {
-                        $points[] = "{$row['count']}({$row['points']})";
+                
+                // Add debug output
+                if ($result->num_rows === 0) {
+                    // $html .= "<td>No data found (ID: {$school['id']}, Q: $quarter, Y: {$sy['start_year']})</td>";
+                } else {
+                    $points = [];
+                    while ($row = $result->fetch_assoc()) {
+                        if ($row['count'] > 0) {
+                            $points[] = "{$row['count']}";
+                        }
                     }
+                    $html .= "<td>" . implode(", ", $points) . "</td>";
                 }
-                $html .= "<td>" . implode(", ", $points) . "</td>";
             }
             else if ($type === 'sbfp') {
                 $query = "SELECT gender, SUM(count) as total 
-                         FROM equity_assessment 
-                         WHERE school_id = ? AND type = 'sbfp' 
-                         AND quarter = ? AND year = ?
+                         FROM equity_assessment ea
+                         JOIN school_year sy ON
+                            (ea.year = sy.start_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month)
+                            OR (ea.year = sy.end_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) < sy.start_month)
+                         WHERE ea.school_id = ? 
+                         AND ea.type = 'sbfp'
+                         AND ea.quarter = ?
+                         AND sy.start_year = ?
                          GROUP BY gender";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['start_year']);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 $male = $female = 0;
@@ -87,19 +103,20 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
                 $html .= "<td>$male</td><td>$female</td>";
             }
             else { // wash
-                $query = "SELECT count FROM equity_assessment 
-                         WHERE school_id = ? AND type = 'wash' 
-                         AND quarter = ? AND year = ?";
+                $query = "SELECT count FROM equity_assessment ea
+                         JOIN school_year sy ON
+                            (ea.year = sy.start_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month)
+                            OR (ea.year = sy.end_year AND MONTH(CONCAT(ea.year, '-', LPAD(ea.quarter * 3 - 2, 2, '0'), '-01')) < sy.start_month)
+                         WHERE ea.school_id = ? 
+                         AND ea.type = 'wash'
+                         AND ea.quarter = ?
+                         AND sy.start_year = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
+                $stmt->bind_param('iii', $school['id'], $quarter, $sy['start_year']); 
                 $stmt->execute();
                 $result = $stmt->get_result();
                 $row = $result->fetch_assoc();
                 $stars = $row ? intval($row['count']) : 0;
-                
-                // Add debug info temporarily
-                $html .= "<td>";
-                $html .= "<!-- Debug: School: {$school['id']}, Quarter: $quarter, Year: {$sy['end_year']}, Stars: $stars -->";
                 
                 // Generate stars with colors
                 for ($i = 1; $i <= 5; $i++) {

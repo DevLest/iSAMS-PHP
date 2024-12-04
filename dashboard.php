@@ -67,15 +67,28 @@ $sum = $sum->fetch_assoc();
 $schoolsQuery = "SELECT 
     s.id,
     s.name,
-    COALESCE(SUM(a.count), 0) as total_count,
+    COALESCE(SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) THEN a.count 
+        ELSE 0 
+    END), 0) as total_count,
     (SELECT COALESCE(SUM(count), 0) 
      FROM attendance_summary 
      WHERE type = '$reportType' 
-     AND year = $year) as overall_total
+     AND (
+         (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+         OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+     )
+    ) as overall_total
 FROM schools s
 LEFT JOIN attendance_summary a ON s.id = a.school_id 
     AND a.type = '$reportType' 
-    AND a.year = $year
+    AND (
+        (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+        OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+    )
 GROUP BY s.id, s.name
 ORDER BY s.id";
 
