@@ -42,6 +42,7 @@ if ($result->num_rows > 0) {
          data-toggle="pill" 
          href="#dynamicId-'.$row["id"].'" 
          role="tab" 
+         data-grade-level="'.$row["id"].'" 
          onclick="activeTab(\'dynamicId-'.$row["id"].'\')">'.$row["name"].'</a>';
 
     // Build grade level content areas
@@ -104,6 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   
   // Function to handle database operations
   function saveData($conn, $params) {
+    // Ensure grade_level is an integer
+    if (isset($params['grade_level'])) {
+      $params['grade_level'] = intval($params['grade_level']);
+    }
+    
     $query = sprintf(
       "SELECT * FROM quality_assessment WHERE school_id = '%s' AND type = '%s' AND quarter = '%s' AND year = '%s'",
       mysqli_real_escape_string($conn, $params['school_id']),
@@ -249,9 +255,9 @@ function getExistingData($conn, $quarter, $year) {
       // Format key to match ALS input names: als-blp[school_id], als-elementary[school_id], als-jhs[school_id]
       $key = "als-{$alsType}[{$row['school_id']}]";
     } else {
-      // Handle reading assessment data as before
+      // Add grade_level to the key for non-ALS entries
       $gender = ($row['gender'] == 1) ? 'male' : 'female';
-      $key = $row['type'] . '-' . $gender . '[' . $row['school_id'] . ']';
+      $key = $row['type'] . '-' . $gender . '[' . $row['school_id'] . ']' . '-grade-' . $row['grade_level'];
     }
     
     $data[$key] = $row['count'];
@@ -544,6 +550,7 @@ $lastUserSave = $existingDataResult['lastUserSave'];
       
       var gradeLevel = tab.split('-').pop();
       $('#activeGradeLevel').val(gradeLevel);
+      console.log(gradeLevel);
     }
     
     function lockFields() {
@@ -668,6 +675,42 @@ $lastUserSave = $existingDataResult['lastUserSave'];
     }
 
     $(document).ready(function() {
+      // Initial setup
+      $('#activeTab').val('als-1');
+      $('#activeGradeLevel').val('1');
+      filterDataByGradeLevel(1);
+
+      // Handle grade level changes
+      $('.nav-pills a').on('click', function() {
+        var gradeLevel = $(this).data('grade-level');
+        $('#activeGradeLevel').val(gradeLevel);
+        filterDataByGradeLevel(gradeLevel);
+      });
+
+      function filterDataByGradeLevel(gradeLevel) {
+        // Reset all inputs first
+        $('input[type="number"]').val('');
+        
+        // Get the current tab type (excluding ALS)
+        var currentTab = $('.tab-pane.active').attr('id');
+        if (currentTab !== 'als') {
+          var qualityData = <?php echo json_encode($qualityData); ?>;
+          
+          // Loop through the data and only show values for current grade level
+          Object.keys(qualityData).forEach(function(key) {
+            if (key.includes('-grade-' + gradeLevel)) {
+              // Remove grade level suffix to match input names
+              var inputKey = key.split('-grade-')[0];
+              var input = $('input[name="' + inputKey + '"]');
+              if (input.length) {
+                input.val(qualityData[key]);
+                updateTotal(input.closest('tr'));
+              }
+            }
+          });
+        }
+      }
+
       // Set initial active tab value when page loads
       $('#activeTab').val('als-1'); // Or whatever your default tab should be
 
