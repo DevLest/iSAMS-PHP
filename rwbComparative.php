@@ -21,7 +21,7 @@ $schoolYearQuery = "SELECT * FROM school_year WHERE start_year >= $currentYear A
 $schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Get schools
-$schoolQuery = "SELECT * FROM schools WHERE id <= 17 ORDER BY name";
+$schoolQuery = "SELECT * FROM schools";
 $schools = $conn->query($schoolQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Get grade levels
