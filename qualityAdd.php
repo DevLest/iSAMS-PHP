@@ -69,7 +69,7 @@ if ($result->num_rows > 0) {
 
 $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
-$year = date('Y');
+$currentYear = date('Y');
 
 if (isset($_POST['quarter'])) {
   $selectedQuarter = $_POST['quarter'];
@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
               'type' => "als",
               'count' => $count,
               'quarter' => $_POST['quarter'],
-              'year' => $year,
+              'year' => $currentYear,
               'user_id' => $current_user_id,
               'grade_level' => $als_type == 'blp' ? 1 : ($als_type == 'elementary' ? 2 : 3),
               'gender' => 1
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
               'type' => $type,
               'count' => $count,
               'quarter' => $_POST['quarter'],
-              'year' => $year,
+              'year' => $currentYear,
               'user_id' => $current_user_id,
               'grade_level' => $_POST['activeGradeLevel'],
               'gender' => $gender_value
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 }
 
 // Get existing quality assessment data
-$qualityQuery = "SELECT * FROM quality_assessment WHERE quarter = $selectedQuarter AND year = $year";
+$qualityQuery = "SELECT * FROM quality_assessment WHERE quarter = $selectedQuarter AND year = $currentYear";
 $qualityResult = $conn->query($qualityQuery);
 $qualityData = [];
 while($row = $qualityResult->fetch_assoc()) {
@@ -220,7 +220,7 @@ $qualityKeys = array_keys($qualityData);
 
 // At the top of your file, after getting the selected quarter
 $selectedQuarter = isset($_POST['quarter']) ? $_POST['quarter'] : $currentQuarter;
-$year = date('Y');
+$year = $currentYear;
 
 // Get existing quality assessment data
 function getExistingData($conn, $quarter, $year) {
@@ -271,6 +271,13 @@ function getExistingData($conn, $quarter, $year) {
 $existingDataResult = getExistingData($conn, $selectedQuarter, $year);
 $qualityData = $existingDataResult['data'];
 $lastUserSave = $existingDataResult['lastUserSave'];
+
+// Fetch school years for the dropdown
+$schoolYearQuery = "SELECT * FROM school_year ORDER BY start_year DESC";
+$schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
+
+// Update the year selection logic
+$year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['year'] : $currentYear);
 
 ?>
 
@@ -339,9 +346,11 @@ $lastUserSave = $existingDataResult['lastUserSave'];
                   <?php endfor; ?>
                 </select>
                 <select id="year" name="year" class="form-control d-inline-block w-auto mr-2">
-                  <?php for($i = $year; $i <= $year + 1; $i++): ?>
-                    <option value="<?php echo $i; ?>" <?php echo ($year == $i) ? 'selected' : ''; ?>><?php echo $i; ?></option>
-                  <?php endfor; ?>
+                  <?php foreach ($schoolYears as $sy): ?>
+                    <option value="<?php echo $sy['end_year']; ?>" <?php echo $year == $sy['end_year'] ? 'selected' : ''; ?>>
+                      SY <?php echo $sy['start_year']."-".$sy['end_year']; ?>
+                    </option>
+                  <?php endforeach; ?>
                 </select>
               </div>
               <div class="col-md-6 text-right">
@@ -550,7 +559,7 @@ $lastUserSave = $existingDataResult['lastUserSave'];
       
       var gradeLevel = tab.split('-').pop();
       $('#activeGradeLevel').val(gradeLevel);
-      console.log(gradeLevel);
+      filterDataByGradeLevel(gradeLevel);
     }
     
     function lockFields() {
@@ -674,20 +683,7 @@ $lastUserSave = $existingDataResult['lastUserSave'];
       row.find('.total').text(male + female);
     }
 
-    $(document).ready(function() {
-      // Initial setup
-      $('#activeTab').val('als-1');
-      $('#activeGradeLevel').val('1');
-      filterDataByGradeLevel(1);
-
-      // Handle grade level changes
-      $('.nav-pills a').on('click', function() {
-        var gradeLevel = $(this).data('grade-level');
-        $('#activeGradeLevel').val(gradeLevel);
-        filterDataByGradeLevel(gradeLevel);
-      });
-
-      function filterDataByGradeLevel(gradeLevel) {
+    function filterDataByGradeLevel(gradeLevel) {
         // Reset all inputs first
         $('input[type="number"]').val('');
         
@@ -710,6 +706,19 @@ $lastUserSave = $existingDataResult['lastUserSave'];
           });
         }
       }
+
+    $(document).ready(function() {
+      // Initial setup
+      $('#activeTab').val('als-1');
+      $('#activeGradeLevel').val('1');
+      filterDataByGradeLevel(1);
+
+      // Handle grade level changes
+      $('.nav-pills a').on('click', function() {
+        var gradeLevel = $(this).data('grade-level');
+        $('#activeGradeLevel').val(gradeLevel);
+        filterDataByGradeLevel(gradeLevel);
+      });
 
       // Set initial active tab value when page loads
       $('#activeTab').val('als-1'); // Or whatever your default tab should be
