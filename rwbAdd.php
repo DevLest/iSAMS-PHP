@@ -32,7 +32,7 @@ $gradeLevels = $conn->query($gradeLevelQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Define helper functions
 function saveRwbData($conn, $params) {
-  try {
+  try {    
     $query = "SELECT id FROM rwb_assessment WHERE 
               school_id = ? AND type = ? AND quarter = ? AND year = ?";
     
@@ -52,7 +52,9 @@ function saveRwbData($conn, $params) {
       throw new Exception("Prepare failed: " . $conn->error);
     }
 
-    $types = str_repeat('i', count($values) - 1) . 's'; // All integers except type which is string
+    $types = 'isiiii'; // All integers except type which is string
+    
+    // Debug output
     $stmt->bind_param($types, ...$values);
     
     if (!$stmt->execute()) {
@@ -60,51 +62,43 @@ function saveRwbData($conn, $params) {
     }
     
     $result = $stmt->get_result();
+    
 
     if ($result->num_rows > 0) {
-      // Update
-      $row = $result->fetch_assoc();
-      $query = "UPDATE rwb_assessment SET count = ?, last_user_save = ? WHERE id = ?";
-      $stmt = $conn->prepare($query);
-      if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
-      }
-      $stmt->bind_param('iii', $params['count'], $_SESSION['user_id'], $row['id']);
+        // Record exists - UPDATE
+        $row = $result->fetch_assoc();
+        $updateQuery = "UPDATE rwb_assessment SET count = ? WHERE id = ?";
+        $updateStmt = $conn->prepare($updateQuery);
+        $updateStmt->bind_param('ii', $params['count'], $row['id']);
+        
+        $updateStmt->execute();
+        error_log("Updated RWB record with ID: " . $row['id']);
     } else {
-      // Insert
-      $query = "INSERT INTO rwb_assessment (school_id, type, count, quarter, year, last_user_save";
-      $values = [$params['school_id'], $params['type'], $params['count'], $params['quarter'], $params['year'], $_SESSION['user_id']];
-      $types = 'isiiii';
-
-      if (isset($params['grade_level'])) {
-        $query .= ", grade_level";
-        $values[] = $params['grade_level'];
-        $types .= 'i';
-      }
-      if (isset($params['gender'])) {
-        $query .= ", gender";
-        $values[] = $params['gender'];
-        $types .= 'i';
-      }
-
-      $query .= ") VALUES (" . str_repeat('?,', count($values)-1) . "?)";
-      $stmt = $conn->prepare($query);
-      if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
-      }
-      $stmt->bind_param($types, ...$values);
-    }
-
-    if (!$stmt->execute()) {
-      throw new Exception("Execute failed: " . $stmt->error);
+        // No record - INSERT
+        $insertQuery = "INSERT INTO rwb_assessment (school_id, grade_level, gender, type, count, quarter, year, last_user_save) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $insertStmt = $conn->prepare($insertQuery);
+        $insertStmt->bind_param('iiisiiis', 
+            $params['school_id'],
+            $params['grade_level'],
+            $params['gender'],
+            $params['type'],
+            $params['count'],
+            $params['quarter'],
+            $params['year'],
+            $_SESSION['user_id']
+        );
+        $insertStmt->execute();
+        error_log("Inserted new RWB record with ID: " . $conn->insert_id);
     }
 
     return true;
   } catch (Exception $e) {
-    throw $e;
+    error_log("Error in saveRwbData: " . $e->getMessage());
+    return false;
   }
-}
 
+}
 function getExistingData($conn, $quarter, $year) {
   $query = "SELECT rwb_assessment.*, users.first_name, users.last_name, schools.name as school_name 
             FROM rwb_assessment 
@@ -413,7 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                           <?php foreach ($gradeLevels as $level): ?>
                           <a class="nav-link <?php echo $level['id'] == 1 ? 'active' : ''; ?>" 
                              data-toggle="pill" 
-                             href="#grade-<?php echo $level['id']; ?>" 
+                             href="#equipped-grade-<?php echo $level['id']; ?>" 
                              role="tab">
                             <?php echo $level['name']; ?>
                           </a>
@@ -424,7 +418,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                         <div class="tab-content">
                           <?php foreach ($gradeLevels as $level): ?>
                           <div class="tab-pane fade <?php echo $level['id'] == 1 ? 'show active' : ''; ?>" 
-                               id="grade-<?php echo $level['id']; ?>" 
+                               id="equipped-grade-<?php echo $level['id']; ?>" 
                                role="tabpanel">
                             <table class="table">
                               <thead>
@@ -469,7 +463,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                           <?php foreach ($gradeLevels as $level): ?>
                           <a class="nav-link <?php echo $level['id'] == 1 ? 'active' : ''; ?>" 
                              data-toggle="pill" 
-                             href="#grade-<?php echo $level['id']; ?>" 
+                             href="#bmi-grade-<?php echo $level['id']; ?>" 
                              role="tab">
                             <?php echo $level['name']; ?>
                           </a>
@@ -480,7 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                         <div class="tab-content">
                           <?php foreach ($gradeLevels as $level): ?>
                           <div class="tab-pane fade <?php echo $level['id'] == 1 ? 'show active' : ''; ?>" 
-                               id="grade-<?php echo $level['id']; ?>" 
+                               id="bmi-grade-<?php echo $level['id']; ?>" 
                                role="tabpanel">
                             <table class="table">
                               <thead>
