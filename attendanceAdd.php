@@ -800,7 +800,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                     
                     // Update editPermissions with the latest requests
                     response.requests.forEach(function(request) {
-                        var permissionKey = request.type + '-' + request.gender + '-' + request.grade_level + '-' + request.school_id;
+                        var permissionKey = request.type + '-' + (request.gender === 'male' ? '1' : '2') + '-' + request.grade_level + '-' + request.school_id;
                         editPermissions[permissionKey] = request.status;
                         console.log(permissionKey + ' ' + request.status);
                     });
@@ -841,6 +841,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                     // Check edit permissions for other users
                     else {
                         var permission = editPermissions[permissionKey];
+                        console.log(permissionKey + ' ' + permission);
                         
                         if (permission === 'approved') {
                             inputBox.prop('readonly', false);
