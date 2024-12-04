@@ -22,21 +22,53 @@
             method: 'GET',
             dataType: 'json',
             success: function(data) {
-                console.log(data); // Log the response data
                 $('#alertsDropdown .badge-counter').text(data.count > 0 ? data.count : '');
-                let dropdown = $('#alertsDropdown .dropdown-list');
+                let dropdown = $('#alertsDropdown').next('.dropdown-list');
                 dropdown.empty(); // Clear previous notifications
                 dropdown.append('<h6 class="dropdown-header">Alerts Center</h6>');
-                if (data.requests.length > 0) {
+                if (data.requests && data.requests.length > 0) {
                     data.requests.forEach(function(request) {
-                        dropdown.append('<a class="dropdown-item text-center small text-gray-500" href="adminEditRequests.php">Edit request from ' + request.user_name + ' for issue: ' + request.issues + '</a>');
+                        let displayUsername = request.requester_username === '<?php echo $_SESSION["username"]; ?>' 
+                            ? request.processor_username
+                            : request.requester_username;
+                        
+                        // Determine request type text based on status
+                        let requestTypeText = request.status === 'pending' 
+                            ? 'Edit request' 
+                            : `Request ${request.status}`;
+                        
+                        dropdown.append(`
+                            <a class="dropdown-item d-flex align-items-center" href="adminEditRequests.php">
+                                <div class="mr-3">
+                                    <div class="icon-circle bg-primary">
+                                        <i class="fas fa-edit text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500">${request.request_date}</div>
+                                    <span>${requestTypeText} from <strong>${displayUsername}</strong> for ${request.type}</span>
+                                    <div class="small">Grade ${request.grade_level}, ${request.gender.charAt(0).toUpperCase() + request.gender.slice(1)}</div>
+                                </div>
+                            </a>
+                        `);
                     });
                 } else {
-                    dropdown.append('<div class="dropdown-item text-center small text-gray-500">No pending requests</div>');
+                    dropdown.append(`
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-secondary">
+                                    <i class="fas fa-bell-slash text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <span>No pending requests</span>
+                            </div>
+                        </a>
+                    `);
                 }
             },
             error: function(xhr, status, error) {
-                console.error("AJAX Error: ", status, error); // Log any errors
+                console.error("AJAX Error: ", status, error);
             }
         });
     }

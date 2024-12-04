@@ -810,19 +810,19 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                     // Check permissions
                     var lastEditor = attendanceData[keys[i] + '_editor'];
                     if (lastEditor === currentUserId) {
-                        inputBox.prop('disabled', false);
+                        inputBox.prop('readonly', false);
                     } else {
                         var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
                         var permission = editPermissions[permissionKey];
                         
                         if (permission === 'approved') {
-                            inputBox.prop('disabled', false);
+                            inputBox.prop('readonly', false);
                             inputBox.addClass('approved-edit');
                         } else if (permission === 'pending') {
-                            inputBox.prop('disabled', true);
+                            inputBox.prop('readonly', true);
                             inputBox.addClass('pending-edit');
                         } else {
-                            inputBox.prop('disabled', true);
+                            inputBox.prop('readonly', true);
                         }
                     }
                     
@@ -915,7 +915,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
             // Initialize the double-click handler
             $(document).on('dblclick', 'input[type="number"]', function() {
                 console.log('dblclick');
-                if ($(this).prop('disabled')) {
+                if ($(this).prop('readonly')) {
                     const $input = $(this);
                     const inputName = $input.attr('name');
                     const matches = inputName.match(/([^-]+)-([^[]+)\[(\d+)\]/);
@@ -994,7 +994,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
                 e.preventDefault();
                 console.log('Double clicked!'); // Debug line
                 
-                if ($(this).prop('disabled')) {
+                if ($(this).prop('readonly')) {
                     const $input = $(this);
                     const inputName = $input.attr('name');
                     const matches = inputName.match(/([^-]+)-([^[]+)\[(\d+)\]/);
@@ -1021,36 +1021,6 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
         function updateActiveTab(tab, gradeLevel) {
             document.getElementById('activeTab').value = tab;
             document.getElementById('activeGradeLevel').value = gradeLevel;
-        }
-
-        // Update the checkNotifications function
-        function checkNotifications() {
-            $.ajax({
-                url: 'checkNotifications.php',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.count !== undefined) {  // Check if response is valid
-                        $('#alertsDropdown .badge-counter').text(data.count > 0 ? data.count : '');
-                        let dropdown = $('#alertsDropdown .dropdown-list');
-                        dropdown.empty();
-                        dropdown.append('<h6 class="dropdown-header">Alerts Center</h6>');
-                        if (data.requests && data.requests.length > 0) {
-                            data.requests.forEach(function(request) {
-                                dropdown.append('<a class="dropdown-item text-center small text-gray-500" href="adminEditRequests.php">Edit request from ' + request.user_name + ' for ' + request.type + '</a>');
-                            });
-                        } else {
-                            dropdown.append('<div class="dropdown-item text-center small text-gray-500">No pending requests</div>');
-                        }
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    if (xhr.responseText) {
-                        console.error("Response:", xhr.responseText);
-                    }
-                }
-            });
         }
     </script>
 

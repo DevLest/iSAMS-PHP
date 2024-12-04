@@ -7,13 +7,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id']) && isse
     $action = $_POST['action'];
     $status = ($action === 'approve') ? 'approved' : 'denied';
 
+    // Get the referrer before processing the request
+    $return_url = isset($_POST['return_url']) ? $_POST['return_url'] : 'index.php';
+
     // Update the edit request status
     $stmt = $conn->prepare("UPDATE edit_requests SET status = ?, processed_by = ?, processed_date = NOW() WHERE id = ?");
     $stmt->bind_param("sii", $status, $_SESSION['user_id'], $request_id);
     
     if ($stmt->execute()) {
         // Get the request details for notification
-        $requestQuery = "SELECT er.*, u.email, u.username 
+        $requestQuery = "SELECT er.*, u.username, u.first_name, u.last_name 
                         FROM edit_requests er 
                         JOIN users u ON er.requested_by = u.id 
                         WHERE er.id = ?";
@@ -23,24 +26,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id']) && isse
         $result = $stmt2->get_result();
         $request = $result->fetch_assoc();
         
-        // You can implement email notification here if needed
-        // For now, we'll just store a notification in the session
+        // Store notification in session
         if (!isset($_SESSION['notifications'])) {
             $_SESSION['notifications'] = [];
         }
         
         $_SESSION['notifications'][] = [
-            'message' => "Your edit request for {$request['type']} has been {$status}",
+            'message' => "Edit request for {$request['type']} has been {$status}",
             'time' => time()
         ];
         
-        echo json_encode(['success' => true, 'message' => 'Request processed successfully']);
+        $_SESSION['success_message'] = "Request processed successfully";
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to process request']);
+        $_SESSION['error_message'] = "Failed to process request";
     }
     
     $stmt->close();
-    header("Location: adminEditRequests.php");
+    header("Location: " . $return_url);
     exit;
 }
 ?>

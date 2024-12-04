@@ -13,6 +13,12 @@ $requestsQuery = "SELECT er.*, u.username AS user_name
                  JOIN users u ON er.requested_by = u.id 
                  WHERE er.status = 'pending'";
 $requests = $conn->query($requestsQuery);
+
+// Check if there are no pending requests
+if ($requests->num_rows == 0) {
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -49,6 +55,7 @@ $requests = $conn->query($requestsQuery);
                     <td>
                         <form action="processEditRequest.php" method="post">
                             <input type="hidden" name="request_id" value="<?php echo $row['id']; ?>">
+                            <input type="hidden" name="return_url" value="<?php echo $_SERVER['HTTP_REFERER']; ?>">
                             <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
                             <button type="submit" name="action" value="deny" class="btn btn-danger">Deny</button>
                         </form>

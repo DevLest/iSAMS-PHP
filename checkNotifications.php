@@ -5,20 +5,30 @@ require_once "connection/db.php";
 $response = ['count' => 0, 'requests' => []];
 
 if ($_SESSION['role'] == 1) { // Admin
-    $query = "SELECT er.*, u.username 
+    $query = "SELECT er.*, 
+              COALESCE(u1.username, 'Unknown User') as requester_username,
+              COALESCE(u2.username, 'Unknown User') as processor_username
               FROM edit_requests er 
-              JOIN users u ON er.requested_by = u.id 
+              LEFT JOIN users u1 ON er.requested_by = u1.id
+              LEFT JOIN users u2 ON er.processed_by = u2.id 
               WHERE er.status = 'pending'";
     $result = $conn->query($query);
     
     $response['count'] = $result->num_rows;
     while ($row = $result->fetch_assoc()) {
+        $row['username'] = $row['requester_username'] ?: 'Unknown User';
+        $row['processor'] = $row['processor_username'] ?: 'Unknown User';
         $response['requests'][] = $row;
     }
 } else { // Regular user
-    $query = "SELECT * FROM edit_requests 
-              WHERE requested_by = ? AND status IN ('approved', 'denied') 
-              AND processed_date > DATE_SUB(NOW(), INTERVAL 1 DAY)";
+    $query = "SELECT er.*,
+              COALESCE(u1.username, 'Unknown User') as requester_username,
+              COALESCE(u2.username, 'Unknown User') as processor_username
+              FROM edit_requests er
+              LEFT JOIN users u1 ON er.requested_by = u1.id
+              LEFT JOIN users u2 ON er.processed_by = u2.id
+              WHERE er.requested_by = ? AND er.status IN ('approved', 'denied') 
+              AND er.processed_date > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
@@ -26,6 +36,8 @@ if ($_SESSION['role'] == 1) { // Admin
     
     $response['count'] = $result->num_rows;
     while ($row = $result->fetch_assoc()) {
+        $row['username'] = $row['requester_username'] ?: 'Unknown User';
+        $row['processor'] = $row['processor_username'] ?: 'Unknown User';
         $response['requests'][] = $row;
     }
 }
