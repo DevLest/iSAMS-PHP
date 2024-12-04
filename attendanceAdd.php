@@ -239,7 +239,7 @@ $stmt->bind_param("ii", $selectedQuarter, $year);
 $stmt->execute();
 $lastUserResult = $stmt->get_result();
 $lastUserRow = $lastUserResult->fetch_assoc();
-$lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['first_name'] . ' (' . ($lastUserRow['school_name'] ?? '') . ' - ' . ($lastUserRow['school_address'] ?? '') . ')' : 'No entries yet';
+$lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['first_name'] . ' (' . ($lastUserRow['school_name'] ?? 'Admin'). ')' : 'No entries yet';
 
 ?>
 

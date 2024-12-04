@@ -124,7 +124,7 @@ function getExistingData($conn, $quarter, $year) {
       $data[$row['type'].'-'.$row['grade_level'].'-'.$gender][$row['school_id']] = $row['count'];
     // }
     // Set last editor info
-    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'Admin').')';
   }
   
   return ['data' => $data, 'lastUserSave' => $lastUserSave];
