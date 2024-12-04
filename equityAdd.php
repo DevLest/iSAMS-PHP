@@ -128,11 +128,14 @@ function getExistingData($conn, $quarter, $year) {
   while ($row = $result->fetch_assoc()) {
     if ($row['type'] === 'cfs') {
       $data['cfs-'.$row['points']][$row['school_id']] = $row['count'];
+      $data['cfs-'.$row['points']][$row['school_id'].'_editor'] = $row['last_user_save'];
     } elseif ($row['type'] === 'sbfp') {
       $gender = ($row['gender'] == 1) ? 'male' : 'female';
       $data['sbfp-'.$row['grade_level'].'-'.$gender][$row['school_id']] = $row['count'];
+      $data['sbfp-'.$row['grade_level'].'-'.$gender][$row['school_id'].'_editor'] = $row['last_user_save'];
     } else {
       $data['wash-stars'][$row['school_id']] = $row['count'];
+      $data['wash-stars'][$row['school_id'].'_editor'] = $row['last_user_save'];
     }
     // Set last editor info
     $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'Admin').')';
@@ -145,6 +148,19 @@ function getExistingData($conn, $quarter, $year) {
 $existingDataResult = getExistingData($conn, $selectedQuarter, $year);
 $existingData = $existingDataResult['data'];
 $lastUserSave = $existingDataResult['lastUserSave'];
+
+// Add this after getting existing data
+$editRequestsQuery = "SELECT school_id, type, grade_level, gender, status 
+                     FROM edit_requests 
+                     WHERE requested_by = {$_SESSION['user_id']} 
+                     AND status IN ('pending', 'approved')";
+$editRequestsResult = $conn->query($editRequestsQuery);
+$editPermissions = [];
+
+while ($row = $editRequestsResult->fetch_assoc()) {
+    $key = "{$row['type']}-{$row['grade_level']}-{$row['gender']}-{$row['school_id']}";
+    $editPermissions[$key] = $row['status'];
+}
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
@@ -251,6 +267,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Equity Assessment - SMEA</title>
+  <style>
+    .approved-edit {
+        background-color: #e8f5e9 !important;
+        border-color: #4caf50 !important;
+    }
+
+    .pending-edit {
+        background-color: #fff3e0 !important;
+        border-color: #ff9800 !important;
+    }
+
+    .edit-status-tooltip.approved-edit:after {
+        background-color: #4caf50;
+        content: "Approved";
+    }
+
+    .edit-status-tooltip.pending-edit:after {
+        background-color: #ff9800;
+        content: "Pending";
+    }
+  </style>
 </head>
 
 <body id="page-top">
@@ -468,55 +505,242 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   </div>
 
   <script>
+  // Add these at the beginning of your script section
+  var existingData = <?php echo json_encode($existingDataResult['data']); ?>;
+  var role = <?php echo $_SESSION['role']; ?>;
+  var currentUserId = <?php echo $_SESSION['user_id']; ?>;
+  var editPermissions = <?php echo json_encode($editPermissions); ?>;
+
   $(document).ready(function() {
-    // Update totals function
-    function updateTotal(row) {
-      var male = parseInt(row.find('input[name*="male"]').val()) || 0;
-      var female = parseInt(row.find('input[name*="female"]').val()) || 0;
-      row.find('.total').text(male + female);
+    // Remove any activeTab related code
+    
+    function lockFields() {
+        // First enable all fields by default
+        $('input[type="number"]').prop('readonly', false);
+        
+        // Lock only specific fields
+        $('input[type="number"]').each(function() {
+            var $input = $(this);
+            var inputName = $input.attr('name');
+            var value = parseInt($input.val()) || 0;
+            
+            // Only process fields that have data (value > 0)
+            if (value > 0) {
+                if (inputName) {
+                    var matches;
+                    var type, points, gender, schoolId;
+                    var lastEditorId = null;
+                    
+                    // Parse input name based on type
+                    if (inputName.startsWith('cfs-')) {
+                        matches = inputName.match(/cfs-(\d+)\[(\d+)\]/);
+                        if (matches) {
+                            type = 'cfs';
+                            points = matches[1];
+                            schoolId = matches[2];
+                            var permissionKey = type + '-0-0-' + schoolId;
+                            // Get last editor ID from the data
+                            lastEditorId = existingData['cfs-' + points] && 
+                                         existingData['cfs-' + points][schoolId + '_editor'];
+                        }
+                    } else if (inputName.startsWith('sbfp-')) {
+                        matches = inputName.match(/sbfp-(\d+)-(\w+)\[(\d+)\]/);
+                        if (matches) {
+                            type = 'sbfp';
+                            var gradeLevel = matches[1];
+                            gender = matches[2] === 'male' ? '1' : '2';
+                            schoolId = matches[3];
+                            var permissionKey = type + '-' + gradeLevel + '-' + gender + '-' + schoolId;
+                            // Get last editor ID from the data
+                            lastEditorId = existingData['sbfp-' + gradeLevel + '-' + matches[2]] && 
+                                         existingData['sbfp-' + gradeLevel + '-' + matches[2]][schoolId + '_editor'];
+                        }
+                    } else if (inputName.startsWith('wash-')) {
+                        matches = inputName.match(/wash-stars\[(\d+)\]/);
+                        if (matches) {
+                            type = 'wash';
+                            schoolId = matches[1];
+                            var permissionKey = type + '-0-0-' + schoolId;
+                            // Get last editor ID from the data
+                            lastEditorId = existingData['wash-stars'] && 
+                                         existingData['wash-stars'][schoolId + '_editor'];
+                        }
+                    }
+
+                    console.log('Input:', inputName, 'LastEditor:', lastEditorId, 'CurrentUser:', currentUserId); // Debug line
+
+                    // Admin can always edit
+                    if (role === 1) {
+                        $input.prop('readonly', false);
+                    }
+                    // Last editor can edit their own entries
+                    else if (lastEditorId === currentUserId) {
+                        $input.prop('readonly', false);
+                    }
+                    // Check edit permissions for other users
+                    else {
+                        var permission = editPermissions[permissionKey];
+                        console.log(permissionKey, permission); // Debug line
+                        
+                        if (permission === 'approved') {
+                            $input.prop('readonly', false);
+                            $input.addClass('approved-edit');
+                            $input.attr('title', 'Edit permission approved');
+                        } else if (permission === 'pending') {
+                            $input.prop('readonly', true);
+                            $input.addClass('pending-edit');
+                            $input.attr('title', 'Edit permission pending approval');
+                        } else {
+                            // Only lock if there's data and it's not the current user's entry
+                            $input.prop('readonly', true);
+                            $input.attr('title', 'Double-click to request edit permission');
+                        }
+                    }
+                }
+            }
+        });
     }
 
-    // Initialize totals
-    $('tr').each(function() {
-      if ($(this).find('input[type="number"]').length) {
-        updateTotal($(this));
-      }
+    // Initialize fields on page load
+    lockFields();
+
+    // Handle tab changes without activeTab
+    $('.nav-link').on('click', function() {
+        setTimeout(lockFields, 100);
+    });
+
+    // Handle double-click on readonly inputs
+    $(document).on('dblclick', 'input[type="number"]', function() {
+        if ($(this).prop('readonly')) {
+            const $input = $(this);
+            const inputName = $input.attr('name');
+            let type, points, gender, gradeLevel, schoolId;
+            
+            if (inputName.startsWith('cfs-')) {
+                const matches = inputName.match(/cfs-(\d+)\[(\d+)\]/);
+                if (matches) {
+                    type = 'cfs';
+                    points = matches[1];
+                    schoolId = matches[2];
+                    gradeLevel = '0';
+                    gender = '0';
+                }
+            } else if (inputName.startsWith('sbfp-')) {
+                const matches = inputName.match(/sbfp-(\d+)-(\w+)\[(\d+)\]/);
+                if (matches) {
+                    type = 'sbfp';
+                    gradeLevel = matches[1];
+                    gender = matches[2] === 'male' ? '1' : '2';
+                    schoolId = matches[3];
+                    points = '0';
+                }
+            } else if (inputName.startsWith('wash-')) {
+                const matches = inputName.match(/wash-stars\[(\d+)\]/);
+                if (matches) {
+                    type = 'wash';
+                    schoolId = matches[1];
+                    gradeLevel = '0';
+                    gender = '0';
+                    points = '0';
+                }
+            }
+
+            if (schoolId) {
+                $('#requestSchoolId').val(schoolId);
+                $('#requestType').val(type);
+                $('#requestGradeLevel').val(gradeLevel);
+                $('#requestGender').val(gender);
+                $('#requestPoints').val(points);
+                
+                $('#editRequestModal').modal('show');
+            }
+        }
+    });
+
+    // Handle edit request submission
+    $('#submitEditRequest').on('click', function() {
+        const formData = {
+            school_id: $('#requestSchoolId').val(),
+            type: $('#requestType').val(),
+            grade_level: $('#requestGradeLevel').val(),
+            gender: $('#requestGender').val(),
+            points: $('#requestPoints').val(),
+            reason: $('#requestReason').val()
+        };
+
+        $.ajax({
+            url: 'requestEdit.php',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                const result = JSON.parse(response);
+                $('#editRequestForm').hide();
+                $('#editRequestStatus').show();
+                $('#editRequestStatus .alert')
+                    .removeClass('alert-danger alert-success')
+                    .addClass('alert-success')
+                    .text(result.message);
+                
+                $('#submitEditRequest').hide();
+            },
+            error: function() {
+                $('#editRequestStatus').show();
+                $('#editRequestStatus .alert')
+                    .removeClass('alert-danger alert-success')
+                    .addClass('alert-danger')
+                    .text('An error occurred. Please try again.');
+            }
+        });
+    });
+
+    // Reset modal when closed
+    $('#editRequestModal').on('hidden.bs.modal', function () {
+        $('#editRequestForm').show();
+        $('#editRequestStatus').hide();
+        $('#submitEditRequest').show();
+        $('#requestReason').val('');
     });
 
     // Update totals on input change
     $('input[type="number"]').on('input', function() {
-      updateTotal($(this).closest('tr'));
-    });
-
-    // Handle quarter/year changes
-    $('#quarter, #year').on('change', function() {
-      $(this).closest('form').submit();
-    });
-
-    // Clear zero values on focus
-    $('input[type="number"]').on('focus', function() {
-      if ($(this).val() == '0') {
-        $(this).val('');
-      }
-    });
-
-    // Reset to zero if empty on blur
-    $('input[type="number"]').on('blur', function() {
-      if ($(this).val() === '') {
-        $(this).val('0');
-      }
-    });
-
-    // Validate WASH stars (0-5)
-    $('input[name^="wash-stars"]').on('input', function() {
-      var value = parseInt($(this).val());
-      if (value > 5) {
-        $(this).val(5);
-      } else if (value < 0) {
-        $(this).val(0);
-      }
+        updateTotal($(this).closest('tr'));
     });
   });
   </script>
+
+  <!-- Add the edit request modal -->
+  <div class="modal fade" id="editRequestModal" tabindex="-1" role="dialog" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="editRequestModalLabel">Request Edit Permission</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <p>This field is currently locked. Would you like to request permission to edit it?</p>
+                  <form id="editRequestForm">
+                      <input type="hidden" id="requestSchoolId" name="school_id">
+                      <input type="hidden" id="requestType" name="type">
+                      <input type="hidden" id="requestGradeLevel" name="grade_level">
+                      <input type="hidden" id="requestGender" name="gender">
+                      <input type="hidden" id="requestPoints" name="points">
+                      <div class="form-group">
+                          <label for="requestReason">Reason for Edit:</label>
+                          <textarea class="form-control" id="requestReason" name="reason" required></textarea>
+                      </div>
+                  </form>
+              </div>
+              <div class="modal-body" id="editRequestStatus" style="display: none;">
+                  <div class="alert" role="alert"></div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" id="submitEditRequest">Submit Request</button>
+              </div>
+          </div>
+      </div>
+  </div>
 </body>
 </html>
