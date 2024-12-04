@@ -99,14 +99,15 @@
         </div>
     </li>
 
-    <li class="nav-item <?php if(in_array($current_page, ["rwbAdd.php", "rwbConcerns.php"])) echo 'active'; ?>">
+    <li class="nav-item <?php if(in_array($current_page, ["rwbComparative.php", "rwbAdd.php", "rwbConcerns.php"])) echo 'active'; ?>">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#rwb" aria-expanded="true"
             aria-controls="rwb">
             <i class="fas fa-fw fa-list-alt"></i>
             <span>RWB</span>
         </a>
-        <div id="rwb" class="collapse <?php if(in_array($current_page, ["rwbAdd.php", "rwbConcerns.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="rwb" class="collapse <?php if(in_array($current_page, ["rwbComparative.php", "rwbAdd.php", "rwbConcerns.php"])) echo 'show'; ?>" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-warning py-2 collapse-inner rounded">
+                <a class="collapse-item <?php if($current_page == 'rwbComparative.php') echo 'active'; ?>" href="rwbComparative.php">Comparative Data</a>
                 <a class="collapse-item <?php if($current_page == 'rwbAdd.php') echo 'active'; ?>" href="rwbAdd.php">Encode</a>
                 <hr class="sidebar-divider">
                 <a class="collapse-item <?php if($current_page == 'rwbConcerns.php') echo 'active'; ?>" href="rwbConcerns.php">Issues and Concerns</a>

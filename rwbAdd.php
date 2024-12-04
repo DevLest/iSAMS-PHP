@@ -2,6 +2,8 @@
 ob_start();
 session_start();
 
+ini_set('max_input_vars', 10000);
+
 if (!isset($_SESSION['user_id'])) {
   header("Location: login.php");
   exit();
@@ -117,10 +119,10 @@ function getExistingData($conn, $quarter, $year) {
   $data = [];
   $lastUserSave = "";
   while ($row = $result->fetch_assoc()) {
-    if ($row['type'] === 'bmi') {
+    // if ($row['type'] === 'bmi') {
       $gender = ($row['gender'] == 1) ? 'male' : 'female';
-      $data['bmi-'.$row['grade_level'].'-'.$gender][$row['school_id']] = $row['count'];
-    }
+      $data[$row['type'].'-'.$row['grade_level'].'-'.$gender][$row['school_id']] = $row['count'];
+    // }
     // Set last editor info
     $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
   }
@@ -130,14 +132,24 @@ function getExistingData($conn, $quarter, $year) {
 
 // Get existing data
 $existingData = getExistingData($conn, $selectedQuarter, $year);
+$tableData = $existingData['data'];
+$lastUserSave = $existingData['lastUserSave'] ?? '';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   $successCount = 0;
   $errors = [];
+
   
   // Process each tab's data
   $types = ['displaced', 'bullying', 'equipped', 'bmi'];
+  
+  // Add error checking for max_input_vars
+  // if (count($_POST, COUNT_RECURSIVE) >= ini_get('max_input_vars')) {
+  //   $_SESSION['error'] = "Form submission exceeded maximum allowed inputs. Please contact your system administrator.";
+  //   header("Location: rwbAdd.php?quarter=$selectedQuarter&year=$year");
+  //   exit();
+  // }
   
   foreach ($types as $type) {
     foreach ($gradeLevels as $level) {
@@ -189,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Equity Assessment - SMEA</title>
+  <title>Welfare and Behavior Assessment - SMEA</title>
 </head>
 
 <body id="page-top">
@@ -206,8 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         <!-- Begin Page Content -->
         <div class="container-fluid">
           <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Equity Assessment</h1>
-          <p class="mb-4">Enter equity assessment data for analysis and comparison.</p>
+          <h1 class="h3 mb-2 text-gray-800">Welfare and Behavior Assessment</h1>
+          <p class="mb-4">Enter welfare and behavior assessment data for analysis and comparison.</p>
 
           <!-- Add this after your page heading -->
           <?php if (isset($_SESSION['success'])): ?>
@@ -253,6 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                     </option>
                   <?php endforeach; ?>
                 </select>
+                <button type="submit" class="btn btn-secondary" name="filter">Filter</button>
               </div>
               <div class="col-md-6 text-right">
                 Last Edited By: <?php echo $lastUserSave; ?>
@@ -318,12 +331,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="displaced-<?php echo $level['id']; ?>-male[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData["displaced-{$level['id']}-male"][$school['id']]) ? $existingData["displaced-{$level['id']}-male"][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData["displaced-{$level['id']}-male"][$school['id']]) ? $tableData["displaced-{$level['id']}-male"][$school['id']] : '0'; ?>">
                                   </td>
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="displaced-<?php echo $level['id']; ?>-female[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData["displaced-{$level['id']}-female"][$school['id']]) ? $existingData["displaced-{$level['id']}-female"][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData["displaced-{$level['id']}-female"][$school['id']]) ? $tableData["displaced-{$level['id']}-female"][$school['id']] : '0'; ?>">
                                   </td>
                                   <td class="total">0</td>
                                 </tr>
@@ -374,12 +387,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="bullying-<?php echo $level['id']; ?>-male[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['bullying-'.$level['id'].'-male'][$school['id']]) ? $existingData['bullying-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['bullying-'.$level['id'].'-male'][$school['id']]) ? $tableData['bullying-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="bullying-<?php echo $level['id']; ?>-female[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['bullying-'.$level['id'].'-female'][$school['id']]) ? $existingData['bullying-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['bullying-'.$level['id'].'-female'][$school['id']]) ? $tableData['bullying-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td class="total">0</td>
                                 </tr>
@@ -430,12 +443,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="equipped-<?php echo $level['id']; ?>-male[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['equipped-'.$level['id'].'-male'][$school['id']]) ? $existingData['equipped-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['equipped-'.$level['id'].'-male'][$school['id']]) ? $tableData['equipped-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="equipped-<?php echo $level['id']; ?>-female[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['equipped-'.$level['id'].'-female'][$school['id']]) ? $existingData['equipped-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['equipped-'.$level['id'].'-female'][$school['id']]) ? $tableData['equipped-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td class="total">0</td>
                                 </tr>
@@ -486,12 +499,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="bmi-<?php echo $level['id']; ?>-male[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['bmi-'.$level['id'].'-male'][$school['id']]) ? $existingData['bmi-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['bmi-'.$level['id'].'-male'][$school['id']]) ? $tableData['bmi-'.$level['id'].'-male'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td>
                                     <input type="number" class="form-control form-control-sm"
                                            name="bmi-<?php echo $level['id']; ?>-female[<?php echo $school['id']; ?>]"
-                                           value="<?php echo isset($existingData['bmi-'.$level['id'].'-female'][$school['id']]) ? $existingData['bmi-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
+                                           value="<?php echo isset($tableData['bmi-'.$level['id'].'-female'][$school['id']]) ? $tableData['bmi-'.$level['id'].'-female'][$school['id']] : '0'; ?>">
                                   </td>
                                   <td class="total">0</td>
                                 </tr>
@@ -516,6 +529,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
   <script>
   $(document).ready(function() {
+    // Remove the automatic form submission on select change
+    $('#quarter, #year').off('change');
+
     // Update totals function
     function updateTotal(row) {
       var male = parseInt(row.find('input[name*="male"]').val()) || 0;
