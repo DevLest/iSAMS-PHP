@@ -118,7 +118,9 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
                 $row = $result->fetch_assoc();
                 $stars = $row ? intval($row['count']) : 0;
                 
-                // Generate stars with colors
+                // Generate stars with colors and proper alignment
+                $html .= '<td class="text-center">';  // Add text-center class
+                $html .= '<div class="d-inline-block">';  // Add inline-block container
                 for ($i = 1; $i <= 5; $i++) {
                     if ($i <= $stars) {
                         $html .= '<i class="fas fa-star text-warning"></i>'; // Filled star
@@ -126,7 +128,7 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
                         $html .= '<i class="far fa-star"></i>'; // Empty star
                     }
                 }
-                $html .= " ($stars)</td>";
+                $html .= " ($stars)</div></td>";
             }
         }
         $html .= "</tr>";
