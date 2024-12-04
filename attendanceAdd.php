@@ -221,9 +221,10 @@ while ($row = $editRequestsResult->fetch_assoc()) {
 }
 
 // Get the last user who saved data for the current quarter and year
-$lastUserQuery = "SELECT u.username as last_user_save
+$lastUserQuery = "SELECT u.first_name, u.last_name, s.name as school_name, s.address as school_address
                  FROM attendance_summary a
                  JOIN users u ON a.last_user_save = u.id
+                 LEFT JOIN schools s ON s.id = u.school_id 
                  WHERE a.quarter = ? AND a.year = ?
                  ORDER BY a.updated_at DESC
                  LIMIT 1";
@@ -231,7 +232,8 @@ $stmt = $conn->prepare($lastUserQuery);
 $stmt->bind_param("ii", $selectedQuarter, $year);
 $stmt->execute();
 $lastUserResult = $stmt->get_result();
-$lastUserSave = $lastUserResult->fetch_assoc()['last_user_save'] ?? 'No entries yet';
+$lastUserRow = $lastUserResult->fetch_assoc();
+$lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['first_name'] . ' (' . ($lastUserRow['school_name'] ?? '') . ' - ' . ($lastUserRow['school_address'] ?? '') . ')' : 'No entries yet';
 
 ?>
 
