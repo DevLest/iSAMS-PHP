@@ -38,16 +38,16 @@ if ($result->num_rows > 0) {
     // Build grade level navigation pills
     $grade_levels .= '
       <a class="nav-link '.($row["id"] == 1 ? 'active' : '').'" 
-         id="v-pills-dynamicId-'.$row["id"].'-tab" 
+         id="dynamicId-'.$row["id"].'-tab" 
          data-toggle="pill" 
-         href="#v-pills-dynamicId-'.$row["id"].'" 
+         href="#dynamicId-'.$row["id"].'" 
          role="tab" 
          onclick="activeTab(\'dynamicId-'.$row["id"].'\')">'.$row["name"].'</a>';
 
     // Build grade level content areas
     $grade_level_inputs .= '
       <div class="tab-pane fade '.($row["id"] == 1 ? 'show active' : '').'" 
-           id="v-pills-dynamicId-'.$row["id"].'" 
+           id="dynamicId-'.$row["id"].'" 
            role="tabpanel">
         <table class="table">
           <thead>
@@ -85,11 +85,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
   $current_user_id = $_SESSION['user_id'];
   $parts = explode('-', $_POST['activeTab']);
-  if (count($parts) == 3) {
-    list($subject, $type, $grade_level) = $parts;
-    $type = $subject . '-' . $type;
+  
+  // Updated parsing logic for activeTab
+  if (count($parts) >= 2) {
+    if ($parts[0] === 'als') {
+      $type = 'als';
+      $grade_level = $parts[1]; // This will be 1, 2, or 3 for ALS
+    } else {
+      // Handle eng-frustration-1, fil-independent-2, etc.
+      $subject = $parts[0];     // 'eng' or 'fil'
+      $level = $parts[1];       // 'frustration', 'instructional', 'independent'
+      $grade_level = end($parts); // The grade level number
+      $type = $subject . '-' . $level;
+    }
   } else {
-    list($type, $grade_level) = $parts;
+    exit; // Invalid format
   }
   
   // Function to handle database operations
@@ -182,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
               'quarter' => $_POST['quarter'],
               'year' => $year,
               'user_id' => $current_user_id,
-              'grade_level' => $grade_level,
+              'grade_level' => $_POST['activeGradeLevel'],
               'gender' => $gender_value
             ]);
           }
@@ -531,6 +541,11 @@ $lastUserSave = $existingDataResult['lastUserSave'];
   <script>
     function activeTab(tab) {
       $('#activeTab').val(tab);
+      
+      // Extract grade level from the clicked element
+      var gradeLevel = tab.split('-').pop();
+      $('#activeGradeLevel').val(gradeLevel);
+      
       lockFields();
     }
 
@@ -540,9 +555,9 @@ $lastUserSave = $existingDataResult['lastUserSave'];
 
       // Update active tab value when tabs are clicked
       $('.nav-link').on('click', function() {
-        var tabId = $(this).attr('href').substring(1); // Remove the # from href
-        var gradeLevel = $(this).data('grade-level') || '1';
-        $('#activeTab').val(tabId + '-' + gradeLevel);
+        var tabId = $(this).attr('id').replace('-tab', '');
+        var gradeLevel = tabId.split('-').pop();
+        $('#activeTab').val(tabId);
         $('#activeGradeLevel').val(gradeLevel);
       });
 
@@ -562,20 +577,13 @@ $lastUserSave = $existingDataResult['lastUserSave'];
 
       // Load existing data
       var qualityData = <?php echo json_encode($qualityData); ?>;
-      console.log('Quality Data:', qualityData); // Debug log
       
       // Populate saved data
       Object.keys(qualityData).forEach(function(key) {
-        console.log('Processing key:', key); // Debug log
         var input = $('input[name="' + key + '"]');
         if (input.length) {
-          console.log('Found input for key:', key); // Debug log
           input.val(qualityData[key]);
-          if (key.startsWith('als-')) {
-            updateALSTotals();
-          } else {
-            updateTotal(input.closest('tr'));
-          }
+          updateTotal(input.closest('tr'));
         }
       });
 

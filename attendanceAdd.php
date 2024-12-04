@@ -465,9 +465,9 @@ $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['
                             <li class="nav-item">
                                 <a class="nav-link" id="subjects-tab" data-toggle="tab" href="#content-subjects" role="tab" onclick="$('#activeTab').val('subjects-1')">Subjects</a>
                             </li>
-                            <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a class="nav-link" id="modules-tab" data-toggle="tab" href="#content-modules" role="tab" onclick="$('#activeTab').val('modules-1')">Modules</a>
-                            </li>
+                            </li> -->
                         </ul>
 
                         <input type="hidden" name="activeTab" id="activeTab" value="">
@@ -666,7 +666,7 @@ $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['
                                 </div>
                             </div>
                             
-                            <div id="content-modules" class="tab-pane fade">
+                            <!-- <div id="content-modules" class="tab-pane fade">
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="nav flex-column nav-pills" id="v-pills-tab12" role="tablist" aria-orientation="vertical">
@@ -680,7 +680,7 @@ $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     </form>
                     <br>
