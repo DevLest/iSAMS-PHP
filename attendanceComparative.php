@@ -399,91 +399,117 @@ if (isset($_POST['export_pdf'])) {
                     </style>
 
                     <div class="container-fluid">
-
-                    <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
-                    <p class="mb-4">Data comparison based on School Year</p>
-                    
-                    <div class="text-right">
-                        <form action="" method="post" style="display: inline-block;">
-                            <input type="hidden" name="activeTab" id="exportCsvTab">
-                            <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
-                        </form>
-                        <form action="" method="post" style="display: inline-block;">
-                            <input type="hidden" name="activeTab" id="exportPdfTab">
-                            <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
-                        </form>
-                    </div>
-                    
-                    <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                        <div class="collapse navbar-collapse" id="navbarNav">
-                            <ul class="navbar-nav">
-                                <li class="nav-item-custom active">
-                                    <a class="nav-link" href="#" id="als">ALS Enrollment</a>
-                                </li>
-                                <li class="nav-item-custom">
-                                    <a class="nav-link" href="#" id="enrollment">Enrollment</a>
-                                </li>
-                                <li class="nav-item-custom">
-                                    <a class="nav-link" href="#" id="dropouts">Drop Outs </a>
-                                </li>
-                                <li class="nav-item-custom">
-                                    <a class="nav-link" href="#" id="completers">Completers</a>
-                                </li>
-                            </ul>
+                        <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
+                        <p class="mb-4">Data comparison based on School Year</p>
+                        
+                        <div class="text-right mb-4">
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportCsvTab">
+                                <button type="submit" class="btn btn-info" name="export_csv">
+                                    <i class="fas fa-file-csv mr-2"></i>Export CSV
+                                </button>
+                            </form>
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportPdfTab">
+                                <button type="submit" class="btn btn-warning" name="export_pdf">
+                                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                                </button>
+                            </form>
                         </div>
-                    </nav>
-                    
-                    <input type="hidden" name="activeTab" id="activeTab" value="blp">
-                    <div id="tabContent">
-                        <div id="content-als" class="content-tab">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="nav flex-column nav-pills" id="v-pills-als" role="tablist" aria-orientation="vertical">
-                                        <a class="nav-link active" id="v-pills-als-1-tab" onclick="activeTab('als-1')" data-toggle="pill" href="#v-pills-als-1" role="tab" aria-controls="v-pills-als-1" aria-selected="true">BLP</a>
-                                        <a class="nav-link" id="v-pills-als-2-tab" onclick="activeTab('als-2')" data-toggle="pill" href="#v-pills-als-2" role="tab" aria-controls="v-pills-als-2" aria-selected="false">A & E - Elementary</a>
-                                        <a class="nav-link" id="v-pills-als-3-tab" onclick="activeTab('als-3')" data-toggle="pill" href="#v-pills-als-3" role="tab" aria-controls="v-pills-als-3" aria-selected="false">A&E - JHS</a>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-toggle="pill" href="#als">ALS Enrollment</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#pardos_sardos">PARDOS SARDOS</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#pivate_vourcher">Private Voucher</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#enrollment">Enrollment</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#dropouts">Drop Outs</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#graduates">Graduates</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#completers">Completers</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#leavers">Leavers</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#repeaters">Repeaters</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#overweight">Overweight</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#subjects">Subjects</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="pill" href="#modules">Modules</a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="tab-content">
+                                    <!-- ALS Tab -->
+                                    <div class="tab-pane fade show active" id="als">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="nav flex-column nav-pills">
+                                                    <a class="nav-link active" onclick="activeTab('als-1')" data-toggle="pill" href="#als-grade-1">BLP</a>
+                                                    <a class="nav-link" onclick="activeTab('als-2')" data-toggle="pill" href="#als-grade-2">A & E - Elementary</a>
+                                                    <a class="nav-link" onclick="activeTab('als-3')" data-toggle="pill" href="#als-grade-3">A&E - JHS</a>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="tab-content">
+                                                    <?php
+                                                    $alsLevels = [
+                                                        ['id' => 1, 'name' => 'BLP'],
+                                                        ['id' => 2, 'name' => 'A & E - Elementary'],
+                                                        ['id' => 3, 'name' => 'A & E JHS / SHS']
+                                                    ];
+                                                    echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $attendanceData, $syrows);
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="tab-content" id="v-pills-tabContent1">
-                                        <?php
-                                        $alsLevels = [
-                                            ['id' => 1, 'name' => 'BLP'],
-                                            ['id' => 2, 'name' => 'A & E - Elementary'],
-                                            ['id' => 3, 'name' => 'A & E JHS / SHS']
-                                        ];
-                                        echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $attendanceData, $syrows);
-                                        ?>
+
+                                    <!-- Other Tabs -->
+                                    <?php
+                                    $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
+                                    foreach ($types as $type): ?>
+                                    <div class="tab-pane fade" id="<?php echo $type; ?>">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="nav flex-column nav-pills">
+                                                    <?php echo generateGradeLevelTabs($type, $gradeLevels); ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="tab-content">
+                                                    <?php echo generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows); ?>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
-
-                        <?php
-                        $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects'];
-                        foreach ($types as $type) {
-                            echo "<div id='content-$type' class='content-tab'>
-                                    <div class='row'>
-                                        <div class='col-md-3'>
-                                            <div class='nav flex-column nav-pills' id='v-pills-tab-$type' role='tablist' aria-orientation='vertical'>
-                                                ".generateGradeLevelTabs($type, $gradeLevels)."
-                                            </div>
-                                        </div>
-                                        <div class='col-md-9'>
-                                            <div class='tab-content' id='v-pills-tabContent-$type'>
-                                                ".generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $attendanceData, $syrows)."
-                                            </div>
-                                        </div>
-                                    </div>
-                                  </div>";
-                        }
-                        ?>
                     </div>
-                </form>
-                <br>
-
                 </div>
-
             </div>
 
             <footer class="sticky-footer bg-white">
@@ -505,35 +531,25 @@ if (isset($_POST['export_pdf'])) {
     <?php include_once "footer.php"?>
 
     <script>
-    function activeTab(tab) {
-        $('#activeTab').val(tab);
-        lockFields();
-    }
-
-    function lockFields() {
-        $('table input').prop('readonly', true);
-    }
-
     $(document).ready(function(){
-        $(".nav-item-custom a").click(function(e) {
-            e.preventDefault();
-            var tabId = $(this).attr("id");
-            $(".content-tab").hide();
-            $("#content-" + tabId).show();
-            $(".nav-item-custom").removeClass("active");
-            $(this).parent().addClass("active");
-            $('#activeTab').val(tabId+"-1");
-            lockFields();
+        // Handle tab changes
+        $('.nav-pills a').on('click', function() {
+            var tabId = $(this).attr('href').split('-')[0].substring(1);
+            var gradeId = $(this).attr('href').split('-')[2] || '1';
+            $('#exportCsvTab, #exportPdfTab').val(tabId + '-' + gradeId);
         });
 
-        $(".nav-item-custom:first-child a").click();
-        lockFields();
+        // Initialize first tab
+        $('#exportCsvTab, #exportPdfTab').val('als-1');
+        
+        function lockFields() {
+            $('table input').prop('readonly', true);
+        }
 
-        // Add this new function to handle A&E JHS/SHS visibility
+        // Handle A&E JHS/SHS visibility
         function handleAEJHSVisibility() {
             var activeTab = $('#activeTab').val();
             if (activeTab === 'als-3') {
-                // Show only specific schools for A&E JHS/SHS
                 $('.school-row').each(function() {
                     var schoolId = $(this).data('school-id');
                     if ([18, 19, 20].includes(schoolId)) {
@@ -543,28 +559,24 @@ if (isset($_POST['export_pdf'])) {
                     }
                 });
             } else {
-                // Show all schools for other tabs
                 $('.school-row').show();
             }
         }
 
-        // Call the function when tab changes
+        // Call on tab changes
         $('.nav-link').on('click', function() {
             setTimeout(handleAEJHSVisibility, 100);
         });
 
-        // Initial call
+        // Initial calls
         handleAEJHSVisibility();
-
-        // Update hidden inputs before form submission
-        $('button[name="export_csv"]').click(function() {
-            $('#exportCsvTab').val($('#activeTab').val());
-        });
-        
-        $('button[name="export_pdf"]').click(function() {
-            $('#exportPdfTab').val($('#activeTab').val());
-        });
+        lockFields();
     });
+
+    function activeTab(tab) {
+        $('#activeTab').val(tab);
+        $('#exportCsvTab, #exportPdfTab').val(tab);
+    }
     </script>
 
 </body>

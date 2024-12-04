@@ -9,225 +9,191 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
+// Get current quarter and year
+$currentMonth = date('n');
+$currentQuarter = ceil($currentMonth / 3);
+$selectedQuarter = isset($_GET['quarter']) ? $_GET['quarter'] : (isset($_POST['quarter']) ? $_POST['quarter'] : $currentQuarter);
+
 // Fetch school years
 $currentYear = date('Y');
 $nextYear = $currentYear + 1;
-$schoolYearSql = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
-$schoolYearResult = $conn->query($schoolYearSql);
-$schoolYears = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
+$schoolYearQuery = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
+$schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
-$syrows = "";
-foreach ($schoolYears as $sy) {
-    $syrows .= "<th scope='col'>S.Y ".$sy['start_year']."-".$sy['end_year']." (M)</th>";
-    $syrows .= "<th scope='col'>S.Y ".$sy['start_year']."-".$sy['end_year']." (F)</th>";
-}
+// Get schools
+$schoolQuery = "SELECT * FROM schools WHERE id <= 17 ORDER BY name";
+$schools = $conn->query($schoolQuery)->fetch_all(MYSQLI_ASSOC);
 
-// Fetch schools
-$sql = "SELECT * FROM schools";
-$schools = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+// Get grade levels
+$gradeLevelQuery = "SELECT * FROM grade_level ORDER BY id";
+$gradeLevels = $conn->query($gradeLevelQuery)->fetch_all(MYSQLI_ASSOC);
 
-// Fetch grade levels
-$sql = "SELECT * FROM grade_level";
-$gradeLevels = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
-
-// Fetch quality assessment data
-$qualityQuery = "SELECT qa.*, sy.start_year, sy.end_year 
-                 FROM quality_assessment qa
-                 JOIN school_year sy ON (qa.year BETWEEN sy.start_year AND sy.end_year)
-                 WHERE (qa.year = sy.start_year AND MONTH(NOW()) >= sy.start_month) 
-                    OR (qa.year = sy.end_year AND MONTH(NOW()) < sy.end_month)";
-$qualityResult = $conn->query($qualityQuery);
-$qualityData = [];
-
-while ($row = $qualityResult->fetch_assoc()) {
-    $key = $row['type'] . '-' . $row['grade_level'] . '-' . $row['school_id'] . '-' . $row['start_year'] . '-' . $row['end_year'];
-    $qualityData[$key][$row['gender']] = $row['count'];
-}
-
-function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $qualityData) {
-    $inputTable = "";
-    foreach ($schools as $school) {
-        // Special handling for A&E JHS/SHS
-        $showRow = true;
-        if ($type === 'als' && $gradeLevel === 3) {
-            $allowedSchoolIds = [18, 19, 20];
-            $showRow = in_array($school['id'], $allowedSchoolIds);
-        }
-
-        if ($showRow) {
-            $inputTable .= "<tr class='school-row' data-school-id='".$school['id']."'><td>".$school["name"]."</td>";
-            foreach ($schoolYears as $sy) {
-                $key = $type . '-' . $gradeLevel . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
-                $maleValue = isset($qualityData[$key][1]) ? $qualityData[$key][1] : '';
-                $femaleValue = isset($qualityData[$key][2]) ? $qualityData[$key][2] : '';
-                
-                $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$maleValue' readonly></td>";
-                $inputTable .= "<td><input type='number' class='form-control form-control-sm' value='$femaleValue' readonly></td>";
-            }
-            $inputTable .= "</tr>";
-        }
-    }
-    return $inputTable;
-}
-
-function generateGradeLevelContent($type, $gradeLevels, $schools, $schoolYears, $qualityData, $syrows) {
-    $content = "";
-    foreach ($gradeLevels as $index => $level) {
-        $active = $index == 0 ? "show active" : "";
-        $content .= "<div class='tab-pane fade $active' id='v-pills-$type-".$level['id']."' role='tabpanel'>
-                        <table class='table'>
-                            <thead>
-                                <tr>
-                                    <th scope='col'>Name</th>
-                                    $syrows
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ".generateInputTable($type, $level['id'], $schools, $schoolYears, $qualityData)."
-                            </tbody>
-                        </table>
-                    </div>";
-    }
-    return $content;
-}
-
-// Export functions
-if (isset($_POST['export_csv'])) {
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment;filename="quality_assessment_summary.csv"');
-    $output = fopen('php://output', 'w');
-    fputcsv($output, ['School Year', 'Grade Level', 'School Name', 'Male', 'Female', 'Total']);
-
+// Generate table headers for school years
+function generateSchoolYearHeaders($schoolYears) {
+    $headers = '<th>School Name</th>';
     foreach ($schoolYears as $sy) {
-        foreach ($gradeLevels as $level) {
-            foreach ($schools as $school) {
-                $key = 'als-' . $level['id'] . '-' . $school['id'] . '-' . $sy['start_year'] . '-' . $sy['end_year'];
-                $male = $qualityData[$key][1] ?? 0;
-                $female = $qualityData[$key][2] ?? 0;
-                $total = $male + $female;
-                
-                fputcsv($output, [
-                    "S.Y " . $sy['start_year'] . "-" . $sy['end_year'],
-                    $level['name'],
-                    $school['name'],
-                    $male,
-                    $female,
-                    $total
-                ]);
-            }
-        }
+        $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (M)</th>";
+        $headers .= "<th>SY {$sy['start_year']}-{$sy['end_year']} (F)</th>";
     }
-    fclose($output);
-    exit;
+    return $headers;
+}
+
+// Generate table content
+function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $gradeLevel) {
+    $html = '<table class="table table-bordered">
+             <thead><tr>' . generateSchoolYearHeaders($schoolYears) . '</tr></thead>
+             <tbody>';
+    
+    foreach ($schools as $school) {
+        $html .= "<tr><td>{$school['name']}</td>";
+        
+        foreach ($schoolYears as $sy) {
+            $query = "SELECT gender, SUM(count) as total 
+                     FROM quality_assessment 
+                     WHERE school_id = ? AND type = ? 
+                     AND quarter = ? AND year = ? AND grade_level = ?
+                     GROUP BY gender";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['end_year'], $gradeLevel);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $male = $female = 0;
+            while ($row = $result->fetch_assoc()) {
+                if ($row['gender'] == 1) $male = $row['total'];
+                if ($row['gender'] == 2) $female = $row['total'];
+            }
+            
+            $html .= "<td>$male</td><td>$female</td>";
+        }
+        $html .= "</tr>";
+    }
+    
+    $html .= '</tbody></table>';
+    return $html;
+}
+
+// Handle exports
+if (isset($_POST['export_csv'])) {
+    $type = $_POST['activeTab'];
+    $gradeLevel = $_POST['activeGrade'];
+    exportCSV($conn, $type, $selectedQuarter, $schools, $schoolYears, $gradeLevel);
+}
+
+if (isset($_POST['export_pdf'])) {
+    $type = $_POST['activeTab'];
+    $gradeLevel = $_POST['activeGrade'];
+    exportPDF($conn, $type, $selectedQuarter, $schools, $schoolYears, $gradeLevel);
 }
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Quality Assessment Summary</title>
+</head>
 <body id="page-top">
     <div id="wrapper">
         <?php include_once "sidebar.php"; ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
-                <?php include_once "navbar.php"?>
-                <div class="container-fluid">
-                    <h1 class="h3 mb-2 text-gray-800">Quality Assessment Comparative</h1>
-                    <p class="mb-4">Compare quality assessment data across schools</p>
+                <?php include_once "navbar.php"; ?>
 
-                    <div class="text-right">
-                        <form action="" method="post" style="display: inline-block;">
-                            <input type="hidden" name="activeTab" id="exportCsvTab">
-                            <button type="submit" class="btn btn-info" name="export_csv">Export CSV</button>
-                        </form>
-                        <form action="" method="post" style="display: inline-block;">
-                            <input type="hidden" name="activeTab" id="exportPdfTab">
-                            <button type="submit" class="btn btn-warning" name="export_pdf">Export PDF</button>
-                        </form>
+                <div class="container-fluid">
+                    <h1 class="h3 mb-2 text-gray-800">Quality Assessment Summary</h1>
+                    <p class="mb-4">View and export quality assessment data</p>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="quarter">Select Quarter:</label>
+                            <select id="quarter" name="quarter" class="form-control d-inline-block w-auto mr-2">
+                                <?php for ($i = 1; $i <= 4; $i++): ?>
+                                    <option value="<?php echo $i; ?>" <?php echo ($selectedQuarter == $i) ? 'selected' : ''; ?>>
+                                        <?php echo $i; ?><?php echo ($i == 1 ? 'st' : ($i == 2 ? 'nd' : ($i == 3 ? 'rd' : 'th'))); ?> Quarter
+                                    </option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportCsvTab" value="als">
+                                <input type="hidden" name="activeGrade" id="exportCsvGrade" value="1">
+                                <button type="submit" class="btn btn-info" name="export_csv">
+                                    <i class="fas fa-file-csv mr-2"></i>Export CSV
+                                </button>
+                            </form>
+                            <form action="" method="post" style="display: inline-block;">
+                                <input type="hidden" name="activeTab" id="exportPdfTab" value="als">
+                                <input type="hidden" name="activeGrade" id="exportPdfGrade" value="1">
+                                <button type="submit" class="btn btn-warning" name="export_pdf">
+                                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
-                    <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-                        <div class="collapse navbar-collapse" id="navbarNav">
-                            <ul class="navbar-nav">
-                                <li class="nav-item-custom active">
-                                    <a class="nav-link" href="#" id="als">ALS</a>
+                    <div class="card">
+                        <div class="card-header">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="pill" href="#als">ALS</a>
                                 </li>
-                                <li class="nav-item-custom">
-                                    <a class="nav-link" href="#" id="eng">English Reading</a>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#eng-frustration">English Reading Frustration</a>
                                 </li>
-                                <li class="nav-item-custom">
-                                    <a class="nav-link" href="#" id="fil">Filipino Reading</a>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#eng-instructional">English Reading Instructional</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#eng-independent">English Reading Independent</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#fil-frustration">Filipino Reading Frustration</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#fil-instructional">Filipino Reading Instructional</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#fil-independent">Filipino Reading Independent</a>
                                 </li>
                             </ul>
                         </div>
-                    </nav>
 
-                    <div id="tabContent">
-                        <!-- ALS Content -->
-                        <div id="content-als" class="content-tab">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="nav flex-column nav-pills">
-                                        <?php
-                                        $alsLevels = [
-                                            ['id' => 1, 'name' => 'BLP'],
-                                            ['id' => 2, 'name' => 'A & E - Elementary'],
-                                            ['id' => 3, 'name' => 'A & E JHS / SHS']
-                                        ];
-                                        foreach ($alsLevels as $index => $level) {
-                                            $active = $index == 0 ? 'active' : '';
-                                            echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-als-{$level['id']}'>{$level['name']}</a>";
-                                        }
-                                        ?>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <?php
+                                $types = ['als', 'eng-frustration', 'eng-instructional', 'eng-independent', 
+                                         'fil-frustration', 'fil-instructional', 'fil-independent'];
+                                foreach ($types as $type):
+                                ?>
+                                <div class="tab-pane fade <?php echo $type === 'als' ? 'show active' : ''; ?>" id="<?php echo $type; ?>">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="nav flex-column nav-pills">
+                                                <?php foreach ($gradeLevels as $level): ?>
+                                                <a class="nav-link <?php echo $level['id'] == 1 ? 'active' : ''; ?>"
+                                                   data-toggle="pill" 
+                                                   href="#<?php echo $type; ?>-grade-<?php echo $level['id']; ?>">
+                                                    <?php echo $level['name']; ?>
+                                                </a>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="tab-content">
+                                                <?php foreach ($gradeLevels as $level): ?>
+                                                <div class="tab-pane fade <?php echo $level['id'] == 1 ? 'show active' : ''; ?>"
+                                                     id="<?php echo $type; ?>-grade-<?php echo $level['id']; ?>">
+                                                    <?php echo generateTableHTML($conn, $type, $selectedQuarter, $schools, $schoolYears, $level['id']); ?>
+                                                </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-9">
-                                    <div class="tab-content">
-                                        <?php echo generateGradeLevelContent('als', $alsLevels, $schools, $schoolYears, $qualityData, $syrows); ?>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
-
-                        <!-- Reading Assessment Contents -->
-                        <?php
-                        $readingTypes = [
-                            'eng' => ['frustration', 'instructional', 'independent'],
-                            'fil' => ['frustration', 'instructional', 'independent']
-                        ];
-
-                        foreach ($readingTypes as $type => $levels) {
-                            echo "<div id='content-$type' class='content-tab' style='display:none;'>
-                                    <div class='row'>
-                                        <div class='col-md-3'>
-                                            <div class='nav flex-column nav-pills'>";
-                            foreach ($levels as $index => $level) {
-                                $active = $index == 0 ? 'active' : '';
-                                echo "<a class='nav-link $active' data-toggle='pill' href='#v-pills-$type-$level'>".ucfirst($level)."</a>";
-                            }
-                            echo "</div>
-                                        </div>
-                                        <div class='col-md-9'>
-                                            <div class='tab-content'>";
-                            foreach ($levels as $index => $level) {
-                                $active = $index == 0 ? 'show active' : '';
-                                echo "<div class='tab-pane fade $active' id='v-pills-$type-$level'>
-                                        <table class='table'>
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    $syrows
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ".generateInputTable("$type-$level", 1, $schools, $schoolYears, $qualityData)."
-                                            </tbody>
-                                        </table>
-                                      </div>";
-                            }
-                            echo "</div>
-                                        </div>
-                                      </div>
-                                    </div>";
-                        }
-                        ?>
                     </div>
                 </div>
             </div>
@@ -235,53 +201,19 @@ if (isset($_POST['export_csv'])) {
         </div>
     </div>
 
-    <?php include_once "logout-modal.php"?>
-    <?php include_once "footer.php"?>
-
     <script>
-    $(document).ready(function(){
-        $(".nav-item-custom a").click(function(e) {
-            e.preventDefault();
-            var tabId = $(this).attr("id");
-            $(".content-tab").hide();
-            $("#content-" + tabId).show();
-            $(".nav-item-custom").removeClass("active");
-            $(this).parent().addClass("active");
-            handleAEJHSVisibility();
+    $(document).ready(function() {
+        // Handle quarter changes
+        $('#quarter').on('change', function() {
+            window.location.href = 'qualityComparative.php?quarter=' + $(this).val();
         });
 
-        function handleAEJHSVisibility() {
-            var activeTab = $('.nav-link.active').attr('href');
-            if (activeTab === '#v-pills-als-3') {
-                // Show only specific schools for A&E JHS/SHS
-                $('.school-row').each(function() {
-                    var schoolId = $(this).data('school-id');
-                    if ([18, 19, 20].includes(schoolId)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            } else {
-                // Show all schools for other tabs
-                $('.school-row').show();
-            }
-        }
-
-        $('.nav-pills .nav-link').on('click', function() {
-            setTimeout(handleAEJHSVisibility, 100);
-        });
-
-        $(".nav-item-custom:first-child a").click();
-        
-        handleAEJHSVisibility();
-
-        $('button[name="export_csv"]').click(function() {
-            $('#exportCsvTab').val($('#activeTab').val());
-        });
-
-        $('button[name="export_pdf"]').click(function() {
-            $('#exportPdfTab').val($('#activeTab').val());
+        // Update active tab and grade level for exports
+        $('.nav-pills a').on('click', function() {
+            var tabId = $(this).attr('href').split('-')[0].substring(1);
+            var gradeId = $(this).attr('href').split('-')[2] || '1';
+            $('#exportCsvTab, #exportPdfTab').val(tabId);
+            $('#exportCsvGrade, #exportPdfGrade').val(gradeId);
         });
     });
     </script>
