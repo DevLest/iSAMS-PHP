@@ -241,6 +241,13 @@ $lastUserResult = $stmt->get_result();
 $lastUserRow = $lastUserResult->fetch_assoc();
 $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['first_name'] . ' (' . ($lastUserRow['school_name'] ?? 'Admin'). ')' : 'No entries yet';
 
+// Fetch school years for the dropdown
+$schoolYearQuery = "SELECT * FROM school_year ORDER BY start_year DESC";
+$schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
+
+// Update the year selection logic
+$year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['year'] : $currentYear);
+
 ?>
 
 <body id="page-top">
@@ -416,12 +423,11 @@ $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['
                                 </select>
                                 <label for="year">Select Year:</label>
                                 <select id="year" name="year">
-                                    <?php
-                                    // Show last 5 years and next 5 years
-                                    for ($y = $currentYear - 5; $y <= $currentYear + 5; $y++) {
-                                        echo "<option value='$y'" . ($y == $year ? ' selected' : '') . ">$y</option>";
-                                    }
-                                    ?>
+                                    <?php foreach ($schoolYears as $sy): ?>
+                                        <option value="<?php echo $sy['end_year']; ?>" <?php echo $year == $sy['end_year'] ? 'selected' : ''; ?>>
+                                            SY <?php echo $sy['start_year']."-".$sy['end_year']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                                 <button type="submit" class="btn btn-success" name="filter">Select</button>
                             </div>

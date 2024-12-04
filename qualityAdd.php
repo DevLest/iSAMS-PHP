@@ -542,11 +542,129 @@ $lastUserSave = $existingDataResult['lastUserSave'];
     function activeTab(tab) {
       $('#activeTab').val(tab);
       
-      // Extract grade level from the clicked element
       var gradeLevel = tab.split('-').pop();
       $('#activeGradeLevel').val(gradeLevel);
+    }
+    
+    function lockFields() {
+      var activeTab = $('#activeTab').val().split('-')[0];
+      var activeTabGrade = $('#activeTab').val().split('-')[1];
       
-      lockFields();
+      // First reset all inputs
+      $('table input').each(function() {
+        var inputName = $(this).attr('name');
+        if (inputName) {
+          $(this).val(0);
+          $(this).removeClass('approved-edit pending-edit');
+        }
+      });
+      
+      // Then populate with actual data
+      for (var i = 0; i < keys.length; i++) {
+        var parts = keys[i].split('-');
+        var gender = parts[0];  // 1 for male, 2 for female
+        var type = parts[1];    // als, enrollment, etc.
+        var gradeLevel = parts[2];
+        var schoolId = parts[3];
+        
+        // Convert gender number to string
+        var genderStr = (gender === '1') ? 'male' : 'female';
+        
+        // Construct input name
+        var inputName = type + '-' + genderStr + '[' + schoolId + ']';
+        var inputBox = $('input[name="' + inputName + '"]');
+        
+        if (gradeLevel === activeTabGrade && type === activeTab && inputBox.length) {
+          // Set the value
+          inputBox.val(attendanceData[keys[i]] || 0);
+          
+          // Check permissions
+          var lastEditor = attendanceData[keys[i] + '_editor'];
+          if (lastEditor === currentUserId) {
+            inputBox.prop('disabled', false);
+          } else {
+            var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
+            var permission = editPermissions[permissionKey];
+            
+            if (permission === 'approved') {
+              inputBox.prop('disabled', false);
+              inputBox.addClass('approved-edit');
+            } else if (permission === 'pending') {
+              inputBox.prop('disabled', true);
+              inputBox.addClass('pending-edit');
+            } else {
+              inputBox.prop('disabled', true);
+            }
+          }
+          
+          // Update the total
+          updateTotal(inputBox.closest('tr'));
+        }
+      }
+    }
+        
+    function lockFields() {
+      var activeTab = $('#activeTab').val().split('-')[0];
+      var activeTabGrade = $('#activeTab').val().split('-')[1];
+      
+      // First reset all inputs
+      $('table input').each(function() {
+        var inputName = $(this).attr('name');
+        if (inputName) {
+          $(this).val(0);
+          $(this).removeClass('approved-edit pending-edit');
+        }
+      });
+      
+      // Then populate with actual data
+      for (var i = 0; i < keys.length; i++) {
+        var parts = keys[i].split('-');
+        var gender = parts[0];  // 1 for male, 2 for female
+        var type = parts[1];    // als, enrollment, etc.
+        var gradeLevel = parts[2];
+        var schoolId = parts[3];
+        
+        // Convert gender number to string
+        var genderStr = (gender === '1') ? 'male' : 'female';
+        
+        // Construct input name
+        var inputName = type + '-' + genderStr + '[' + schoolId + ']';
+        var inputBox = $('input[name="' + inputName + '"]');
+        
+        if (gradeLevel === activeTabGrade && type === activeTab && inputBox.length) {
+          // Set the value
+          inputBox.val(attendanceData[keys[i]] || 0);
+          
+          // Check permissions
+          var lastEditor = attendanceData[keys[i] + '_editor'];
+          if (lastEditor === currentUserId) {
+            inputBox.prop('disabled', false);
+          } else {
+            var permissionKey = type + '-' + gender + '-' + gradeLevel + '-' + schoolId;
+            var permission = editPermissions[permissionKey];
+            
+            if (permission === 'approved') {
+              inputBox.prop('disabled', false);
+              inputBox.addClass('approved-edit');
+            } else if (permission === 'pending') {
+              inputBox.prop('disabled', true);
+              inputBox.addClass('pending-edit');
+            } else {
+              inputBox.prop('disabled', true);
+            }
+          }
+          
+          // Update the total
+          updateTotal(inputBox.closest('tr'));
+        }
+      }
+      handleAEJHSVisibility();
+    }
+    
+    function updateTotal(row) {
+      var male = parseInt(row.find('input')[0].value) || 0;
+      var female = parseInt(row.find('input')[1].value) || 0;
+      row.find('.total').text(male + female);
     }
 
     $(document).ready(function() {
@@ -565,7 +683,7 @@ $lastUserSave = $existingDataResult['lastUserSave'];
       $('#myTab a').on('click', function (e) {
         e.preventDefault();
         $(this).tab('show');
-        lockFields();
+        // lockFields();
       });
 
       // Update totals for all rows

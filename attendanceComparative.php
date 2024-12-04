@@ -453,9 +453,9 @@ if (isset($_POST['export_pdf'])) {
                                     <li class="nav-item">
                                         <a class="nav-link" data-toggle="pill" href="#subjects">Subjects</a>
                                     </li>
-                                    <li class="nav-item">
+                                    <!-- <li class="nav-item">
                                         <a class="nav-link" data-toggle="pill" href="#modules">Modules</a>
-                                    </li>
+                                    </li> -->
                                 </ul>
                             </div>
 
@@ -488,7 +488,7 @@ if (isset($_POST['export_pdf'])) {
 
                                     <!-- Other Tabs -->
                                     <?php
-                                    $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects', 'modules'];
+                                    $types = ['pardos_sardos', 'pivate_vourcher', 'enrollment', 'dropouts', 'graduates', 'completers', 'leavers', 'repeaters', 'overweight', 'subjects'];
                                     foreach ($types as $type): ?>
                                     <div class="tab-pane fade" id="<?php echo $type; ?>">
                                         <div class="row">
