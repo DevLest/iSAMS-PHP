@@ -107,13 +107,16 @@ CREATE TABLE IF NOT EXISTS `equity_assessment` (
   CONSTRAINT `equity_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.equity_assessment: ~4 rows (approximately)
+-- Dumping data for table smea.equity_assessment: ~5 rows (approximately)
 INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `points`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
-	(1, 1, NULL, NULL, 'cfs', 23, 25, 4, 2024, 5, '2024-11-10 16:31:27', '2024-11-10 16:31:27'),
+	(1, 1, NULL, NULL, 'cfs', 3, 25, 4, 2024, 5, '2024-11-10 16:31:27', '2024-12-04 00:17:28'),
 	(2, 2, 1, 1, 'sbfp', 23, NULL, 1, 2024, 5, '2024-11-10 16:31:36', '2024-11-10 16:31:36'),
 	(3, 2, 1, 2, 'sbfp', 54, NULL, 1, 2024, 5, '2024-11-10 16:31:36', '2024-11-10 16:31:36'),
 	(4, 1, NULL, NULL, 'cfs', 123, 25, 1, 2025, 5, '2024-11-10 16:31:53', '2024-11-10 16:31:53'),
-	(5, 2, NULL, NULL, 'cfs', 21312, 35, 1, 2025, 5, '2024-11-10 16:31:53', '2024-11-10 16:31:53');
+	(5, 2, NULL, NULL, 'cfs', 21312, 35, 1, 2025, 5, '2024-11-10 16:31:53', '2024-11-10 16:31:53'),
+	(6, 3, NULL, NULL, 'wash', 2, NULL, 4, 2024, 5, '2024-12-04 00:17:38', '2024-12-04 00:17:38'),
+	(7, 2, NULL, NULL, 'wash', 5, NULL, 4, 2024, 5, '2024-12-04 00:17:56', '2024-12-04 00:17:56'),
+	(8, 3, NULL, NULL, 'cfs', 232, 25, 4, 2024, 5, '2024-12-04 00:19:30', '2024-12-04 00:19:30');
 
 -- Dumping structure for table smea.grade_level
 CREATE TABLE IF NOT EXISTS `grade_level` (
@@ -256,7 +259,8 @@ CREATE TABLE IF NOT EXISTS `rwb_assessment` (
 INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(1, 1, 1, 1, 'displaced', 2, 4, 2024, 5, '2024-11-10 16:41:41', '2024-12-03 23:45:17'),
 	(2, 1, 1, 2, 'displaced', 22, 4, 2024, 5, '2024-12-03 23:35:32', '2024-12-03 23:35:32'),
-	(3, 2, 1, 1, 'displaced', 332, 4, 2024, 5, '2024-12-03 23:38:00', '2024-12-03 23:39:28');
+	(3, 2, 1, 1, 'displaced', 332, 4, 2024, 5, '2024-12-03 23:38:00', '2024-12-03 23:39:28'),
+	(4, 2, 1, 2, 'bullying', 2, 4, 2024, 5, '2024-12-04 00:02:30', '2024-12-04 00:02:30');
 
 -- Dumping structure for table smea.schools
 CREATE TABLE IF NOT EXISTS `schools` (

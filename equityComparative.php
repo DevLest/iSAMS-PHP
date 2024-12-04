@@ -55,16 +55,19 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
             if ($type === 'cfs') {
                 $query = "SELECT points, count FROM equity_assessment 
                          WHERE school_id = ? AND type = 'cfs' 
-                         AND quarter = ? AND year = ?";
+                         AND quarter = ? AND year = ?
+                         ORDER BY points ASC";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                $points = '';
+                $points = [];
                 while ($row = $result->fetch_assoc()) {
-                    $points .= "{$row['count']}({$row['points']}) ";
+                    if ($row['count'] > 0) {
+                        $points[] = "{$row['count']}({$row['points']})";
+                    }
                 }
-                $html .= "<td>$points</td>";
+                $html .= "<td>" . implode(", ", $points) . "</td>";
             }
             else if ($type === 'sbfp') {
                 $query = "SELECT gender, SUM(count) as total 
@@ -91,8 +94,22 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears) {
                 $stmt->bind_param('iii', $school['id'], $quarter, $sy['end_year']);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                $stars = $result->fetch_assoc()['count'] ?? 0;
-                $html .= "<td>$stars</td>";
+                $row = $result->fetch_assoc();
+                $stars = $row ? intval($row['count']) : 0;
+                
+                // Add debug info temporarily
+                $html .= "<td>";
+                $html .= "<!-- Debug: School: {$school['id']}, Quarter: $quarter, Year: {$sy['end_year']}, Stars: $stars -->";
+                
+                // Generate stars with colors
+                for ($i = 1; $i <= 5; $i++) {
+                    if ($i <= $stars) {
+                        $html .= '<i class="fas fa-star text-warning"></i>'; // Filled star
+                    } else {
+                        $html .= '<i class="far fa-star"></i>'; // Empty star
+                    }
+                }
+                $html .= " ($stars)</td>";
             }
         }
         $html .= "</tr>";

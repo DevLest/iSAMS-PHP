@@ -9,9 +9,21 @@ if(!isset($_SESSION['user_id'])) {
 require_once "connection/db.php";
 include_once('header.php');
 
+// Get current school year
+$schoolYearQuery = "SELECT * FROM school_year 
+                    WHERE (YEAR(NOW()) BETWEEN start_year AND end_year) 
+                    OR (YEAR(NOW()) = end_year AND MONTH(NOW()) <= end_month)
+                    OR (YEAR(NOW()) = start_year AND MONTH(NOW()) >= start_month)
+                    LIMIT 1";
+$schoolYearResult = $conn->query($schoolYearQuery);
+$schoolYear = $schoolYearResult->fetch_assoc();
+
+// Calculate current quarter based on school year
+$startMonth = $schoolYear['start_month'];
 $currentMonth = date('n');
-$currentQuarter = ceil($currentMonth / 3);
-$year = date('Y');
+$adjustedMonth = ($currentMonth < $startMonth) ? $currentMonth + 12 : $currentMonth;
+$currentQuarter = ceil(($adjustedMonth - $startMonth + 1) / 3);
+$year = $schoolYear['end_year'];
 
 $reportType = 'enrollment'; // Default value
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_type'])) {
@@ -19,12 +31,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_type'])) {
 }
 
 $sql = "SELECT 
-        SUM(CASE WHEN quarter = 1 AND type = '$reportType' THEN count ELSE 0 END) AS q1_total,
-        SUM(CASE WHEN quarter = 2 AND type = '$reportType' THEN count ELSE 0 END) AS q2_total,
-        SUM(CASE WHEN quarter = 3 AND type = '$reportType' THEN count ELSE 0 END) AS q3_total,
-        SUM(CASE WHEN quarter = 4 AND type = '$reportType' THEN count ELSE 0 END) AS q4_total
-        FROM attendance_summary 
-        WHERE year = $year;";
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+        ) AND quarter = 1 AND type = '$reportType' 
+        THEN count ELSE 0 END
+    ) AS q1_total,
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+        ) AND quarter = 2 AND type = '$reportType' 
+        THEN count ELSE 0 END
+    ) AS q2_total,
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+        ) AND quarter = 3 AND type = '$reportType' 
+        THEN count ELSE 0 END
+    ) AS q3_total,
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+        ) AND quarter = 4 AND type = '$reportType' 
+        THEN count ELSE 0 END
+    ) AS q4_total
+FROM attendance_summary 
+WHERE year IN ($year - 1, $year)";
 $sum = $conn->query($sql);
 $sum = $sum->fetch_assoc();
 
