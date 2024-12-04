@@ -914,6 +914,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
 
             // Initialize the double-click handler
             $(document).on('dblclick', 'input[type="number"]', function() {
+                console.log('dblclick');
                 if ($(this).prop('disabled')) {
                     const $input = $(this);
                     const inputName = $input.attr('name');
@@ -987,10 +988,37 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
             // Initialize the fields based on the default active tab
             lockFields();
             handleAEJHSVisibility();
+
+            // Add this inside the $(document).ready(function() { ... })
+            $('input[type="number"]').on('dblclick', function(e) {
+                e.preventDefault();
+                console.log('Double clicked!'); // Debug line
+                
+                if ($(this).prop('disabled')) {
+                    const $input = $(this);
+                    const inputName = $input.attr('name');
+                    const matches = inputName.match(/([^-]+)-([^[]+)\[(\d+)\]/);
+                    
+                    if (matches) {
+                        const type = matches[1];
+                        const gender = matches[2] === 'male' ? '1' : '2';
+                        const schoolId = matches[3];
+                        const gradeLevel = $('#activeTab').val().split('-')[1];
+
+                        // Set the values in the modal
+                        $('#requestSchoolId').val(schoolId);
+                        $('#requestType').val(type);
+                        $('#requestGradeLevel').val(gradeLevel);
+                        $('#requestGender').val(gender);
+                        
+                        // Show the modal
+                        $('#editRequestModal').modal('show');
+                    }
+                }
+            });
         });
 
         function updateActiveTab(tab, gradeLevel) {
-            console.log(tab);
             document.getElementById('activeTab').value = tab;
             document.getElementById('activeGradeLevel').value = gradeLevel;
         }

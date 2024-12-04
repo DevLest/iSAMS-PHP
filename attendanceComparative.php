@@ -224,7 +224,7 @@ function exportPDF($conn, $activeTab) {
             <p>Comparative Report</p>
         </div>
         <div class="date-generated">
-            Generated on: ' . date('F d, Y h:i A') . '
+            Generated on: ' . date('F d, Y') . '
         </div>
         <div class="report-title">
             ' . $reportTitle . '

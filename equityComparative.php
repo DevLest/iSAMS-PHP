@@ -232,7 +232,7 @@ function exportPDF($conn, $type, $quarter, $schools, $schoolYears) {
             <h1>SMEA - School Management Enrollment Analytics</h1>
             <p>Equity Assessment Report - ' . ucfirst($type) . '</p>
             <p>Quarter: ' . $quarter . '</p>
-            <p>Generated on: ' . date('F d, Y h:i A') . '</p>
+            <p>Generated on: ' . date('F d, Y') . '</p>
         </div>';
 
     // Add table

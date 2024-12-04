@@ -23,7 +23,7 @@ $schoolYearQuery = "SELECT * FROM school_year ORDER BY start_year DESC";
 $schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Get schools
-$schoolQuery = "SELECT * FROM schools WHERE id <= 17 ORDER BY name";
+$schoolQuery = "SELECT * FROM schools";
 $schools = $conn->query($schoolQuery)->fetch_all(MYSQLI_ASSOC);
 
 // Get grade levels
@@ -139,7 +139,7 @@ $lastUserSave = $existingData['lastUserSave'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   $successCount = 0;
   $errors = [];
-  
+
   // Process each tab's data
   $types = ['displaced', 'bullying', 'equipped', 'bmi'];
   

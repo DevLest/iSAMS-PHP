@@ -1,5 +1,6 @@
 <?php
 require_once "connection/db.php";
+include_once "logout-modal.php";
 
 // Fetch pending edit requests count for admin
 $pendingRequestsQuery = "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'";

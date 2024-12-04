@@ -141,7 +141,7 @@ function exportPDF($conn, $type, $quarter, $schools, $schoolYears, $gradeLevel) 
             <h1>SMEA - School Management Enrollment Analytics</h1>
             <p>RWB Assessment Report - ' . ucfirst($type) . '</p>
             <p>Quarter: ' . $quarter . '</p>
-            <p>Generated on: ' . date('F d, Y h:i A') . '</p>
+            <p>Generated on: ' . date('F j, Y ') . '</p>
         </div>';
 
     $html .= generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $gradeLevel);
