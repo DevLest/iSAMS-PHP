@@ -78,6 +78,7 @@ if (isset($_POST['quarter'])) {
 
 // Save functionality
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+  
   if (!isset($_POST['activeTab'])) {
     exit;
   }
@@ -151,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $als_types = ['blp', 'elementary', 'jhs'];
     foreach ($als_types as $als_type) {
       if (isset($_POST['als-'.$als_type])) {
+        
         foreach ($_POST['als-'.$als_type] as $school_id => $count) {
           if (!empty($count) && $count > 0) {
             saveData($conn, [
@@ -217,13 +219,33 @@ function getExistingData($conn, $quarter, $year) {
   $result = $stmt->get_result();
   
   $data = [];
-  $lastUserSave = "No edits yet"; // Default value
+  $lastUserSave = "No edits yet";
+  
   while ($row = $result->fetch_assoc()) {
-    $gender = ($row['gender'] == 1) ? 'male' : 'female';
-    $keyId = $gender.'-'.$row['type'].'-'.$row['grade_level'].'-'.$row['school_id'];
-    $data[$keyId] = $row['count'];
-    // Update last editor info
-    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? '').')';
+    if ($row['type'] === 'als') {
+      // Map grade_level to ALS type
+      $alsType = '';
+      switch ($row['grade_level']) {
+        case 1:
+          $alsType = 'blp';
+          break;
+        case 2:
+          $alsType = 'elementary';
+          break;
+        case 3:
+          $alsType = 'jhs';
+          break;
+      }
+      // Format key to match ALS input names: als-blp[school_id], als-elementary[school_id], als-jhs[school_id]
+      $key = "als-{$alsType}[{$row['school_id']}]";
+    } else {
+      // Handle reading assessment data as before
+      $gender = ($row['gender'] == 1) ? 'male' : 'female';
+      $key = $row['type'] . '-' . $gender . '[' . $row['school_id'] . ']';
+    }
+    
+    $data[$key] = $row['count'];
+    $lastUserSave = $row['last_name'].', '.$row['first_name'].' ('.($row['school_name'] ?? 'Admin').')';
   }
   
   return ['data' => $data, 'lastUserSave' => $lastUserSave];
@@ -531,128 +553,73 @@ $lastUserSave = $existingDataResult['lastUserSave'];
         lockFields();
       });
 
-      // Update totals when input changes
-      $('input[type="number"]').on('change', function() {
-        updateTotal($(this).closest('tr'));
-      });
-
-      // Load existing data
-      var qualityData = <?php echo json_encode($qualityData); ?>;
-      var qualityKeys = <?php echo json_encode($qualityKeys); ?>;
-      
-      // Function to update totals
+      // Update totals for all rows
       function updateTotal(row) {
         var male = parseInt(row.find('input[name*="male"]').val()) || 0;
         var female = parseInt(row.find('input[name*="female"]').val()) || 0;
         row.find('.total').text(male + female);
       }
 
-      // Initialize with existing data
-      for(var key in qualityData) {
+      // Load existing data
+      var qualityData = <?php echo json_encode($qualityData); ?>;
+      console.log('Quality Data:', qualityData); // Debug log
+      
+      // Populate saved data
+      Object.keys(qualityData).forEach(function(key) {
+        console.log('Processing key:', key); // Debug log
         var input = $('input[name="' + key + '"]');
-        if(input.length) {
+        if (input.length) {
+          console.log('Found input for key:', key); // Debug log
           input.val(qualityData[key]);
-          updateTotal(input.closest('tr'));
+          if (key.startsWith('als-')) {
+            updateALSTotals();
+          } else {
+            updateTotal(input.closest('tr'));
+          }
         }
-      }
+      });
 
-      // Add this to your existing script section
+      // Update ALS totals on page load
+      updateALSTotals();
+
+      // Update totals when input changes
+      $('input[type="number"]').on('change', function() {
+        updateTotal($(this).closest('tr'));
+      });
+
+      // Function to update ALS totals
       function updateALSTotals() {
         let blpTotal = 0;
         let elementaryTotal = 0;
         let jhsTotal = 0;
 
-        // Calculate BLP total
         $('input[name^="als-blp"]').each(function() {
           blpTotal += parseInt($(this).val()) || 0;
         });
+        $('.blp-total').text(blpTotal);
 
-        // Calculate Elementary total
         $('input[name^="als-elementary"]').each(function() {
           elementaryTotal += parseInt($(this).val()) || 0;
         });
+        $('.elementary-total').text(elementaryTotal);
 
-        // Calculate JHS total
         $('input[name^="als-jhs"]').each(function() {
           jhsTotal += parseInt($(this).val()) || 0;
         });
-
-        // Update totals in the table
-        $('.blp-total').text(blpTotal);
-        $('.elementary-total').text(elementaryTotal);
         $('.jhs-total').text(jhsTotal);
       }
-
-      // Add this to your document ready function
-      $('input[name^="als"]').on('input', function() {
-        updateALSTotals();
-      });
 
       // Initial calculation
       updateALSTotals();
 
-      // Populate saved data
-      var qualityData = <?php echo json_encode($qualityData); ?>;
-      var role = <?php echo $_SESSION['role']; ?>; // Assuming you have role
-
-      // Update totals on page load
-      updateAllTotals();
-      
-      // Update totals when input changes
-      $('input[type="number"]').on('change', function() {
-        updateAllTotals();
-      });
-      
-      // Function to update row totals
-      function updateRowTotal(row) {
-        var total = 0;
-        row.find('input[type="number"]').each(function() {
-          total += parseInt($(this).val()) || 0;
-        });
-        row.find('.total').text(total);
-      }
-      
-      // Function to update all totals
-      function updateAllTotals() {
-        // Update ALS totals
-        var blpTotal = 0, elementaryTotal = 0, jhsTotal = 0;
-        
-        $('input[name^="als-blp"]').each(function() {
-          blpTotal += parseInt($(this).val()) || 0;
-        });
-        $('.blp-total').text(blpTotal);
-        
-        $('input[name^="als-elementary"]').each(function() {
-          elementaryTotal += parseInt($(this).val()) || 0;
-        });
-        $('.elementary-total').text(elementaryTotal);
-        
-        $('input[name^="als-jhs"]').each(function() {
-          jhsTotal += parseInt($(this).val()) || 0;
-        });
-        $('.jhs-total').text(jhsTotal);
-        
-        // Update Reading totals
-        $('.table tr').each(function() {
-          if($(this).find('input[type="number"]').length) {
-            updateRowTotal($(this));
-          }
-        });
-      }
-      
       // Handle tab changes
       $('.nav-link').on('click', function() {
         var tabId = $(this).attr('href');
         $(tabId).find('tr').each(function() {
           if($(this).find('input[type="number"]').length) {
-            updateRowTotal($(this));
+            updateTotal($(this));
           }
         });
-      });
-      
-      // Handle quarter changes
-      $('#quarter').on('change', function() {
-        $(this).closest('form').submit();
       });
     });
   </script>

@@ -139,17 +139,16 @@ $lastUserSave = $existingData['lastUserSave'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
   $successCount = 0;
   $errors = [];
-
   
   // Process each tab's data
   $types = ['displaced', 'bullying', 'equipped', 'bmi'];
   
   // Add error checking for max_input_vars
-  // if (count($_POST, COUNT_RECURSIVE) >= ini_get('max_input_vars')) {
-  //   $_SESSION['error'] = "Form submission exceeded maximum allowed inputs. Please contact your system administrator.";
-  //   header("Location: rwbAdd.php?quarter=$selectedQuarter&year=$year");
-  //   exit();
-  // }
+  if (count($_POST, COUNT_RECURSIVE) >= ini_get('max_input_vars')) {
+    $_SESSION['error'] = "Form submission exceeded maximum allowed inputs. Please try submitting fewer changes at once.";
+    header("Location: rwbAdd.php?quarter=$selectedQuarter&year=$year");
+    exit();
+  }
   
   foreach ($types as $type) {
     foreach ($gradeLevels as $level) {
