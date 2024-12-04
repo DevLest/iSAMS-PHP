@@ -11,7 +11,13 @@ include_once('header.php');
 
 $currentMonth = date('n');
 $currentQuarter = ceil($currentMonth / 3);
-$year = date('Y');
+$currentYear = date('Y');
+
+if (isset($_POST['year'])) {
+    $year = $_POST['year'];
+} else {
+    $year = $currentYear;
+}
 
 if (isset($_POST['quarter'])) {
     $selectedQuarter = $_POST['quarter'];
@@ -407,6 +413,15 @@ $lastUserSave = $lastUserRow ? $lastUserRow['last_name'] . ', ' . $lastUserRow['
                                     <option value="2" <?php if ($selectedQuarter == 2) echo 'selected'; ?>>2nd</option>
                                     <option value="3" <?php if ($selectedQuarter == 3) echo 'selected'; ?>>3rd</option>
                                     <option value="4" <?php if ($selectedQuarter == 4) echo 'selected'; ?>>4th</option>
+                                </select>
+                                <label for="year">Select Year:</label>
+                                <select id="year" name="year">
+                                    <?php
+                                    // Show last 5 years and next 5 years
+                                    for ($y = $currentYear - 5; $y <= $currentYear + 5; $y++) {
+                                        echo "<option value='$y'" . ($y == $year ? ' selected' : '') . ">$y</option>";
+                                    }
+                                    ?>
                                 </select>
                                 <button type="submit" class="btn btn-success" name="filter">Select</button>
                             </div>
