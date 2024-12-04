@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.attendance_summary: ~2 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~4 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`) VALUES
 	(10, 2, 1, 1, 'enrollment', 100, 4, 2024, 5, '2024-12-02 11:32:32', '2024-12-02 10:40:39'),
-	(11, 2, 1, 1, 'enrollment', 80, 4, 2023, 5, '2024-12-02 11:32:33', '2024-12-02 10:40:39');
+	(11, 2, 1, 1, 'enrollment', 80, 4, 2023, 5, '2024-12-02 11:32:33', '2024-12-02 10:40:39'),
+	(12, 9, 10, 1, 'enrollment', 11, 4, 2025, 5, '2024-12-04 11:50:57', '2024-12-04 11:50:57'),
+	(13, 10, 11, 1, 'enrollment', 225, 3, 2024, 5, '2024-12-04 11:52:14', '2024-12-04 11:52:14');
 
 -- Dumping structure for table smea.edit_requests
 CREATE TABLE IF NOT EXISTS `edit_requests` (
@@ -107,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `equity_assessment` (
   CONSTRAINT `equity_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.equity_assessment: ~5 rows (approximately)
+-- Dumping data for table smea.equity_assessment: ~8 rows (approximately)
 INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `points`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(1, 1, NULL, NULL, 'cfs', 3, 25, 4, 2024, 5, '2024-11-10 16:31:27', '2024-12-04 00:17:28'),
 	(2, 2, 1, 1, 'sbfp', 23, NULL, 1, 2024, 5, '2024-11-10 16:31:36', '2024-11-10 16:31:36'),
@@ -202,11 +204,11 @@ CREATE TABLE IF NOT EXISTS `quality_assessment` (
   CONSTRAINT `quality_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.quality_assessment: ~13 rows (approximately)
+-- Dumping data for table smea.quality_assessment: ~16 rows (approximately)
 INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
-	(2, 1, 1, 1, 'als', 23, 4, 2024, 5, '2024-11-10 13:18:47', '2024-11-10 13:18:47'),
-	(3, 1, 2, 1, 'als', 3436, 4, 2024, 5, '2024-11-10 13:55:49', '2024-11-10 13:55:49'),
-	(4, 1, 1, 1, 'eng-frustration', 11, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
+	(2, 1, 1, 1, 'als', 232, 4, 2024, 5, '2024-11-10 13:18:47', '2024-12-04 08:53:48'),
+	(3, 1, 2, 1, 'als', 22, 4, 2024, 5, '2024-11-10 13:55:49', '2024-12-04 08:54:51'),
+	(4, 1, 1, 1, 'eng-frustration', 12, 4, 2024, 5, '2024-11-10 14:20:08', '2024-12-04 08:54:11'),
 	(5, 2, 1, 1, 'eng-frustration', 33, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
 	(6, 3, 1, 1, 'eng-frustration', 55, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
 	(7, 1, 1, 2, 'eng-frustration', 22, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
@@ -216,7 +218,10 @@ INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `t
 	(11, 3, 1, 1, 'fil-frustration', 88, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
 	(12, 1, 1, 2, 'fil-frustration', 222, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
 	(13, 2, 1, 2, 'fil-frustration', 44, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
-	(14, 4, 1, 2, 'fil-frustration', 78, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47');
+	(14, 4, 1, 2, 'fil-frustration', 78, 4, 2024, 5, '2024-11-10 14:26:47', '2024-11-10 14:26:47'),
+	(15, 1, 1, 2, 'eng-instructional', 3, 4, 2024, 5, '2024-12-04 09:01:46', '2024-12-04 09:01:46'),
+	(16, 1, 1, 2, 'fil-independent', 32, 4, 2024, 5, '2024-12-04 09:03:13', '2024-12-04 09:03:13'),
+	(17, 3, 8, 1, 'eng-independent', 4343, 4, 2024, 5, '2024-12-04 10:00:53', '2024-12-04 10:00:53');
 
 -- Dumping structure for table smea.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -255,7 +260,7 @@ CREATE TABLE IF NOT EXISTS `rwb_assessment` (
   CONSTRAINT `rwb_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.rwb_assessment: ~3 rows (approximately)
+-- Dumping data for table smea.rwb_assessment: ~4 rows (approximately)
 INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(1, 1, 1, 1, 'displaced', 2, 4, 2024, 5, '2024-11-10 16:41:41', '2024-12-03 23:45:17'),
 	(2, 1, 1, 2, 'displaced', 22, 4, 2024, 5, '2024-12-03 23:35:32', '2024-12-03 23:35:32'),

@@ -100,13 +100,20 @@ if ($schools->num_rows > 0) {
 
 // Get school year data for the chart
 $chartSql = "SELECT 
-        CONCAT(sy.start_year, '-', sy.end_year) as school_year,
-        SUM(a.count) as total
-    FROM attendance_summary a
-    JOIN school_year sy ON a.year = sy.end_year
-    WHERE a.type = '$reportType'
-    GROUP BY sy.id, sy.start_year, sy.end_year
-    ORDER BY sy.start_year ASC";
+    CONCAT(sy.start_year, '-', sy.end_year) as school_year,
+    SUM(CASE 
+        WHEN (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month AND a.year = sy.start_year)
+        OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < sy.start_month AND a.year = sy.end_year)
+        THEN a.count 
+        ELSE 0 
+    END) as total
+FROM attendance_summary a
+JOIN school_year sy ON 
+    (a.year = sy.start_year AND MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month)
+    OR (a.year = sy.end_year AND MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < sy.start_month)
+WHERE a.type = '$reportType'
+GROUP BY sy.id, sy.start_year, sy.end_year
+ORDER BY sy.start_year ASC";
 
     $chartResult = $conn->query($chartSql);
     $yearLabels = [];
@@ -126,21 +133,32 @@ $chartSql = "SELECT
 // Add this query to get the pie chart data
 $pieChartQuery = "SELECT 
     SUM(CASE 
-        WHEN a.type = 'als' THEN a.count 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) AND a.type = 'als' 
+        THEN a.count 
         ELSE 0 
     END) as als_count,
     SUM(CASE 
-        WHEN g.type = 'elem' THEN a.count 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) AND g.type = 'elem' AND a.type = '$reportType'
+        THEN a.count 
         ELSE 0 
     END) as elem_count,
     SUM(CASE 
-        WHEN g.type IN ('jhs', 'shs') THEN a.count 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) AND g.type IN ('jhs', 'shs') AND a.type = '$reportType'
+        THEN a.count 
         ELSE 0 
     END) as secondary_count
 FROM attendance_summary a
 LEFT JOIN grade_level g ON a.grade_level_id = g.id
-WHERE a.type = '$reportType' 
-AND a.year = $year";
+WHERE a.year IN ($year - 1, $year)";
 
 $pieResult = $conn->query($pieChartQuery);
 $pieData = $pieResult->fetch_assoc();
@@ -154,37 +172,38 @@ echo "<script>
     };
 </script>";
 
-// Add after the existing SQL queries
+// Debug issues query
 $issuesQuery = "SELECT ic.*, s.name as school_name 
                 FROM issues_and_concerns ic 
                 LEFT JOIN schools s ON ic.school_id = s.id
-                WHERE ic.type = 'attendance' 
-                AND ic.year = $year 
-                AND ic.quarter = $currentQuarter
-                ORDER BY ic.updated_at DESC";
+                WHERE ic.type = 'attendance'"; // Removed all other conditions temporarily
+                
 $issuesResult = $conn->query($issuesQuery);
+if (!$issuesResult) {
+    echo "Issues Query Error: " . $conn->error;
+} else {
+    echo "<!-- Found " . $issuesResult->num_rows . " issues records -->"; // Debug comment
+}
 
-// Get trend analysis
+// Debug trend query
 $trendQuery = "SELECT 
     s.id as school_id,
     s.name as school_name,
-    SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) as last_year,
-    SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) as this_year,
+    SUM(CASE WHEN a.year = $year THEN a.count ELSE 0 END) as this_year,
+    SUM(CASE WHEN a.year = $year - 1 THEN a.count ELSE 0 END) as last_year,
     a.type,
     $currentQuarter as quarter
 FROM attendance_summary a
 JOIN schools s ON a.school_id = s.id
 WHERE a.type = '$reportType'
-AND a.year IN ($year, $year-1)
-AND a.quarter = $currentQuarter
 GROUP BY s.id, s.name, a.type
-HAVING SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) > 0 
-    OR SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) > 0
-ORDER BY (SUM(CASE WHEN a.year = $year AND a.quarter = $currentQuarter THEN a.count ELSE 0 END) 
-         - SUM(CASE WHEN a.year = $year-1 AND a.quarter = $currentQuarter THEN a.count ELSE 0 END)) ASC";
+ORDER BY this_year DESC";
+
 $trendResult = $conn->query($trendQuery);
 if (!$trendResult) {
-    echo "Error: " . $conn->error;
+    echo "Trend Query Error: " . $conn->error;
+} else {
+    echo "<!-- Found " . $trendResult->num_rows . " trend records -->"; // Debug comment
 }
 ?>
 
