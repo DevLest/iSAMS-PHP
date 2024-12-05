@@ -101,7 +101,7 @@ function exportCSV($conn, $type, $quarter, $schools, $schoolYears, $gradeLevel) 
                      AND quarter = ? AND year = ? AND grade_level = ?
                      GROUP BY gender";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['end_year'], $gradeLevel);
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['start_year'], $gradeLevel);
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -197,13 +197,13 @@ if (isset($_POST['export_pdf'])) {
                             </select>
                         </div>
                         <div class="col-md-6 text-right">
-                            <form action="" method="post" style="display: inline-block;">
+                            <!-- <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportCsvTab" value="displaced">
                                 <input type="hidden" name="activeGrade" id="exportCsvGrade" value="1">
                                 <button type="submit" class="btn btn-info" name="export_csv">
                                     <i class="fas fa-file-csv mr-2"></i>Export CSV
                                 </button>
-                            </form>
+                            </form> -->
                             <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportPdfTab" value="displaced">
                                 <input type="hidden" name="activeGrade" id="exportPdfGrade" value="1">
