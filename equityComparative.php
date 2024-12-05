@@ -341,12 +341,12 @@ if (isset($_POST['export_pdf'])) {
                             </select>
                         </div>
                         <div class="col-md-6 text-right">
-                            <form action="" method="post" style="display: inline-block;">
+                            <!-- <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportCsvTab" value="cfs">
                                 <button type="submit" class="btn btn-info" name="export_csv">
                                     <i class="fas fa-file-csv mr-2"></i>Export CSV
                                 </button>
-                            </form>
+                            </form> -->
                             <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportPdfTab" value="cfs">
                                 <button type="submit" class="btn btn-warning" name="export_pdf">

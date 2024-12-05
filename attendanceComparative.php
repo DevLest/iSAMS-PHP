@@ -403,12 +403,12 @@ if (isset($_POST['export_pdf'])) {
                         <p class="mb-4">Data comparison based on School Year</p>
                         
                         <div class="text-right mb-4">
-                            <form action="" method="post" style="display: inline-block;">
+                            <!-- <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportCsvTab">
                                 <button type="submit" class="btn btn-info" name="export_csv">
                                     <i class="fas fa-file-csv mr-2"></i>Export CSV
                                 </button>
-                            </form>
+                            </form> -->
                             <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportPdfTab">
                                 <button type="submit" class="btn btn-warning" name="export_pdf">

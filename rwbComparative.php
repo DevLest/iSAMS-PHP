@@ -15,10 +15,13 @@ $currentQuarter = ceil($currentMonth / 3);
 $selectedQuarter = isset($_GET['quarter']) ? $_GET['quarter'] : (isset($_POST['quarter']) ? $_POST['quarter'] : $currentQuarter);
 
 // Fetch school years
-$currentYear = date('Y');
-$nextYear = $currentYear + 1;
-$schoolYearQuery = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
+$schoolYearQuery = "SELECT * FROM school_year 
+                   WHERE id IN (6, 8)  // Explicitly select 2023-2024 and 2024-2025
+                   ORDER BY start_year DESC";
 $schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
+
+// Reverse the array to display newest year first
+$schoolYears = array_reverse($schoolYears);
 
 // Get schools
 $schoolQuery = "SELECT * FROM schools";
@@ -48,13 +51,17 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
         $html .= "<tr><td>{$school['name']}</td>";
         
         foreach ($schoolYears as $sy) {
+            // Debug output
+            error_log("Querying for year: {$sy['start_year']} school: {$school['id']} type: {$type}");
+            
             $query = "SELECT gender, SUM(count) as total 
                      FROM rwb_assessment 
                      WHERE school_id = ? AND type = ? 
                      AND quarter = ? AND year = ? AND grade_level = ?
                      GROUP BY gender";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['start_year'], $gradeLevel);
+            $year = $sy['start_year'];
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $year, $gradeLevel);
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -63,6 +70,9 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
                 if ($row['gender'] == 1) $male = $row['total'];
                 if ($row['gender'] == 2) $female = $row['total'];
             }
+            
+            // Debug output
+            error_log("Results for {$sy['start_year']}: male={$male} female={$female}");
             
             $maleClass = $male == 0 ? ' class="text-muted"' : '';
             $femaleClass = $female == 0 ? ' class="text-muted"' : '';
@@ -101,7 +111,7 @@ function exportCSV($conn, $type, $quarter, $schools, $schoolYears, $gradeLevel) 
                      AND quarter = ? AND year = ? AND grade_level = ?
                      GROUP BY gender";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['end_year'], $gradeLevel);
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $sy['start_year'], $gradeLevel);
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -197,13 +207,13 @@ if (isset($_POST['export_pdf'])) {
                             </select>
                         </div>
                         <div class="col-md-6 text-right">
-                            <form action="" method="post" style="display: inline-block;">
+                            <!-- <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportCsvTab" value="displaced">
                                 <input type="hidden" name="activeGrade" id="exportCsvGrade" value="1">
                                 <button type="submit" class="btn btn-info" name="export_csv">
                                     <i class="fas fa-file-csv mr-2"></i>Export CSV
                                 </button>
-                            </form>
+                            </form> -->
                             <form action="" method="post" style="display: inline-block;">
                                 <input type="hidden" name="activeTab" id="exportPdfTab" value="displaced">
                                 <input type="hidden" name="activeGrade" id="exportPdfGrade" value="1">
