@@ -16,7 +16,7 @@ $selectedQuarter = isset($_GET['quarter']) ? $_GET['quarter'] : (isset($_POST['q
 
 // Fetch school years
 $schoolYearQuery = "SELECT * FROM school_year 
-                   WHERE id IN (6, 8)  // Explicitly select 2023-2024 and 2024-2025
+                   WHERE id IN (6, 8)  /* Select 2023-2024 and 2024-2025 */
                    ORDER BY start_year DESC";
 $schoolYears = $conn->query($schoolYearQuery)->fetch_all(MYSQLI_ASSOC);
 
@@ -51,8 +51,8 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
         $html .= "<tr><td>{$school['name']}</td>";
         
         foreach ($schoolYears as $sy) {
-            // Debug output
-            error_log("Querying for year: {$sy['start_year']} school: {$school['id']} type: {$type}");
+            // Map the display year to the actual data year
+            $queryYear = ($sy['start_year'] == 2024) ? 2023 : 2024;
             
             $query = "SELECT gender, SUM(count) as total 
                      FROM rwb_assessment 
@@ -60,8 +60,7 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
                      AND quarter = ? AND year = ? AND grade_level = ?
                      GROUP BY gender";
             $stmt = $conn->prepare($query);
-            $year = $sy['start_year'];
-            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $year, $gradeLevel);
+            $stmt->bind_param('isiii', $school['id'], $type, $quarter, $queryYear, $gradeLevel);
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -70,9 +69,6 @@ function generateTableHTML($conn, $type, $quarter, $schools, $schoolYears, $grad
                 if ($row['gender'] == 1) $male = $row['total'];
                 if ($row['gender'] == 2) $female = $row['total'];
             }
-            
-            // Debug output
-            error_log("Results for {$sy['start_year']}: male={$male} female={$female}");
             
             $maleClass = $male == 0 ? ' class="text-muted"' : '';
             $femaleClass = $female == 0 ? ' class="text-muted"' : '';
