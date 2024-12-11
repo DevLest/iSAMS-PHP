@@ -32,35 +32,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_type'])) {
 
 $sql = "SELECT 
     SUM(CASE 
-        WHEN (
-            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
-            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
-        ) AND quarter = 1 AND type = '$reportType' 
+        WHEN quarter = 1 AND type = '$reportType' 
+        AND (
+            (year IN ($year - 1, $year) AND MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth)
+        )
         THEN count ELSE 0 END
     ) AS q1_total,
     SUM(CASE 
-        WHEN (
-            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
-            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
-        ) AND quarter = 2 AND type = '$reportType' 
+        WHEN quarter = 2 AND type = '$reportType'
+        AND (
+            (year IN ($year - 1, $year) AND MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth)
+        )
         THEN count ELSE 0 END
     ) AS q2_total,
     SUM(CASE 
-        WHEN (
-            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
-            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
-        ) AND quarter = 3 AND type = '$reportType' 
+        WHEN quarter = 3 AND type = '$reportType'
+        AND (
+            (year IN ($year - 1, $year) AND MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth)
+        )
         THEN count ELSE 0 END
     ) AS q3_total,
     SUM(CASE 
-        WHEN (
-            (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
-            OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
-        ) AND quarter = 4 AND type = '$reportType' 
+        WHEN quarter = 4 AND type = '$reportType'
+        AND (
+            (year IN ($year - 1, $year) AND MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth)
+        )
         THEN count ELSE 0 END
-    ) AS q4_total
-FROM attendance_summary 
-WHERE year IN ($year - 1, $year)";
+    ) AS q4_total,
+    MAX(sy.start_year) as start_year,
+    MAX(sy.end_year) as end_year,
+    MAX(sy.start_month) as start_month,
+    MAX(sy.end_month) as end_month
+FROM attendance_summary a
+JOIN school_year sy ON 
+    (a.year BETWEEN sy.start_year AND sy.end_year)
+    OR (a.year = sy.end_year AND MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) <= sy.end_month)
+    OR (a.year = sy.start_year AND MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= sy.start_month)
+WHERE a.year IN ($year - 1, $year)
+GROUP BY sy.id";
 $sum = $conn->query($sql);
 $sum = $sum->fetch_assoc();
 
@@ -218,6 +227,68 @@ if (!$trendResult) {
 } else {
     echo "<!-- Found " . $trendResult->num_rows . " trend records -->"; // Debug comment
 }
+
+// Add this query before the closing PHP tag and before the body tag
+$comparisonQuery = "SELECT 
+    s.id,
+    s.name,
+    COALESCE(SUM(CASE 
+        WHEN a.type = 'enrollment' AND (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) THEN a.count 
+        ELSE 0 
+    END), 0) as enrollment_count,
+    COALESCE(SUM(CASE 
+        WHEN a.type = 'dropouts' AND (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) THEN a.count 
+        ELSE 0 
+    END), 0) as dropout_count
+FROM schools s
+LEFT JOIN attendance_summary a ON s.id = a.school_id 
+    AND a.type IN ('enrollment', 'dropouts') 
+    AND (
+        (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+        OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+    )
+GROUP BY s.id, s.name
+ORDER BY s.name";
+
+$comparisonResult = $conn->query($comparisonQuery);
+
+// Add this query to get gender distribution data
+$genderQuery = "SELECT 
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) AND a.gender = 'male' AND a.type = '$reportType'
+        THEN a.count 
+        ELSE 0 
+    END) as male_count,
+    SUM(CASE 
+        WHEN (
+            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+        ) AND a.gender = 'female' AND a.type = '$reportType'
+        THEN a.count 
+        ELSE 0 
+    END) as female_count
+FROM attendance_summary a
+WHERE a.year IN ($year - 1, $year)";
+
+$genderResult = $conn->query($genderQuery);
+$genderData = $genderResult->fetch_assoc();
+
+// Pass gender data to JavaScript
+echo "<script>
+    var genderData = {
+        male: " . ($genderData['male_count'] ?? 0) . ",
+        female: " . ($genderData['female_count'] ?? 0) . "
+    };
+</script>";
 ?>
 
 <body id="page-top">
@@ -252,7 +323,7 @@ if (!$trendResult) {
                                     <button type="submit" name="report_type" value="enrollment" class="dropdown-item">
                                         Enrollment
                                     </button>
-                                    <button type="submit" name="report_type" value="dropout" class="dropdown-item">
+                                    <button type="submit" name="report_type" value="dropouts" class="dropdown-item">
                                         Drop Out
                                     </button>
                                     <button type="submit" name="report_type" value="graduates" class="dropdown-item">
@@ -543,22 +614,201 @@ if (!$trendResult) {
 
                     <!-- Content Row -->
                     <div class="row">
-
-                        <!-- Content Column -->
-                        <div class="col-lg-12 mb-4">
-
+                        <!-- Enrollment Distribution Column -->
+                        <div class="col-lg-6 mb-4">
                             <!-- Project Card Example -->
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Schools <?php echo ucwords($reportType); ?> Distribution</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Schools Enrollment Distribution</h6>
                                 </div>
                                 <div class="card-body">
-                                    <?php echo $schoolStats; ?>
+                                    <?php 
+                                    // Specific query for enrollment distribution
+                                    $enrollmentQuery = "SELECT 
+                                        s.id,
+                                        s.name,
+                                        COALESCE(SUM(CASE 
+                                            WHEN (
+                                                (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+                                                OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+                                            ) THEN a.count 
+                                            ELSE 0 
+                                        END), 0) as total_count,
+                                        (SELECT COALESCE(SUM(count), 0) 
+                                         FROM attendance_summary 
+                                         WHERE type = 'enrollment'
+                                         AND (
+                                             (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND year = $year - 1)
+                                             OR (MONTH(CONCAT(year, '-', LPAD(quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND year = $year)
+                                         )
+                                        ) as overall_total
+                                    FROM schools s
+                                    LEFT JOIN attendance_summary a ON s.id = a.school_id 
+                                        AND a.type = 'enrollment'
+                                        AND (
+                                            (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) >= $startMonth AND a.year = $year - 1)
+                                            OR (MONTH(CONCAT(a.year, '-', LPAD(a.quarter * 3 - 2, 2, '0'), '-01')) < $startMonth AND a.year = $year)
+                                        )
+                                    GROUP BY s.id, s.name
+                                    ORDER BY s.id";
+
+                                    $enrollments = $conn->query($enrollmentQuery);
+                                    $enrollmentStats = "";
+
+                                    if ($enrollments && $enrollments->num_rows > 0) {
+                                        while($enrollment = $enrollments->fetch_assoc()) {
+                                            $percentage = $enrollment['overall_total'] > 0 
+                                                ? round(($enrollment['total_count'] / $enrollment['overall_total']) * 100, 1)
+                                                : 0;
+                                                
+                                            $enrollmentStats .= "
+                                                <h4 class='small font-weight-bold'>{$enrollment['name']} <span
+                                                        class='float-right'>{$enrollment['total_count']} ({$percentage}%)</span></h4>
+                                                <div class='progress mb-4'>
+                                                    <div class='progress-bar bg-info' role='progressbar' style='width: {$percentage}%'
+                                                        aria-valuenow='{$percentage}' aria-valuemin='0' aria-valuemax='100'></div>
+                                                </div>";
+                                        }
+                                        echo $enrollmentStats;
+                                    }
+                                    ?>
                                 </div>
                             </div>
-
                         </div>
 
+                        <!-- Dropout Distribution Column -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Schools Dropout Distribution</h6>
+                                </div>
+                                <div class="card-body">
+                                    <?php
+                                    $dropoutStats = "";
+                                    
+                                    $dropoutQuery = "SELECT 
+                                        s.id,
+                                        s.name,
+                                        COALESCE(SUM(CASE 
+                                            WHEN a.type = 'dropouts' THEN a.count 
+                                            ELSE 0 
+                                        END), 0) as total_count,
+                                        (SELECT COALESCE(SUM(count), 0) 
+                                         FROM attendance_summary 
+                                         WHERE type = 'dropouts'
+                                        ) as overall_total
+                                    FROM schools s
+                                    LEFT JOIN attendance_summary a ON s.id = a.school_id 
+                                    GROUP BY s.id, s.name
+                                    ORDER BY s.id";
+                                    
+                                    // Debug the query
+                                    
+                                    $dropouts = $conn->query($dropoutQuery);
+                                    
+                                    
+                                    if ($dropouts && $dropouts->num_rows > 0) {
+                                        while($dropout = $dropouts->fetch_assoc()) {
+                                            
+                                            $percentage = $dropout['overall_total'] > 0 
+                                                ? round(($dropout['total_count'] / $dropout['overall_total']) * 100, 1)
+                                                : 0;
+                                                
+                                            $dropoutStats .= "
+                                                <h4 class='small font-weight-bold'>{$dropout['name']} <span
+                                                        class='float-right'>{$dropout['total_count']} ({$percentage}%)</span></h4>
+                                                <div class='progress mb-4'>
+                                                    <div class='progress-bar bg-danger' role='progressbar' style='width: {$percentage}%'
+                                                        aria-valuenow='{$percentage}' aria-valuemin='0' aria-valuemax='100'></div>
+                                                </div>";
+                                        }
+                                        echo $dropoutStats;
+                                    } else {
+                                        echo "<p class='text-muted'>No dropout data available.</p>";
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enrollment vs Dropouts Comparison -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Enrollment vs Dropouts Comparison</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>School</th>
+                                                    <th class="text-center">Enrollment</th>
+                                                    <th class="text-center">Dropouts</th>
+                                                    <th class="text-center">Retention Rate</th>
+                                                    <th class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php while($comparison = $comparisonResult->fetch_assoc()): 
+                                                    $retentionRate = $comparison['enrollment_count'] > 0 
+                                                        ? round((($comparison['enrollment_count'] - $comparison['dropout_count']) / $comparison['enrollment_count']) * 100, 1)
+                                                        : 0;
+                                                    
+                                                    // Determine status and badge color
+                                                    if ($retentionRate >= 90) {
+                                                        $status = "Excellent";
+                                                        $badgeColor = "success";
+                                                    } elseif ($retentionRate >= 80) {
+                                                        $status = "Good";
+                                                        $badgeColor = "info";
+                                                    } elseif ($retentionRate >= 70) {
+                                                        $status = "Fair";
+                                                        $badgeColor = "warning";
+                                                    } else {
+                                                        $status = "Needs Attention";
+                                                        $badgeColor = "danger";
+                                                    }
+                                                ?>
+                                                    <tr>
+                                                        <td><?php echo $comparison['name']; ?></td>
+                                                        <td class="text-center"><?php echo number_format($comparison['enrollment_count']); ?></td>
+                                                        <td class="text-center">
+                                                            <?php if($comparison['dropout_count'] > 0): ?>
+                                                                <span class="text-danger">
+                                                                    <?php echo number_format($comparison['dropout_count']); ?>
+                                                                </span>
+                                                            <?php else: ?>
+                                                                0
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="progress" style="height: 20px;">
+                                                                <div class="progress-bar bg-<?php echo $badgeColor; ?>" 
+                                                                     role="progressbar" 
+                                                                     style="width: <?php echo $retentionRate; ?>%"
+                                                                     aria-valuenow="<?php echo $retentionRate; ?>" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="100">
+                                                                    <?php echo $retentionRate; ?>%
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="badge badge-<?php echo $badgeColor; ?>">
+                                                                <?php echo $status; ?>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                <?php endwhile; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

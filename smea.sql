@@ -58,14 +58,23 @@ CREATE TABLE IF NOT EXISTS `attendance_summary` (
   CONSTRAINT `FK_attendance_summary_grade_level` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `FK_attendance_summary_schools` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `FK_attendance_summary_users` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.attendance_summary: ~2 rows (approximately)
+-- Dumping data for table smea.attendance_summary: ~13 rows (approximately)
 INSERT INTO `attendance_summary` (`summary_id`, `school_id`, `grade_level_id`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `updated_at`, `created_at`, `school_year_id`) VALUES
 	(1, 2, 1, 1, 'pivate_vourcher', 23, 4, 2024, 5, '2024-12-04 15:14:19', '2024-12-04 15:01:33', NULL),
 	(2, 1, 1, 1, 'pivate_vourcher', 2322, 4, 2025, 5, '2024-12-04 22:17:45', '2024-12-04 22:17:45', NULL),
 	(3, 4, 5, 1, 'enrollment', 3216, 4, 2025, 5, '2024-12-04 22:18:11', '2024-12-04 22:18:11', NULL),
-	(4, 4, 4, 1, 'enrollment', 223, 4, 2024, 5, '2024-12-04 22:18:35', '2024-12-04 22:18:35', NULL);
+	(4, 4, 4, 1, 'enrollment', 223, 4, 2025, 5, '2024-12-05 00:38:02', '2024-12-04 22:18:35', NULL),
+	(5, 2, 8, 2, 'enrollment', 2312, 3, 2025, 6, '2024-12-05 00:20:39', '2024-12-05 00:20:39', NULL),
+	(6, 2, 3, 1, 'enrollment', 2131, 2, 2025, 6, '2024-12-05 00:20:48', '2024-12-05 00:20:48', NULL),
+	(7, 3, 4, 1, 'enrollment', 25, 4, 2025, 6, '2024-12-05 00:26:30', '2024-12-05 00:26:30', NULL),
+	(8, 4, 4, 1, 'enrollment', 223, 4, 2025, 6, '2024-12-05 00:26:30', '2024-12-05 00:26:30', NULL),
+	(9, 2, 2, 1, 'enrollment', 2, 4, 2025, 6, '2024-12-05 00:27:12', '2024-12-05 00:27:12', NULL),
+	(10, 1, 1, 1, 'enrollment', 215, 4, 2025, 6, '2024-12-05 00:41:12', '2024-12-05 00:41:12', NULL),
+	(11, 3, 1, 1, 'enrollment', 2, 3, 2025, 6, '2024-12-05 00:41:31', '2024-12-05 00:41:31', NULL),
+	(12, 1, 1, 1, 'dropouts', 22, 4, 2025, 5, '2024-12-11 17:39:24', '2024-12-11 17:16:33', NULL),
+	(13, 1, 1, 2, 'dropouts', 354, 4, 2025, 5, '2024-12-11 17:39:20', '2024-12-11 17:22:16', NULL);
 
 -- Dumping structure for table smea.edit_requests
 CREATE TABLE IF NOT EXISTS `edit_requests` (
@@ -85,16 +94,21 @@ CREATE TABLE IF NOT EXISTS `edit_requests` (
   KEY `processed_by` (`processed_by`),
   CONSTRAINT `edit_requests_ibfk_1` FOREIGN KEY (`requested_by`) REFERENCES `users` (`id`),
   CONSTRAINT `edit_requests_ibfk_2` FOREIGN KEY (`processed_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.edit_requests: ~6 rows (approximately)
+-- Dumping data for table smea.edit_requests: ~11 rows (approximately)
 INSERT INTO `edit_requests` (`id`, `school_id`, `type`, `grade_level`, `gender`, `reason`, `requested_by`, `processed_by`, `status`, `request_date`, `processed_date`) VALUES
 	(1, 2, 'pivate_vourcher', 1, 'male', 'Edit please', 6, 5, 'approved', '2024-12-04 21:59:55', '2024-12-04 22:06:16'),
 	(2, 2, 'pivate_vourcher', 1, 'male', 'pa edit po', 6, 5, 'approved', '2024-12-04 22:09:40', '2024-12-04 22:09:53'),
 	(3, 2, 'pivate_vourcher', 1, 'male', 'aaa', 6, 5, 'approved', '2024-12-04 22:12:28', '2024-12-04 22:12:32'),
 	(4, 2, 'pivate_vourcher', 1, 'male', 'aasd', 6, 5, 'approved', '2024-12-04 22:15:17', '2024-12-04 22:15:22'),
 	(5, 2, 'pivate_vourcher', 1, 'male', 'asdasafg', 6, 5, 'approved', '2024-12-04 22:15:40', '2024-12-04 22:15:43'),
-	(6, 2, 'pivate_vourcher', 1, 'male', 'Pa edit', 6, 5, 'approved', '2024-12-04 22:36:37', '2024-12-04 22:36:57');
+	(6, 2, 'pivate_vourcher', 1, 'male', 'Pa edit', 6, 5, 'approved', '2024-12-04 22:36:37', '2024-12-04 22:36:57'),
+	(7, 1, 'cfs', 0, '0', 'wewew', 6, 5, 'approved', '2024-12-04 23:30:33', '2024-12-04 23:30:50'),
+	(8, 1, 'sbfp', 1, '1', 'asda', 6, 5, 'approved', '2024-12-04 23:31:15', '2024-12-04 23:31:22'),
+	(9, 1, 'displaced', 1, '1', 'asda', 6, 5, 'approved', '2024-12-04 23:49:58', '2024-12-04 23:51:00'),
+	(10, 1, 'displaced', 1, '1', 'asda', 6, 5, 'approved', '2024-12-04 23:50:09', '2024-12-04 23:51:03'),
+	(11, 1, 'displaced', 1, '1', 'dasasdas', 6, 5, 'approved', '2024-12-04 23:50:53', '2024-12-04 23:51:05');
 
 -- Dumping structure for table smea.equity_assessment
 CREATE TABLE IF NOT EXISTS `equity_assessment` (
@@ -117,9 +131,9 @@ CREATE TABLE IF NOT EXISTS `equity_assessment` (
   CONSTRAINT `equity_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `equity_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `equity_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=315 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=318 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.equity_assessment: ~263 rows (approximately)
+-- Dumping data for table smea.equity_assessment: ~266 rows (approximately)
 INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `points`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(40, 1, 1, 1, 'sbfp', 3, NULL, 4, 2025, 6, '2024-12-03 06:22:29', '2024-12-03 06:38:21'),
 	(41, 2, 1, 1, 'sbfp', 3, NULL, 4, 2025, 6, '2024-12-03 06:22:29', '2024-12-03 06:38:21'),
@@ -383,7 +397,10 @@ INSERT INTO `equity_assessment` (`id`, `school_id`, `grade_level`, `gender`, `ty
 	(311, 1, NULL, NULL, 'cfs', 1, 30, 4, 2025, 6, '2024-12-03 06:40:33', '2024-12-03 06:40:33'),
 	(312, 2, NULL, NULL, 'cfs', 1, 30, 4, 2025, 6, '2024-12-03 06:40:33', '2024-12-03 06:40:33'),
 	(313, 1, NULL, NULL, 'wash', 5, NULL, 4, 2024, 5, '2024-12-04 13:08:56', '2024-12-04 15:51:30'),
-	(314, 1, 3, 1, 'sbfp', 35, NULL, 4, 2024, 5, '2024-12-04 15:51:30', '2024-12-04 15:51:30');
+	(314, 1, 3, 1, 'sbfp', 35, NULL, 4, 2024, 5, '2024-12-04 15:51:30', '2024-12-04 15:51:30'),
+	(315, 1, NULL, NULL, 'cfs', 250, 30, 4, 2024, 5, '2024-12-04 23:12:13', '2024-12-04 23:12:13'),
+	(316, 1, NULL, NULL, 'cfs', 23, 35, 4, 2024, 5, '2024-12-04 23:26:01', '2024-12-04 23:26:01'),
+	(317, 1, 1, 1, 'sbfp', 232, NULL, 4, 2024, 5, '2024-12-04 23:31:04', '2024-12-04 23:31:04');
 
 -- Dumping structure for table smea.grade_level
 CREATE TABLE IF NOT EXISTS `grade_level` (
@@ -510,9 +527,9 @@ CREATE TABLE IF NOT EXISTS `quality_assessment` (
   CONSTRAINT `quality_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `quality_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `quality_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.quality_assessment: ~13 rows (approximately)
+-- Dumping data for table smea.quality_assessment: ~15 rows (approximately)
 INSERT INTO `quality_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(2, 1, 1, 1, 'als', 23, 4, 2024, 5, '2024-11-10 13:18:47', '2024-11-10 13:18:47'),
 	(4, 1, 1, 1, 'eng-frustration', 11, 4, 2024, 5, '2024-11-10 14:20:08', '2024-11-10 14:20:08'),
@@ -565,9 +582,9 @@ CREATE TABLE IF NOT EXISTS `rwb_assessment` (
   CONSTRAINT `rwb_assessment_ibfk_1` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`),
   CONSTRAINT `rwb_assessment_ibfk_2` FOREIGN KEY (`grade_level`) REFERENCES `grade_level` (`id`),
   CONSTRAINT `rwb_assessment_ibfk_3` FOREIGN KEY (`last_user_save`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=497 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=498 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.rwb_assessment: ~496 rows (approximately)
+-- Dumping data for table smea.rwb_assessment: ~497 rows (approximately)
 INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`, `count`, `quarter`, `year`, `last_user_save`, `created_at`, `updated_at`) VALUES
 	(1, 1, 1, 1, 'displaced', 505, 4, 2024, 5, '2024-11-10 16:41:41', '2024-11-10 16:41:41'),
 	(2, 1, 1, 1, 'displaced', 19, 3, 2024, 6, '2024-12-04 04:07:13', '2024-12-04 04:28:06'),
@@ -1064,7 +1081,8 @@ INSERT INTO `rwb_assessment` (`id`, `school_id`, `grade_level`, `gender`, `type`
 	(493, 17, 7, 2, 'displaced', 19, 4, 2025, 5, '2024-12-04 10:42:40', '2024-12-04 15:45:52'),
 	(494, 2, 1, 1, 'equipped', 9999, 4, 2024, 5, '2024-12-04 15:43:41', '2024-12-04 15:43:41'),
 	(495, 2, 1, 1, 'equipped', 9989, 4, 2025, 5, '2024-12-04 16:20:27', '2024-12-04 16:20:27'),
-	(496, 2, 1, 1, 'bmi', 555, 4, 2025, 5, '2024-12-04 16:21:09', '2024-12-04 16:21:09');
+	(496, 2, 1, 1, 'bmi', 555, 4, 2025, 5, '2024-12-04 16:21:09', '2024-12-04 16:21:09'),
+	(497, 1, 1, 2, 'displaced', 23, 4, 2024, 5, '2024-12-04 23:32:30', '2024-12-04 23:32:30');
 
 -- Dumping structure for table smea.schools
 CREATE TABLE IF NOT EXISTS `schools` (
@@ -1111,13 +1129,12 @@ CREATE TABLE IF NOT EXISTS `school_year` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table smea.school_year: ~5 rows (approximately)
+-- Dumping data for table smea.school_year: ~4 rows (approximately)
 INSERT INTO `school_year` (`id`, `start_month`, `start_year`, `end_month`, `end_year`, `updated_at`, `created_at`) VALUES
 	(3, 8, 2025, 7, 2026, '2024-12-03 10:25:16', '2024-09-10 23:19:14'),
 	(4, 8, 2027, 7, 2028, '2024-12-03 10:25:40', '2024-09-10 23:18:26'),
 	(5, 8, 2026, 7, 2027, '2024-12-03 10:25:28', '2024-05-28 08:44:50'),
-	(6, 8, 2024, 7, 2025, '2024-09-10 23:19:47', '2024-05-28 08:46:07'),
-	(8, 8, 2023, 7, 2024, '2024-12-04 02:27:37', '2024-12-04 02:27:37');
+	(6, 8, 2024, 7, 2025, '2024-09-10 23:19:47', '2024-05-28 08:46:07');
 
 -- Dumping structure for table smea.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (

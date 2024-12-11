@@ -73,8 +73,8 @@ function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $attenda
                 $maleValue = isset($attendanceData[$key][1]) ? $attendanceData[$key][1] : '';
                 $femaleValue = isset($attendanceData[$key][2]) ? $attendanceData[$key][2] : '';
                 
-                $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-male[".$school['id']."]' value='$maleValue' readonly></td>";
-                $inputTable .= "<td><input type='number' class='form-control form-control-sm' name='year-".$sy['start_year']."-".$sy['end_year']."-female[".$school['id']."]' value='$femaleValue' readonly></td>";
+                $inputTable .= "<td>$maleValue</td>";
+                $inputTable .= "<td>$femaleValue</td>";
             }
             $inputTable .= "</tr>";
         }
@@ -177,6 +177,20 @@ function exportCSV($conn, $activeTab) {
 }
 
 function exportPDF($conn, $activeTab) {
+    // Get logged in user details
+    $userId = $_SESSION['user_id'];
+    $userQuery = "SELECT CONCAT(first_name, ' ', last_name) as full_name, school_id FROM users WHERE id = $userId";
+    $userResult = $conn->query($userQuery)->fetch_assoc();
+    $userName = $userResult['full_name'] ?? 'Unknown User';
+    
+    // Get school address if available
+    $schoolAddress = '';
+    if (!empty($userResult['school_id'])) {
+        $schoolQuery = "SELECT address FROM schools WHERE id = {$userResult['school_id']}";
+        $schoolResult = $conn->query($schoolQuery)->fetch_assoc();
+        $schoolAddress = $schoolResult['address'] ?? '';
+    }
+
     // Split activeTab to get type and grade level
     list($type, $gradeLevel) = explode('-', $activeTab);
     
@@ -204,6 +218,18 @@ function exportPDF($conn, $activeTab) {
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
             th { background-color: #f5f5f5; }
             .date-generated { text-align: right; font-size: 12px; color: #666; margin-bottom: 20px; }
+            .user-info { 
+                text-align: right; 
+                font-size: 12px; 
+                color: #666; 
+                margin-bottom: 10px; 
+            }
+            .school-address {
+                text-align: right;
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 20px;
+            }
         </style>
         <script>
             window.onafterprint = function() {
@@ -223,11 +249,19 @@ function exportPDF($conn, $activeTab) {
             <h1>SMEA - School Management Enrollment Analytics</h1>
             <p>Comparative Report</p>
         </div>
-        <div class="date-generated">
+        <div class="user-info">
+            Prepared by: ' . htmlspecialchars($userName) . '
+        </div>';
+    
+    // Only add school address if available
+    if (!empty($schoolAddress)) {
+        $html .= '<div class="school-address">
+            School Address: ' . htmlspecialchars($schoolAddress) . '
+        </div>';
+    }
+
+    $html .= '<div class="date-generated">
             Generated on: ' . date('F d, Y') . '
-        </div>
-        <div class="report-title">
-            ' . $reportTitle . '
         </div>';
 
     // Continue with the existing table structure
@@ -541,10 +575,6 @@ if (isset($_POST['export_pdf'])) {
 
         // Initialize first tab
         $('#exportCsvTab, #exportPdfTab').val('als-1');
-        
-        function lockFields() {
-            $('table input').prop('readonly', true);
-        }
 
         // Handle A&E JHS/SHS visibility
         function handleAEJHSVisibility() {
@@ -570,7 +600,6 @@ if (isset($_POST['export_pdf'])) {
 
         // Initial calls
         handleAEJHSVisibility();
-        lockFields();
     });
 
     function activeTab(tab) {
