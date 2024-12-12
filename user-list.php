@@ -59,7 +59,7 @@ $resultUsers = $conn->query($sql);
                                             <th>Fullname</th>
                                             <th>Role</th>
                                             <th>School</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </thead>
                                     <tfoot>
@@ -68,7 +68,7 @@ $resultUsers = $conn->query($sql);
                                             <th>Fullname</th>
                                             <th>Role</th>
                                             <th>School</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </tfoot>
                                     <tbody>
@@ -82,11 +82,7 @@ $resultUsers = $conn->query($sql);
                                                             <td>".$row["first_name"]. " ".$row["last_name"]."</td>
                                                             <td>".$row["description"]."</td>
                                                             <td>".$row["school"]."</td>
-                                                            <td>";
-                                                    echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
-                                                            <a href='addUser.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>
-                                                            <a href='addUser.php?id=".$row["id"]."&type=delete' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i> Delete</a>" : "";
-                                                    echo " </td>
+                                                            <td>
                                                         </tr>
                                                     ";
                                                 }

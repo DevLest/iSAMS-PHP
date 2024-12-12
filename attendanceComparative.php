@@ -433,22 +433,25 @@ if (isset($_POST['export_pdf'])) {
                     </style>
 
                     <div class="container-fluid">
-                        <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
-                        <p class="mb-4">Data comparison based on School Year</p>
-                        
-                        <div class="text-right mb-4">
-                            <!-- <form action="" method="post" style="display: inline-block;">
-                                <input type="hidden" name="activeTab" id="exportCsvTab">
-                                <button type="submit" class="btn btn-info" name="export_csv">
-                                    <i class="fas fa-file-csv mr-2"></i>Export CSV
-                                </button>
-                            </form> -->
-                            <form action="" method="post" style="display: inline-block;">
-                                <input type="hidden" name="activeTab" id="exportPdfTab">
-                                <button type="submit" class="btn btn-warning" name="export_pdf">
-                                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
-                                </button>
-                            </form>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h1 class="h3 mb-2 text-gray-800">Comparative</h1>
+                                <p class="mb-0">Data comparison based on School Year</p>
+                            </div>
+                            <div>
+                                <!-- <form action="" method="post" style="display: inline-block;">
+                                    <input type="hidden" name="activeTab" id="exportCsvTab">
+                                    <button type="submit" class="btn btn-info" name="export_csv">
+                                        <i class="fas fa-file-csv mr-2"></i>Export CSV
+                                    </button>
+                                </form> -->
+                                <form action="" method="post" style="display: inline-block;">
+                                    <input type="hidden" name="activeTab" id="exportPdfTab">
+                                    <button type="submit" class="btn btn-warning" name="export_pdf">
+                                        <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
                         <div class="card">

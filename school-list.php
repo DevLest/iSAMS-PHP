@@ -47,14 +47,14 @@ $schoolResult = $conn->query($sql);
                                         <tr>
                                             <th>School Name</th>
                                             <th>Location</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </thead>
                                     <tfoot>
                                         <tr>
                                             <th>School Name</th>
                                             <th>Location</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </tfoot>
                                     <tbody>
@@ -66,11 +66,7 @@ $schoolResult = $conn->query($sql);
                                                         <tr>
                                                             <td>".$row["name"]."</td>
                                                             <td>".$row["address"]."</td>
-                                                            <td>";
-                                                    echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
-                                                            <a href='addSchool.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>
-                                                            <a href='addSchool.php?id=".$row["id"]."&type=delete' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i> Delete</a>" : "";
-                                                    echo " </td>
+                                                            <td>
                                                         </tr>
                                                     ";
                                                 }

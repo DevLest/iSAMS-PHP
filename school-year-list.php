@@ -44,13 +44,13 @@ $syResult = $conn->query($sql);
                                     <thead>
                                         <tr>
                                             <th>School Year</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </thead>
                                     <tfoot>
                                         <tr>
                                             <th>School Year</th>
-                                            <th>Action</th>
+                                            <!-- <th>Action</th> -->
                                         </tr>
                                     </tfoot>
                                     <tbody>
@@ -61,12 +61,6 @@ $syResult = $conn->query($sql);
                                                     echo "
                                                         <tr>
                                                             <td> S.Y. ".$row["start_year"]." - ".$row["end_year"]." ( ".$row['start_month']."/".$row["start_year"]." - ".$row['end_month']."/".$row["end_year"]." ) </td>
-    
-                                                            <td>";
-                                                    echo isset($_SESSION['role']) && $_SESSION['role'] == 1 ? "
-                                                            <a href='addSchoolYear.php?id=".$row["id"]."&type=edit' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i> Edit</a>
-                                                            <a href='addSchoolYear.php?id=".$row["id"]."&type=delete' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i> Delete</a>" : "";
-                                                    echo " </td>
                                                         </tr>
                                                     ";
                                                 }
