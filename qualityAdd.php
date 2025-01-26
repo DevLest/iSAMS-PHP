@@ -329,7 +329,7 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
           <form action="qualityAdd.php" method="post">
             <!-- Add this hidden input field inside your form -->
             <input type="hidden" name="activeTab" id="activeTab" value="">
-            <input type="hidden" name="activeGradeLevel" id="activeGradeLevel" value="">
+            <input type="text" name="activeGradeLevel" id="activeGradeLevel" value="">
 
             <!-- Quarter selection and buttons -->
             <div class="row mb-4">
@@ -727,6 +727,10 @@ $year = isset($_GET['year']) ? $_GET['year'] : (isset($_POST['year']) ? $_POST['
       $('.nav-link').on('click', function() {
         var tabId = $(this).attr('id').replace('-tab', '');
         var gradeLevel = tabId.split('-').pop();
+        // Default to 1 if gradeLevel is not an integer
+        if(isNaN(parseInt(gradeLevel))) {
+          gradeLevel = 1;
+        }
         $('#activeTab').val(tabId);
         $('#activeGradeLevel').val(gradeLevel);
       });
