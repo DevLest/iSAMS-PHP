@@ -24,7 +24,7 @@ if (isset($_POST['quarter'])) {
 // Fetch school years
 $currentYear = date('Y');
 $nextYear = $currentYear + 1;
-$schoolYearSql = "SELECT * FROM school_year WHERE start_year >= $currentYear AND start_year <= $nextYear ORDER BY start_year ASC";
+$schoolYearSql = "SELECT * FROM school_year WHERE start_year <= $nextYear ORDER BY start_year ASC";
 $schoolYearResult = $conn->query($schoolYearSql);
 $schoolYears = $schoolYearResult->fetch_all(MYSQLI_ASSOC);
 
@@ -45,9 +45,7 @@ $gradeLevels = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 // Fetch attendance data
 $attendanceQuery = "SELECT a.*, sy.start_year, sy.end_year 
                     FROM attendance_summary a
-                    JOIN school_year sy ON (a.year BETWEEN sy.start_year AND sy.end_year)
-                    WHERE (a.year = sy.start_year AND MONTH(NOW()) >= sy.start_month) 
-                       OR (a.year = sy.end_year AND MONTH(NOW()) < sy.end_month)";
+                    JOIN school_year sy ON (a.year BETWEEN sy.start_year AND sy.end_year)";
 $attendanceResult = $conn->query($attendanceQuery);
 $attendanceData = [];
 
@@ -57,6 +55,7 @@ while ($row = $attendanceResult->fetch_assoc()) {
 }
 
 function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $attendanceData) {
+
     $inputTable = "";
     foreach ($schools as $school) {
         // Special handling for A&E JHS/SHS (grade level 3 in als type)
@@ -78,9 +77,11 @@ function generateInputTable($type, $gradeLevel, $schools, $schoolYears, $attenda
             }
             $inputTable .= "</tr>";
         }
+        
     }
     return $inputTable;
 }
+
 
 function generateGradeLevelTabs($type, $gradeLevels) {
     $tabs = "";
